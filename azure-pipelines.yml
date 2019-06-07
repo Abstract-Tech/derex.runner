@@ -1,0 +1,17 @@
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: docker-compose -f first_tests/docker-compose.yml pull
+  displayName: 'Pull docker image'
+
+- script: |
+    docker-compose -f first_tests/docker-compose.yml up -d
+    sleep 10
+  displayName: 'Start Open edX services'
+
+- script: curl http://localhost:8000/
+  displayName: 'Run a curl'
+
+- script: docker-compose -f first_tests/docker-compose.yml logs
+  displayName: 'Show docker logs'
