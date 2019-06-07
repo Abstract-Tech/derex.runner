@@ -1,0 +1,31 @@
+{
+  "SECRET_KEY": "secretkey",
+  "AWS_ACCESS_KEY_ID": "",
+  "AWS_SECRET_ACCESS_KEY": "",
+  "CONTENTSTORE": {
+    "ENGINE": "xmodule.contentstore.mongo.MongoContentStore",
+    "DOC_STORE_CONFIG": {
+      "db": "mongoedx",
+      "host": "mongodb"
+    }
+  },
+  "DOC_STORE_CONFIG": {
+    "db": "mongoedx",
+    "host": "mongodb"
+  },
+  "DATABASES": {
+    "default": {
+      "ENGINE": "django.db.backends.mysql",
+      "NAME": "myedx",
+      "USER": "root",
+      "PASSWORD": "secret",
+      "HOST": "mysql",
+      "PORT": "3306",
+      "ATOMIC_REQUESTS": true
+    }
+  },
+  "XQUEUE_INTERFACE": {
+      "url": null,
+      "django_auth": null
+  }
+}
