@@ -6,8 +6,14 @@ steps:
   displayName: 'Pull docker image'
 
 - script: |
-    docker-compose -f first_tests/docker-compose.yml up -d
+    set -x
+    docker-compose -f first_tests/docker-compose.yml up -d mysql
     sleep 10
+    docker-compose -f first_tests/docker-compose.yml exec -T mysql mysql -u root -psecret -e 'CREATE DATABASE IF NOT EXISTS myedx'
+    docker-compose -f first_tests/docker-compose.yml exec -T mysql mysql -u root -psecret -e 'SHOW DATABASES'
+    docker-compose -f first_tests/docker-compose.yml up -d
+    docker-compose -f first_tests/docker-compose.yml run lms ./manage.py lms --settings=derex.base migrate
+    #docker-compose -f first_tests/docker-compose.yml run cms ./manage.py cms --settings=derex.base migrate
   displayName: 'Start Open edX services'
 
 - script: curl http://localhost:8000/
