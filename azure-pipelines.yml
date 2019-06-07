@@ -3,18 +3,19 @@ pool:
 
 steps:
 - script: docker-compose -f first_tests/docker-compose.yml pull
-  displayName: 'Pull docker image'
+  displayName: 'Pull docker images'
 
 - script: |
     set -x
-    docker-compose -f first_tests/docker-compose.yml up -d mysql
+    cd first_tests
+    docker-compose up -d mysql
     sleep 10
-    docker-compose -f first_tests/docker-compose.yml exec -T mysql mysql -u root -psecret -e 'CREATE DATABASE IF NOT EXISTS myedx'
-    docker-compose -f first_tests/docker-compose.yml exec -T mysql mysql -u root -psecret -e 'SHOW DATABASES'
-    docker-compose -f first_tests/docker-compose.yml up -d
-    docker-compose -f first_tests/docker-compose.yml run lms ./manage.py lms --settings=derex.base migrate
-    #docker-compose -f first_tests/docker-compose.yml run cms ./manage.py cms --settings=derex.base migrate
-  displayName: 'Start Open edX services'
+    docker-compose exec -T mysql mysql -u root -psecret -e 'CREATE DATABASE IF NOT EXISTS myedx'
+    docker-compose exec -T mysql mysql -u root -psecret -e 'SHOW DATABASES'
+    docker-compose up -d
+    docker-compose run lms ./manage.py lms --settings=derex.base migrate
+    #docker-compose run cms ./manage.py cms --settings=derex.base migrate
+  displayName: 'Run migrations and start Open edX services'
 
 - script: curl http://localhost:8000/
   displayName: 'Run a curl'
