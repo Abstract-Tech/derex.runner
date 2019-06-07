@@ -17,6 +17,9 @@ steps:
     #docker-compose run cms ./manage.py cms --settings=derex.base migrate
   displayName: 'Run migrations and start Open edX services'
 
+- script: docker-compose exec mysql mysqldump -psecret myedx |xz -9 -c - >  basedump.sql.xz
+  displayName: 'Dump mysql database'
+
 - script: curl http://localhost:8000/
   displayName: 'Run a curl'
 
