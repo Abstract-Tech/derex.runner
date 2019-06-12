@@ -1,42 +1,41 @@
+from openedx.core.lib.derived import derive_settings
+from path import Path as path
+from xmodule.modulestore.modulestore_settings import update_module_store_settings
+
 import os
-from lms.envs.production import *
 
 
-# Execute the contents of common.py in this context
-execfile(os.path.join(os.path.dirname(__file__), "common.py"), globals())
+SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
+assert SERVICE_VARIANT in ("lms", "cms")
 
-ALLOWED_HOSTS = [
-    ENV_TOKENS.get("LMS_BASE"),
-    FEATURES["PREVIEW_LMS_BASE"],
-    "127.0.0.1",
-    "localhost",
-    "preview.localhost",
-    "127.0.0.1:8000",
-    "localhost:8000",
-    "preview.localhost:8000",
-]
+exec("from {}.envs.common import *".format(SERVICE_VARIANT), globals(), locals())
 
-# Required to display all courses on start page
-SEARCH_SKIP_ENROLLMENT_START_DATE_FILTERING = True
+ENV_ROOT = (path(os.environ["CONFIG_ROOT"]) / "..").normpath()
+DATA_DIR = ENV_ROOT / "data"
+LOG_DIR = "/openedx/data/logs"
+SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
+assert SERVICE_VARIANT in ("lms", "cms")
 
-# Allow insecure oauth2 for local interaction with local containers
-OAUTH_ENFORCE_SECURE = False
+DATABASES = {
+    "default": {
+        "ATOMIC_REQUESTS": True,
+        "ENGINE": "django.db.backends.mysql",
+        "HOST": "mysql",
+        "NAME": "myedx",
+        "PASSWORD": "secret",
+        "PORT": "3306",
+        "USER": "root",
+    }
+}
 
-DEFAULT_FROM_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-DEFAULT_FEEDBACK_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-SERVER_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-TECH_SUPPORT_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-CONTACT_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-BUGS_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-UNIVERSITY_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-PRESS_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-PAYMENT_SUPPORT_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-BULK_EMAIL_DEFAULT_FROM_EMAIL = "no-reply@" + ENV_TOKENS["LMS_BASE"]
-API_ACCESS_MANAGER_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
-API_ACCESS_FROM_EMAIL = ENV_TOKENS["CONTACT_EMAIL"]
+CONTENTSTORE = {
+    "ENGINE": "xmodule.contentstore.mongo.MongoContentStore",
+    "DOC_STORE_CONFIG": {"host": "mongodb", "db": "mongoedx"},
+}
+DOC_STORE_CONFIG = {"host": "mongodb", "db": "mongoedx"}
+update_module_store_settings(MODULESTORE, doc_store_settings=DOC_STORE_CONFIG)
 
-WEBPACK_CONFIG_PATH = "webpack.dev.config.js"
+XQUEUE_INTERFACE = {"url": None, "django_auth": None}
+ALLOWED_HOSTS = ["*"]
 
-
-#MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware']
-#STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+derive_settings(__name__)

@@ -38,7 +38,7 @@ services:
       - lms
 
   lms:
-    image: derex/openedx-ironwood-tutor:1d519984de
+    image: derex/openedx-ironwood-tutor:cf05a11af5
     command: sh -c "gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application"
     environment:
       SERVICE_VARIANT: lms
@@ -47,9 +47,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./wsgi.py:/openedx/edx-platform/wsgi.py
       - ./config/:/openedx/edx-platform/lms/envs/derex
-      - ./json_files:/openedx/config/
       - openedx_data:/openedx/data
     depends_on:
       - elasticsearch
