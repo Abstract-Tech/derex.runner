@@ -36,6 +36,7 @@ services:
       SETTINGS: derex.base
     ports:
       - "8000:8000"
+      - "8001:8001"  # To be used with ./manage.py lms runserver 8001
     volumes:
       - ./config/:/openedx/edx-platform/lms/envs/derex
       - openedx_data:/openedx/data
