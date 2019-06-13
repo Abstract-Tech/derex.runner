@@ -27,16 +27,6 @@ services:
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
 
-  nginx:
-    image: nginx:1.13
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx:/etc/nginx/conf.d/
-    depends_on:
-      - lms
-
   lms:
     image: derex/openedx-ironwood-tutor:cf05a11af5
     command: sh -c "gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application"
