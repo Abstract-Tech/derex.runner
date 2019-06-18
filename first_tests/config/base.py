@@ -10,6 +10,10 @@ assert SERVICE_VARIANT in ("lms", "cms")
 
 exec("from {}.envs.common import *".format(SERVICE_VARIANT), globals(), locals())
 
+PLATFORM_NAME="TestEdX"
+# XXX Remove CONFIG_ROOT: it's the path to the JSON files we're getting rid of
+# Instead, we could just import something we KNOW comes from `edx-platform`
+# and base other paths on that one.
 ENV_ROOT = (path(os.environ["CONFIG_ROOT"]) / "..").normpath()
 DATA_DIR = ENV_ROOT / "data"
 LOG_DIR = "/openedx/data/logs"
@@ -58,5 +62,12 @@ if DEBUG:  # In debug mode serve static files from `runserver`
     # Load development webpack donfiguration
     WEBPACK_CONFIG_PATH = 'webpack.dev.config.js'
 
+
+##################### CMS Settings ###################
+
+if SERVICE_VARIANT == 'cms':
+    CMS_SEGMENT_KEY = 'foobar'
+    LOGIN_URL = '/signin'
+    FRONTEND_LOGIN_URL = LOGIN_URL
 
 derive_settings(__name__)
