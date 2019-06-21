@@ -2,26 +2,26 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: docker-compose -f first_tests/docker-compose.yml pull
-  displayName: 'Pull docker images'
+- script: |
+    set -ex
+    docker network create -d bridge derex
+    docker run -d --network derex --name mysql --rm -e MYSQL_ALLOW_EMPTY_PASSWORD=True mysql:5.6.44 mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+  displayName: 'Start mysql'
 
 - script: |
-    set -x
-    cd first_tests
-    docker-compose up -d mysql
-    sleep 10
-    docker-compose exec -T mysql mysql -u root -psecret -e 'CREATE DATABASE IF NOT EXISTS myedx'
-    docker-compose exec -T mysql mysql -u root -psecret -e 'SHOW DATABASES'
-    docker-compose up -d
-    docker-compose run lms ./manage.py lms --settings=derex.base migrate
-    #docker-compose run cms ./manage.py cms --settings=derex.base migrate
-  displayName: 'Run migrations and start Open edX services'
+    set -ex
+    sudo systemctl stop mysql
+    docker run -d --network derex --name mongodb --rm mongo:3.2.16 mongod --smallfiles --nojournal --storageEngine wiredTiger
+  displayName: 'Start mongodb'
 
-- script: docker-compose exec mysql mysqldump -psecret myedx |xz -9 -c - >  basedump.sql.xz
-  displayName: 'Dump mysql database'
+- script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
+  displayName: 'Prime mysql database'
+
+- script: docker run -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest compile_assets.sh
+  displayName: 'Compile static assets'
+
+- script: docker run -d -p 8000:8000 -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
+  displayName: 'Start lms'
 
 - script: curl http://localhost:8000/
   displayName: 'Run a curl'
-
-- script: docker-compose -f first_tests/docker-compose.yml logs
-  displayName: 'Show docker logs'
