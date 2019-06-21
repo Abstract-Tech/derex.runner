@@ -17,8 +17,17 @@ steps:
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
   displayName: 'Prime mysql database'
 
-- script: docker run -d -p 8000:8000 -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
+- script: docker run --name derex_lms -d -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
   displayName: 'Start lms'
 
-- script: curl http://localhost:8000/
-  displayName: 'Run a curl'
+- script: docker run --name derex_cms -e SERVICE_VARIANT=cms -d -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
+  displayName: 'Start cms'
+
+- script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
+  displayName: 'Start nginx'
+
+- script: curl http://localhost/
+  displayName: 'Curl the LMS'
+
+- script: curl http://studio.localhost/
+  displayName: 'Curl the CMS'
