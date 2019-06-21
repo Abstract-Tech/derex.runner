@@ -17,9 +17,6 @@ steps:
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
   displayName: 'Prime mysql database'
 
-- script: docker run -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest compile_assets.sh
-  displayName: 'Compile static assets'
-
 - script: docker run -d -p 8000:8000 -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
   displayName: 'Start lms'
 
