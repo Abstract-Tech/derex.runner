@@ -22,10 +22,21 @@ Features
 
 * TODO
 
+
+Development setup
+-----------------
+
+Make sure you have direnv installed and configured. Also, set up git pre commit hooks.
+
+```
+direnv allow
+pip install pre-commit
+pre-commit install --install-hooks
+```
+
 Credits
 -------
 
 This package was created with `Cookiecutter
 <https://github.com/audreyr/cookiecutter>`_ and the `cookiecutter-namespace-template
 <https://github.com/veit/cookiecutter-namespace-template>`_ project template.
-
