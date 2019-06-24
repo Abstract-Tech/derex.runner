@@ -5,23 +5,20 @@ steps:
 - script: |
     set -ex
     docker network create -d bridge derex
-    docker run -d --network derex --name mysql --rm -e MYSQL_ALLOW_EMPTY_PASSWORD=True mysql:5.6.44 mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
-  displayName: 'Start mysql'
-
-- script: |
-    set -ex
-    sudo systemctl stop mysql
-    docker run -d --network derex --name mongodb --rm mongo:3.2.16 mongod --smallfiles --nojournal --storageEngine wiredTiger
-  displayName: 'Start mongodb'
+    docker-compose -f derex/runner/templates/docker-compose.yml up -d
+  displayName: 'Start daemons'
 
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
   displayName: 'Prime mysql database'
 
-- script: docker run --name derex_lms -d -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
+- script: docker run --name derex_lms -d --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
   displayName: 'Start lms'
 
-- script: docker run --name derex_cms -e SERVICE_VARIANT=cms -d -v ironwood-staticfiles:/openedx/staticfiles/ --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
+- script: docker run --name derex_cms -e SERVICE_VARIANT=cms -d --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
   displayName: 'Start cms'
+
+- script: docker run -e C_FORCE_ROOT=True --name derex_lms_worker -d --network derex --rm derex/openedx-ironwood:latest sh -c './manage.py lms celery worker --loglevel=info --hostname=edx.lms.core.default --maxtasksperchild 100'
+  displayName: 'Start lms worker'
 
 - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
   displayName: 'Start nginx'
