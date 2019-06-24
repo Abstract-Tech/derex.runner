@@ -20,6 +20,25 @@ services:
     volumes:
       - derex_mysql:/var/lib/mysql
 
+  elasticsearch:
+    image: elasticsearch:1.5.2
+    environment:
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "cluster.name=openedx"
+      - "bootstrap.memory_lock=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - derex_elasticsearch:/usr/share/elasticsearch/data
+
+  rabbitmq:
+    image: rabbitmq:3.6.16-alpine
+    container_name: rabbitmq
+    volumes:
+      - derex_rabbitmq:/var/lib/rabbitmq
+
   mailslurper:
     image: marcopas/docker-mailslurper
     # Something needs to prime this with
@@ -41,6 +60,8 @@ services:
 volumes:
   derex_mongodb:
   derex_mysql:
+  derex_elasticsearch:
+  derex_rabbitmq:
 
 networks:
   default:
