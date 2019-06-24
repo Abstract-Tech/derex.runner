@@ -6,6 +6,11 @@ steps:
     set -ex
     docker network create -d bridge derex
     docker-compose -f derex/runner/templates/docker-compose.yml up -d
+    docker-compose -f derex/runner/templates/docker-compose.yml logs
+    sleep 5
+    docker-compose -f derex/runner/templates/docker-compose.yml logs
+    sleep 5
+    docker-compose -f derex/runner/templates/docker-compose.yml logs
   displayName: 'Start daemons'
 
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
