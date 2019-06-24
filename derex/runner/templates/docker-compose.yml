@@ -1,0 +1,35 @@
+version: "3"
+services:
+  mongodb:
+    image: mongo:3.2.21
+    container_name: mongodb
+    command: mongod --smallfiles --nojournal --storageEngine wiredTiger --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    volumes:
+      - derex_mongodb:/data/db
+
+  mysql:
+    image: mysql:5.6.36
+    container_name: mysql
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    networks:
+      default:
+        aliases:
+          - db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "True"
+    volumes:
+      - derex_mysql:/var/lib/mysql
+
+  adminer:
+    image: adminer:4.7.1
+    ports:
+      - 8080:8080
+
+volumes:
+  derex_mongodb:
+  derex_mysql:
+
+networks:
+  default:
+    external:
+      name: derex
