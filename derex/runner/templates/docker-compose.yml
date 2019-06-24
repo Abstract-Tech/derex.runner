@@ -16,14 +16,27 @@ services:
         aliases:
           - db
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "True"
+      MYSQL_ROOT_PASSWORD: secret
     volumes:
       - derex_mysql:/var/lib/mysql
+
+  mailslurper:
+    image: marcopas/docker-mailslurper
+    # Something needs to prime this with
+    # docker-compose -f derex/runner/templates/docker-compose.yml exec mysql /usr/bin/mysql -psecret -e "$(cat derex/runner/templates/mailslurper.sql)"
+    container_name: smtp
+    ports:
+      - 4300:4300
+      - 4301:4301
+    volumes:
+      - ./mailslurper.json:/opt/mailslurper/config.json
+    depends_on:
+      - mysql
 
   adminer:
     image: adminer:4.7.1
     ports:
-      - 8080:8080
+      - 4400:4400
 
 volumes:
   derex_mongodb:
