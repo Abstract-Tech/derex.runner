@@ -22,6 +22,7 @@ services:
 
   elasticsearch:
     image: elasticsearch:1.5.2
+    container_name: elasticsearch
     environment:
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       - "cluster.name=openedx"
@@ -38,6 +39,15 @@ services:
     container_name: rabbitmq
     volumes:
       - derex_rabbitmq:/var/lib/rabbitmq
+
+  flower:
+    image: derex/openedx-ironwood:latest
+    command: sh -c 'pip install flower; flower --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)") --port=5555'
+    ports:
+      - 5555:5555
+    container_name: derex_flower
+    depends_on:
+      - rabbitmq
 
   mailslurper:
     image: marcopas/docker-mailslurper
