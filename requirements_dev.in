@@ -1,0 +1,12 @@
+bumpversion
+coverage
+flake8
+pytest
+pytest-runner
+pyyaml==3.13
+requests==2.20.1
+Sphinx
+tox
+twine
+watchdog
+wheel
