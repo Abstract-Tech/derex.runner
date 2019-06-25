@@ -9,6 +9,7 @@ def test_asbool():
     """
     from derex.runner.utils import asbool
 
+    assert asbool(True) is True
     assert asbool("True") is True
     assert asbool("false") is False
     assert asbool(0) is False
