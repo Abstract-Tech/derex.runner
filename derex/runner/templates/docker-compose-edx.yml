@@ -13,6 +13,20 @@ services:
       - mongodb
       - elasticsearch
 
+  cms:
+    image: derex/openedx-ironwood:latest
+    command: sh -c 'gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:4800 --max-requests=1000 wsgi:application'
+    environment:
+      SERVICE_VARIANT: cms
+    ports:
+      - 4800:4800
+    container_name: derex_cms
+    depends_on:
+      - rabbitmq
+      - mysql
+      - mongodb
+      - elasticsearch
+
   lms_worker:
     image: derex/openedx-ironwood:latest
     command: sh -c './manage.py lms celery worker --loglevel=info --hostname=edx.lms.core.default --maxtasksperchild 100'
