@@ -16,3 +16,14 @@ services:
       - 4400:4400
     depends_on:
       - mysql
+
+  portainer:
+    image: portainer/portainer:1.21.0
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data portainer/portainer
+
+volumes:
+  portainer_data:
