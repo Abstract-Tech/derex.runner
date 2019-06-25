@@ -35,7 +35,6 @@ steps:
 
 - script: |
     set -ex
-    docker network create -d bridge derex
     export DEREX_ADMIN_SERVICES=False
     ddc up -d
     ddc logs

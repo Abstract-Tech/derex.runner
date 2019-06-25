@@ -1,6 +1,7 @@
 import pkg_resources
 import os
 from compose.cli.main import main
+from derex.runner.docker import ensure_network_present
 from typing import List
 import sys
 import logging
@@ -10,6 +11,7 @@ EXTRA_OPTS = ["--project-name", "derex"]
 
 
 def run_compose(args: List[str]):
+    ensure_network_present()
     old_argv = sys.argv
     try:
         sys.argv = ["docker-compose"] + yaml_opts() + EXTRA_OPTS + args
