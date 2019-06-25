@@ -2,6 +2,7 @@ black
 bumpversion
 coverage
 flake8
+flake8-import-order
 git+https://github.com/Abstract-Tech/pytest-black.git#egg=pytest-black
 git+https://github.com/Abstract-Tech/pytest-flake8.git#egg=pytest-flake8
 isort
