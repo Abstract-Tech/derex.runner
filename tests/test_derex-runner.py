@@ -4,35 +4,33 @@
 """Tests for `derex.runner` package."""
 
 from click.testing import CliRunner
-
-# from derex.runner import derex.runner
-from derex.runner import cli
-
+import contextlib
+import sys
 import pytest
+import io
+from contextlib import redirect_stdout
+
+
+def test_ddc(sys_argv):
+    """Test the derex docker compose shortcut."""
+    from derex.runner.cli import ddc
+
+    f = io.StringIO()
+    with redirect_stdout(f):
+        with sys_argv(["_", "config"]):
+            ddc()
+    assert "mongodb" in f.getvalue()
 
 
 @pytest.fixture
-def response():
-    """Sample pytest fixture.
+def sys_argv(mocker):
+    @contextlib.contextmanager
+    def my_cm(eargs):
+        with mocker.mock_module.patch.object(sys, "argv", eargs):
+            try:
+                yield
+            except SystemExit as exc:
+                if exc.code != 0:
+                    raise
 
-    See more at: http://doc.pytest.org/en/latest/fixture.html
-    """
-    # import requests
-    # return requests.get('https://github.com/veit/cookiecutter-namespace-template')
-
-
-def test_content(response):
-    """Sample pytest test function with the pytest fixture as an argument."""
-    # from bs4 import BeautifulSoup
-    # assert 'GitHub' in BeautifulSoup(response.content).title.string
-
-
-def test_ddc():
-    """Test the derex docker compose shortcut."""
-    runner = CliRunner()
-    result = runner.invoke(cli.main, ["config"])
-    assert result.exit_code == 0
-    assert "mongodb" in result.output
-    help_result = runner.invoke(cli.main, ["--help"])
-    assert help_result.exit_code == 0
-    assert "Run Open edX docker images" in help_result.output
+    return my_cm
