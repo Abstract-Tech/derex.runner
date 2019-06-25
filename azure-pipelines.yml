@@ -3,6 +3,25 @@ pool:
 
 steps:
 - script: |
+    pip3 install -r requirements_dev.txt
+    pip3 install -r requirements.txt -e .
+    python3 setup.py install
+    pip3 install git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
+    cd tests
+    pytest --ignore-docstrings |grep -v codecoveragetool=Cobertura
+  displayName: 'Run python tests'
+
+- script: |
+    npm install juice
+    # Azure pipelines strips style sheets but leaves styles in place.
+    # juice can embed the styles in the HTML for us and present a much better
+    # view in the coverage results tab.
+    for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+    echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=$(pwd)/tests/test-cov.xml;reportdirectory=${PWD}/tests/htmlcov;]"
+  displayName: Fix coverage result and publish it
+  condition: succeededOrFailed()
+
+- script: |
     set -ex
     docker network create -d bridge derex
     DOCKER_COMPOSE="docker-compose -f derex/runner/templates/docker-compose-services.yml -f derex/runner/templates/docker-compose-edx.yml"

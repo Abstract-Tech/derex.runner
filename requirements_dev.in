@@ -1,7 +1,17 @@
+black
 bumpversion
 coverage
 flake8
+git+https://github.com/Abstract-Tech/pytest-black.git#egg=pytest-black
+git+https://github.com/Abstract-Tech/pytest-flake8.git#egg=pytest-flake8
+isort
+mypy
+pip-tools
+pre-commit
 pytest
+pytest
+pytest-cov
+pytest-mock
 pytest-runner
 pyyaml==3.13
 requests==2.20.1
