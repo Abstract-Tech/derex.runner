@@ -13,6 +13,10 @@ steps:
     pip3 install -r requirements.txt -e .
     python3 setup.py install
     pip3 install git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
+  displayName: 'Install derex.runner'
+
+- script: |
+    set -ex
     cd tests
     pytest --ignore-docstrings |grep -v codecoveragetool=Cobertura
   displayName: 'Run python tests'
