@@ -34,13 +34,15 @@ steps:
 - script: |
     set -ex
     docker network create -d bridge derex
-    derex.runner up -d
-    derex.runner logs
+    export DEREX_ADMIN_SERVICES=False
+    ddc up -d
+    ddc logs
     sleep 5
-    derex.runner logs
+    ddc logs
     sleep 5
-    derex.runner logs
-  displayName: 'Start daemons'
+    ddc logs
+    docker-compose -f derex/runner/templates/docker-compose-services.yml -f derex/runner/templates/docker-compose-edx.yml up -d
+    displayName: 'Start daemons'
 
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
   displayName: 'Prime mysql database'
@@ -49,6 +51,7 @@ steps:
   displayName: 'Start nginx'
 
 - script: |
+    ddc logs
     echo 127.0.0.1 localhost studio.localhost | sudo tee -a /etc/hosts
     sleep 3  # Give the services a little time to start up
   displayName: Add studio.localhost to /etc/hosts

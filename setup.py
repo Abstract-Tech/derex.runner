@@ -36,7 +36,12 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     description="Run Open edX docker images",
-    entry_points={"console_scripts": ["derex.runner=derex.runner.cli:main"]},
+    entry_points={
+        "console_scripts": [
+            "derex.runner=derex.runner.cli:main",
+            "ddc=derex.runner.cli:ddc",
+        ]
+    },
     install_requires=requirements,
     license="GNU General Public License v3",
     long_description=readme + "\n\n" + history,
