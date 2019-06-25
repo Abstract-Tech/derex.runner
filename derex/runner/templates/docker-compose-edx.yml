@@ -5,7 +5,7 @@ services:
     image: derex/openedx-ironwood:latest
     command: sh -c 'gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:4700 --max-requests=1000 wsgi:application'
     ports:
-      - 4700:4700
+      - 127.0.0.1:4700:4700
     container_name: derex_lms
     depends_on:
       - rabbitmq
@@ -19,7 +19,7 @@ services:
     environment:
       SERVICE_VARIANT: cms
     ports:
-      - 4800:4800
+      - 127.0.0.1:4800:4800
     container_name: derex_cms
     depends_on:
       - rabbitmq

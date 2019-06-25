@@ -47,8 +47,8 @@ services:
     # docker-compose -f derex/runner/templates/docker-compose.yml exec mysql /usr/bin/mysql -psecret -e "$(cat derex/runner/templates/mailslurper.sql)"
     container_name: smtp
     ports:
-      - 4300:4300
-      - 4301:4301
+      - 127.0.0.1:4300:4300
+      - 127.0.0.1:4301:4301
     volumes:
       - ./mailslurper.json:/opt/mailslurper/config.json
     depends_on:
