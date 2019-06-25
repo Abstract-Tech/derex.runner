@@ -5,25 +5,17 @@ steps:
 - script: |
     set -ex
     docker network create -d bridge derex
-    docker-compose -f derex/runner/templates/docker-compose.yml up -d
-    docker-compose -f derex/runner/templates/docker-compose.yml logs
+    DOCKER_COMPOSE="docker-compose -f derex/runner/templates/docker-compose-services.yml -f derex/runner/templates/docker-compose-edx.yml"
+    ${DOCKER_COMPOSE} up -d
+    ${DOCKER_COMPOSE} logs
     sleep 5
-    docker-compose -f derex/runner/templates/docker-compose.yml logs
+    ${DOCKER_COMPOSE} logs
     sleep 5
-    docker-compose -f derex/runner/templates/docker-compose.yml logs
+    ${DOCKER_COMPOSE} logs
   displayName: 'Start daemons'
 
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
   displayName: 'Prime mysql database'
-
-- script: docker run --name derex_lms -d --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
-  displayName: 'Start lms'
-
-- script: docker run --name derex_cms -e SERVICE_VARIANT=cms -d --network derex --rm derex/openedx-ironwood:latest sh -c 'gunicorn --name ${SERVICE_VARIANT} --bind=0.0.0.0:8000 --max-requests=1000 wsgi:application'
-  displayName: 'Start cms'
-
-- script: docker run -e C_FORCE_ROOT=True --name derex_lms_worker -d --network derex --rm derex/openedx-ironwood:latest sh -c './manage.py lms celery worker --loglevel=info --hostname=edx.lms.core.default --maxtasksperchild 100'
-  displayName: 'Start lms worker'
 
 - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
   displayName: 'Start nginx'

@@ -1,3 +1,4 @@
+# Services needed for Open edX to work
 version: "3"
 services:
   mongodb:
@@ -40,15 +41,6 @@ services:
     volumes:
       - derex_rabbitmq:/var/lib/rabbitmq
 
-  flower:
-    image: derex/openedx-ironwood:latest
-    command: sh -c 'pip install flower; flower --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)") --port=5555'
-    ports:
-      - 5555:5555
-    container_name: derex_flower
-    depends_on:
-      - rabbitmq
-
   mailslurper:
     image: marcopas/docker-mailslurper
     # Something needs to prime this with
@@ -61,11 +53,6 @@ services:
       - ./mailslurper.json:/opt/mailslurper/config.json
     depends_on:
       - mysql
-
-  adminer:
-    image: adminer:4.7.1
-    ports:
-      - 4400:4400
 
 volumes:
   derex_mongodb:

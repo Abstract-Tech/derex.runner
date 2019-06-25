@@ -1,0 +1,27 @@
+# Open edX services
+version: "3"
+services:
+  lms:
+    image: derex/openedx-ironwood:latest
+    command: sh -c 'gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:4700 --max-requests=1000 wsgi:application'
+    ports:
+      - 4700:4700
+    container_name: derex_lms
+    depends_on:
+      - rabbitmq
+      - mysql
+      - mongodb
+      - elasticsearch
+
+  lms_worker:
+    image: derex/openedx-ironwood:latest
+    command: sh -c './manage.py lms celery worker --loglevel=info --hostname=edx.lms.core.default --maxtasksperchild 100'
+    container_name: derex_lms_worker
+    environment:
+      C_FORCE_ROOT: "True"
+    depends_on:
+      - rabbitmq
+      - mysql
+      - mongodb
+      - mailslurper
+      - elasticsearch
