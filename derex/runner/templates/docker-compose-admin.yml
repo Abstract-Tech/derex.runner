@@ -13,7 +13,7 @@ services:
   adminer:
     image: adminer:4.7.1
     ports:
-      - 127.0.0.1:4400:4400
+      - 127.0.0.1:4400:8080
     depends_on:
       - mysql
 
