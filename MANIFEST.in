@@ -4,7 +4,7 @@ include HISTORY.rst
 include LICENSE
 include README.rst
 
-recursive-include derex/runner *.yml
+recursive-include derex/runner/templates *
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
