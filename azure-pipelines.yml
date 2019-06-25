@@ -15,6 +15,9 @@ steps:
     pip3 install git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
   displayName: 'Install derex.runner'
 
+- script: docker pull derex/openedx-ironwood:latest &
+  displayName: 'Pull edX image in background'
+
 - script: |
     set -ex
     cd tests
@@ -39,10 +42,11 @@ steps:
     ddc logs
     sleep 5
     ddc logs
-    sleep 5
-    ddc logs
-    docker-compose -f derex/runner/templates/docker-compose-services.yml -f derex/runner/templates/docker-compose-edx.yml up -d
-  displayName: 'Start daemons'
+  displayName: 'Start service daemons'
+
+- script: |
+    docker-compose --project-name derex -f derex/runner/templates/docker-compose-services.yml -f derex/runner/templates/docker-compose-edx.yml up -d
+  displayName: 'Start edX daemons'
 
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
   displayName: 'Prime mysql database'
