@@ -6,10 +6,13 @@ import sys
 import logging
 
 
+EXTRA_OPTS = ["--project-name", "derex"]
+
+
 def run_compose(args: List[str]):
     old_argv = sys.argv
     try:
-        sys.argv = ["docker-compose"] + yaml_opts() + args
+        sys.argv = ["docker-compose"] + yaml_opts() + EXTRA_OPTS + args
         logging.getLogger(__name__).info(f"Running {' '.join(sys.argv)}")
         main()
     finally:
