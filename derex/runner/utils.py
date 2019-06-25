@@ -21,25 +21,22 @@ def run_compose(args: List[str]):
         sys.argv = old_argv
 
 
+def compose_path(name: str) -> str:
+    """Given a docker compose file name return its path
+    inside this package.
+    """
+    return pkg_resources.resource_filename(__name__, f"compose_files/{name}")
+
+
 def yaml_opts() -> List[str]:
     """Return a list of strings pointing to docker-compose yml files suitable
     to be passed as options to docker-compose.
     The list looks like:
     ['-f', '/path/to/docker-compose.yml', '-f', '/path/to/another-docker-compose.yml']
     """
-    result = [
-        "-f",
-        pkg_resources.resource_filename(
-            __name__, "templates/docker-compose-services.yml"
-        ),
-    ]
+    result = ["-f", compose_path("services.yml")]
     if asbool(os.environ.get("DEREX_ADMIN_SERVICES", True)):
-        result += [
-            "-f",
-            pkg_resources.resource_filename(
-                __name__, "templates/docker-compose-admin.yml"
-            ),
-        ]
+        result += ["-f", compose_path("admin.yml")]
     return result
 
 
