@@ -3,17 +3,14 @@ import os
 from compose.cli.main import main
 from typing import List
 import sys
-from logging import getLogger
-
-
-logger = getLogger(__name__)
+import logging
 
 
 def run_compose(args: List[str]):
     old_argv = sys.argv
     try:
         sys.argv = ["docker-compose"] + yaml_opts() + args
-        logger.info(f"Running {' '.join(sys.argv)}")
+        logging.getLogger(__name__).info(f"Running {' '.join(sys.argv)}")
         main()
     finally:
         sys.argv = old_argv
