@@ -3,15 +3,18 @@
 """Console script for derex.runner."""
 import click
 import sys
+from derex.runner.utils import run_compose
 
 
 @click.command()
-def main(args=None):
-    """Console script for derex.runner."""
-    click.echo(
-        "Replace this message by putting your code into " "derex.runner.cli.main"
-    )
-    click.echo("See click documentation at http://click.pocoo.org/")
+@click.argument("args", nargs=-1)
+def main(args):
+    """Run Open edX docker images."""
+    if len(args) == 0:
+        click.echo("Include arguments to pass to docker-compose")
+        run_compose([])
+        click.abort()
+    run_compose(list(args))
     return 0
 
 
