@@ -27,10 +27,10 @@ def test_content(response):
     # assert 'GitHub' in BeautifulSoup(response.content).title.string
 
 
-def test_command_line_interface():
-    """Test the CLI."""
+def test_ddc():
+    """Test the derex docker compose shortcut."""
     runner = CliRunner()
-    result = runner.invoke(cli.main, ["ps"])
+    result = runner.invoke(cli.main, ["config"])
     assert result.exit_code == 0
     assert "mongodb" in result.output
     help_result = runner.invoke(cli.main, ["--help"])
