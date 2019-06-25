@@ -42,7 +42,7 @@ steps:
     sleep 5
     ddc logs
     docker-compose -f derex/runner/templates/docker-compose-services.yml -f derex/runner/templates/docker-compose-edx.yml up -d
-    displayName: 'Start daemons'
+  displayName: 'Start daemons'
 
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
   displayName: 'Prime mysql database'
