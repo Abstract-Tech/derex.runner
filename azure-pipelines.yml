@@ -2,7 +2,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.7'
+  displayName: 'Use Python 3.7'
+
 - script: |
+    pip3 install -U pip setuptools
     pip3 install -r requirements_dev.txt
     pip3 install -r requirements.txt -e .
     python3 setup.py install
