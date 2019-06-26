@@ -19,8 +19,8 @@ steps:
 
 - script: |
     set -ex
-    cd tests
-    pytest --ignore-docstrings |grep -v codecoveragetool=Cobertura
+    set -o pipefail
+    pytest tests --ignore-docstrings |grep -v codecoveragetool=Cobertura
   displayName: 'Run python tests'
 
 - script: |
@@ -28,8 +28,8 @@ steps:
     # Azure pipelines strips style sheets but leaves styles in place.
     # juice can embed the styles in the HTML for us and present a much better
     # view in the coverage results tab.
-    for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-    echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=$(pwd)/tests/test-cov.xml;reportdirectory=${PWD}/tests/htmlcov;]"
+    for filename in htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+    echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=$(pwd)/test-cov.xml;reportdirectory=${PWD}/htmlcov;]"
   displayName: Fix coverage result and publish it
   condition: succeededOrFailed()
 
