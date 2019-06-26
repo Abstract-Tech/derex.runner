@@ -3,39 +3,44 @@ derex.runner
 ============
 
 
-.. image:: https://img.shields.io/pypi/v/derex.runner.svg
-        :target: https://pypi.python.org/pypi/derex.runner
-
-.. image:: https://readthedocs.org/projects/derex.runner/badge/?version=latest
-        :target: https://derex.runner.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
+.. image:: https://dev.azure.com/abstract-technology/derex.runner/_apis/build/status/Abstract-Tech.derex.runner?branchName=master
+        :target: https://dev.azure.com/abstract-technology/derex.runner/_build
 
 Run Open edX docker images
 
 
-* Free software: GNU General Public License v3
-* Documentation: https://derex.runner.readthedocs.io.
+Quickstart
+----------
 
+Run the following commands: ::
 
-Features
---------
+    pip install git+https://github.com/Abstract-Tech/derex.runner.git
+    ddc up -d
+    sleep 10 # Give mysql time to start up
+    ddc run  -v $(pwd)/derex/runner/compose_files/:/dump mysql bash -c "mysql -h mysql -psecret < /dump/mailslurper.sql 2> /dev/null || echo Mailsluper tables already present"
 
-* TODO
+Then head to one of the started services:
 
+    * http://localhost:4700 LMS
+    * http://localhost:4800 CMS
+    * http://localhost:5555 Flower (monitor celery workers)
+    * http://localhost:4300 Mailslurper (debug emails sent by the platform)
+    * http://localhost:4400 Adminer (mysql administration tool)
+    * http://localhost:9000 Portainer (docker administration tool)
 
 Development setup
 -----------------
 
-Make sure you have direnv installed and configured. Also, set up git pre commit hooks.
+Make sure you have direnv installed and configured. Also, set up git pre commit hooks. ::
 
-```
-direnv allow
-pip install pre-commit
-pre-commit install --install-hooks
-```
+    direnv allow
+    pip install pre-commit
+    pre-commit install --install-hooks
 
 Credits
 -------
+
+This work uses extensively parts of the `tutor <https://github.com/regisb/tutor>`_ project. Many thanks to Régis Behmo!
 
 This package was created with `Cookiecutter
 <https://github.com/audreyr/cookiecutter>`_ and the `cookiecutter-namespace-template
