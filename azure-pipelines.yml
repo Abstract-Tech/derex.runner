@@ -27,7 +27,7 @@ steps:
 - script: |
     # We installed the package with pip, and coverage reports the full absolute path.
     # We cut to derex/runner/etc/etc
-    DEREX_RUNNER_PATH=`python -c "from pathlib import Path; import derex;print(Path(derex.__file__).parent.parent)"`
+    DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
     echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
     grep "${DEREX_RUNNER_PATH}" tests/htmlcov/*.html
     sed -i -e "s|${DEREX_RUNNER_PATH}||" tests/htmlcov/*.html
