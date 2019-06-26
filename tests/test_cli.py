@@ -31,6 +31,28 @@ def test_ddc(sys_argv):
     assert "adminer" in f.getvalue()
 
 
+def test_ddc_ironwood(sys_argv):
+    """Test the open edx ironwood docker compose shortcut."""
+    from derex.runner.cli import ddc_ironwood
+
+    f = io.StringIO()
+    with redirect_stdout(f):
+        with sys_argv(["_", "config"]):
+            ddc_ironwood()
+    assert "cms_worker" in f.getvalue()
+
+
+def test_ddc_ironwood_resetdb(sys_argv, mocker):
+    """Test the open edx ironwood docker compose shortcut."""
+    from derex.runner.cli import ddc_ironwood
+
+    mocker.patch("derex.runner.cli.check_services", return_value=True)
+    client = mocker.patch("derex.runner.docker.client")
+    client.containers.get.return_value.exec_run.return_value.exit_code = 0
+    with sys_argv(["_", "resetdb"]):
+        ddc_ironwood()
+
+
 @pytest.fixture
 def sys_argv(mocker):
     @contextlib.contextmanager

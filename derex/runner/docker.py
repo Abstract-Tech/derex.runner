@@ -69,11 +69,11 @@ def create_database(dbname: str):
 def reset_mysql():
     """Run script from derex/openedx image to reset the mysql db.
     """
-    logger.warn("Resetting mysql database")
+    logger.warning("Resetting mysql database")
     output = client.containers.run(
         "derex/openedx-ironwood", "restore_dump.py", network="derex", remove=True
     )
-    logger.warn(output.decode("utf8").strip())
+    logger.warning(output.decode("utf8").strip())
 
 
 def wait_for_mysql(max_seconds: int = 20):
@@ -86,4 +86,4 @@ def wait_for_mysql(max_seconds: int = 20):
         if res.exit_code == 0:
             break
         time.sleep(1)
-        logger.warn("Waiting for mysql database to be ready")
+        logger.warning("Waiting for mysql database to be ready")
