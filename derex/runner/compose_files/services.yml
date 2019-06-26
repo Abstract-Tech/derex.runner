@@ -56,9 +56,13 @@ services:
 
 volumes:
   derex_mongodb:
+    external: true
   derex_mysql:
+    external: true
   derex_elasticsearch:
+    external: true
   derex_rabbitmq:
+    external: true
 
 networks:
   default:
