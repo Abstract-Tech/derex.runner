@@ -3,6 +3,8 @@
 
 """Tests for `derex.runner` package."""
 
+from itertools import repeat
+from types import SimpleNamespace
 from click.testing import CliRunner
 import contextlib
 import sys
@@ -48,7 +50,9 @@ def test_ddc_ironwood_resetdb(sys_argv, mocker):
 
     mocker.patch("derex.runner.cli.check_services", return_value=True)
     client = mocker.patch("derex.runner.docker.client")
-    client.containers.get.return_value.exec_run.return_value.exit_code = 0
+    client.containers.get.return_value.exec_run.side_effect = [
+        SimpleNamespace(exit_code=-1)
+    ] + list(repeat(SimpleNamespace(exit_code=0), 10))
     with sys_argv(["_", "resetdb"]):
         ddc_ironwood()
 
