@@ -27,7 +27,10 @@ steps:
 - script: |
     # We installed the package with pip, and coverage reports the full absolute path.
     # We cut to derex/runner/etc/etc
-    sed -i -e "s|`python -c "from pathlib import Path; import derex;print(Path(derex.__file__).parent.parent)"`||" tests/htmlcov/*.html
+    DEREX_RUNNER_PATH=`python -c "from pathlib import Path; import derex;print(Path(derex.__file__).parent.parent)"`
+    echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
+    grep "${DEREX_RUNNER_PATH}" tests/htmlcov/*.html
+    sed -i -e "s|${DEREX_RUNNER_PATH}||" tests/htmlcov/*.html
     npm install juice
     # Azure pipelines strips style sheets but leaves styles in place.
     # juice can embed the styles in the HTML for us and present a much better
