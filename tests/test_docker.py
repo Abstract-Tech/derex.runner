@@ -31,3 +31,25 @@ def test_ensure_volumes_present(mocker):
     client.volumes.list.return_value = [SimpleNamespace(name=name) for name in VOLUMES]
     ensure_volumes_present()
     client.volumes.create.assert_not_called()
+
+
+def test_check_services(mocker):
+    from derex.runner.docker import check_services
+
+    client = mocker.patch("derex.runner.docker.client")
+
+    client.containers.get.return_value.status = "running"
+    assert check_services()
+
+    client.containers.get.side_effect = docker.errors.NotFound(
+        "Mysql container not found"
+    )
+    assert not check_services()
+
+
+def test_wait_for_mysql(mocker):
+    from derex.runner.docker import wait_for_mysql
+
+    client = mocker.patch("derex.runner.docker.client")
+    wait_for_mysql(0)
+    client.containers.get.assert_called_once_with("mysql")
