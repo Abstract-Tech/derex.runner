@@ -43,7 +43,7 @@ steps:
   displayName: 'Start service daemons'
 
 - script: |
-    docker-compose --project-name ironwood -f derex/runner/docker_compose_files/edx.yml up -d
+    docker-compose --project-name ironwood -f derex/runner/compose_files/edx.yml up -d
   displayName: 'Start edX daemons'
 
 - script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
