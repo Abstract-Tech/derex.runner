@@ -9,9 +9,7 @@ steps:
 
 - script: |
     pip3 install -U pip setuptools
-    pip3 install -r requirements_dev.txt
-    pip3 install -r requirements.txt .
-    pip3 install git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
+    pip3 install -r requirements_dev.txt -r requirements.txt . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
   displayName: 'Install derex.runner'
 
 - script: nohup ddc pull &
