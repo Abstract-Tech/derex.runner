@@ -14,7 +14,7 @@ steps:
     pip3 install git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
   displayName: 'Install derex.runner'
 
-- script: docker pull derex/openedx-ironwood:latest &
+- script: nohup ddc pull &
   displayName: 'Pull edX image in background'
 
 - script: |
@@ -36,12 +36,10 @@ steps:
 - script: |
     set -ex
     export DEREX_ADMIN_SERVICES=False
-    ddc up -d mysql # Start mysql first to give it more time to initialize
     ddc up -d
   displayName: 'Start service daemons'
 
-- script: |
-    ddc-ironwood up -d
+- script: ddc-ironwood up -d
   displayName: 'Start edX daemons'
 
 - script: ddc-ironwood resetdb

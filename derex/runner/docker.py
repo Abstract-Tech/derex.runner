@@ -3,6 +3,7 @@
 """
 import docker
 import logging
+import time
 
 
 client = docker.from_env()
@@ -73,3 +74,16 @@ def reset_mysql():
         "derex/openedx-ironwood", "restore_dump.py", network="derex", remove=True
     )
     logger.warn(output.decode("utf8").strip())
+
+
+def wait_for_mysql(max_seconds: int = 20):
+    """With a freshly created container mysql might need a bit of time to prime
+    its files. This functions waits up to max_seconds seconds
+    """
+    container = client.containers.get("mysql")
+    for i in range(max_seconds):
+        res = container.exec_run('mysql -psecret -e "SHOW DATABASES"')
+        if res.exit_code == 0:
+            break
+        time.sleep(1)
+        logger.warn("Waiting for mysql database to be ready")

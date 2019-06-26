@@ -7,6 +7,7 @@ from derex.runner.utils import Variant
 from derex.runner.docker import create_database
 from derex.runner.docker import check_services
 from derex.runner.docker import reset_mysql
+from derex.runner.docker import wait_for_mysql
 import logging
 
 
@@ -51,5 +52,6 @@ def ddc_ironwood():
 def resetdb():
     """Reset the mysql database of LMS/CMS
     """
+    wait_for_mysql()
     create_database("derex")
     reset_mysql()
