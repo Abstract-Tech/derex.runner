@@ -31,3 +31,8 @@ services:
     environment:
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
+
+networks:
+  default:
+    external:
+      name: derex
