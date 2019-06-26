@@ -36,17 +36,15 @@ steps:
 - script: |
     set -ex
     export DEREX_ADMIN_SERVICES=False
+    ddc up -d mysql # Start mysql first to give it more time to initialize
     ddc up -d
-    ddc logs
-    sleep 5
-    ddc logs
   displayName: 'Start service daemons'
 
 - script: |
-    docker-compose --project-name ironwood -f derex/runner/compose_files/edx.yml up -d
+    ddc-ironwood up -d
   displayName: 'Start edX daemons'
 
-- script: docker run --network derex --rm derex/openedx-ironwood:latest restore_dump.py
+- script: ddc-ironwood resetdb
   displayName: 'Prime mysql database'
 
 - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
