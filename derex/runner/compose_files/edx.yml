@@ -7,11 +7,6 @@ services:
     ports:
       - 127.0.0.1:4700:4700
     container_name: derex_lms
-    depends_on:
-      - rabbitmq
-      - mysql
-      - mongodb
-      - elasticsearch
 
   cms:
     image: derex/openedx-ironwood:latest
@@ -21,11 +16,6 @@ services:
     ports:
       - 127.0.0.1:4800:4800
     container_name: derex_cms
-    depends_on:
-      - rabbitmq
-      - mysql
-      - mongodb
-      - elasticsearch
 
   lms_worker:
     image: derex/openedx-ironwood:latest
@@ -33,12 +23,6 @@ services:
     container_name: derex_lms_worker
     environment:
       C_FORCE_ROOT: "True"
-    depends_on:
-      - rabbitmq
-      - mysql
-      - mongodb
-      - mailslurper
-      - elasticsearch
 
   cms_worker:
     image: derex/openedx-ironwood:latest
@@ -47,9 +31,3 @@ services:
     environment:
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
-    depends_on:
-      - rabbitmq
-      - mysql
-      - mongodb
-      - mailslurper
-      - elasticsearch
