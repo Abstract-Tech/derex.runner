@@ -43,3 +43,33 @@ def create_deps():
     """
     ensure_network_present()
     ensure_volumes_present()
+
+
+def check_services() -> bool:
+    """Check if the services needed for running Open edX are running.
+    """
+    try:
+        container = client.containers.get("mysql")
+        return container.status == "running"
+    except docker.errors.NotFound:
+        return False
+
+
+def create_database(dbname: str):
+    """Create the given database in mysql.
+    """
+    container = client.containers.get("mysql")
+    res = container.exec_run(
+        f'mysql -psecret -e "CREATE DATABASE IF NOT EXISTS {dbname}"'
+    )
+    assert res.exit_code == 0
+
+
+def reset_mysql():
+    """Run script from derex/openedx image to reset the mysql db.
+    """
+    logger.warn("Resetting mysql database")
+    output = client.containers.run(
+        "derex/openedx-ironwood", "restore_dump.py", network="derex", remove=True
+    )
+    logger.warn(output.decode("utf8").strip())

@@ -14,7 +14,7 @@ pytest
 pytest-cov
 pytest-mock
 pytest-runner
-pyyaml==3.13
+pyyaml==4.2b4
 requests==2.20.1
 Sphinx
 tox
