@@ -33,11 +33,22 @@ def test_ddc(sys_argv):
     assert "adminer" in f.getvalue()
 
 
-def test_ddc_ironwood(sys_argv):
+def test_ddc_ironwood(sys_argv, mocker):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli import ddc_ironwood
 
     f = io.StringIO()
+
+    # It should check for services to be up before trying to do anything
+    check_services = mocker.patch("derex.runner.cli.check_services")
+    check_services.return_value = False
+    with redirect_stdout(f):
+        with sys_argv(["_", "config"]):
+            ddc_ironwood()
+    # It should suggest the appropriate command to run to start the needed services
+    assert "ddc up -d" in f.getvalue()
+
+    check_services.return_value = True
     with redirect_stdout(f):
         with sys_argv(["_", "config"]):
             ddc_ironwood()
