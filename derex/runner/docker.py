@@ -1,9 +1,12 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+import pkg_resources
 import docker
 import logging
 import time
+from typing import Iterable
+from pathlib import Path as path
 
 
 client = docker.from_env()
@@ -46,23 +49,24 @@ def create_deps():
     ensure_volumes_present()
 
 
-def check_services() -> bool:
+def check_services(services: Iterable[str] = ("mysql")) -> bool:
     """Check if the services needed for running Open edX are running.
     """
+    result = True
     try:
-        container = client.containers.get("mysql")
-        return container.status == "running"
+        for service in services:
+            container = client.containers.get(service)
+            result *= container.status == "running"
+        return result
     except docker.errors.NotFound:
         return False
 
 
-def create_database(dbname: str):
+def execute_mysql_query(query: str):
     """Create the given database in mysql.
     """
     container = client.containers.get("mysql")
-    res = container.exec_run(
-        f'mysql -psecret -e "CREATE DATABASE IF NOT EXISTS {dbname}"'
-    )
+    res = container.exec_run(f'mysql -psecret -e "{query}"')
     assert res.exit_code == 0
 
 
@@ -87,3 +91,21 @@ def wait_for_mysql(max_seconds: int = 20):
             break
         time.sleep(1)
         logger.warning("Waiting for mysql database to be ready")
+
+
+def load_dump(relpath):
+    """Loads a mysql dump into the derex mysql database.
+    """
+    dump_path = path(pkg_resources.resource_filename(__name__, relpath))
+    image = client.containers.get("mysql").image
+    logger.info("Resetting email database")
+    try:
+        client.containers.run(
+            image.tags[0],
+            ["sh", "-c", f"mysql -h mysql -psecret < /dump/{dump_path.name}"],
+            network="derex",
+            volumes={dump_path.parent: {"bind": "/dump"}},
+            auto_remove=True,
+        )
+    except docker.errors.ContainerError as exc:
+        logger.exception(exc)
