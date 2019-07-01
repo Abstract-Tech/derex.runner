@@ -7,6 +7,7 @@ import logging
 import time
 from typing import Iterable
 from pathlib import Path as path
+from requests.exceptions import RequestException
 
 
 client = docker.from_env()
@@ -18,6 +19,16 @@ VOLUMES = {
     "derex_rabbitmq",
     "derex_portainer_data",
 }
+
+
+def is_docker_working() -> bool:
+    """Check if we can successfully connect to the docker daemon.
+    """
+    try:
+        client.ping()
+        return True
+    except RequestException:
+        return False
 
 
 def ensure_network_present():

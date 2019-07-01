@@ -8,8 +8,10 @@ from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import check_services
 from derex.runner.docker import reset_mysql
 from derex.runner.docker import wait_for_mysql
+from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
 import logging
+import click
 
 
 def setup_logging():
@@ -25,6 +27,7 @@ def ddc():
     If the environment variable DEREX_ADMIN_SERVICES is set to a falsey value,
     only the core ones will be started (mysql, mongodb etc).
     """
+    check_docker()
     setup_logging()
     if len(sys.argv) > 1:
         if sys.argv[1] == "resetmailslurper":
@@ -42,6 +45,7 @@ def ddc_ironwood():
     with additional parameters.
     Adds docker compose file paths for edx ironwood daemons.
     """
+    check_docker()
     setup_logging()
     if not check_services(["mysql", "mongodb", "rabbitmq"]):
         print("Mysql/mongo/rabbitmq services not found.")
@@ -69,3 +73,12 @@ def resetmailslurper():
     wait_for_mysql()
     execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
     load_dump("compose_files/mailslurper.sql")
+
+
+def check_docker():
+    if not is_docker_working():
+        click.echo(click.style("Could not connect to docker.", fg="red"))
+        click.echo(
+            "Is it installed and running? Make sure the docker command works and try again."
+        )
+        sys.exit(1)
