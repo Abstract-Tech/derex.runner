@@ -31,6 +31,16 @@ Then head to one of the started services:
     * http://localhost:4400 Adminer (mysql administration tool)
     * http://localhost:9000 Portainer (docker administration tool)
 
+You can login to the CMS and LMS using one of these users (the password is always ``secret``):
+
+    * Username: ``user``, email ``user@example.com``
+      Represents a student user.
+    * Username: ``staff``, email ``staff@example.com``
+      Represents a member of the teaching staff.
+    * Username: ``superuser``, email ``superuser@example.com``
+      Represents an administrator of Open edX. This user
+      has full permissions inside the platform.
+
 Development setup
 -----------------
 
