@@ -12,12 +12,15 @@ Run Open edX docker images
 Quickstart
 ----------
 
+Make sure you have python 3.6 or later and docker installed.
+
 Run the following commands: ::
 
-    pip install git+https://github.com/Abstract-Tech/derex.runner.git
-    ddc up -d
-    sleep 10 # Give mysql time to start up
-    ddc run  -v $(pwd)/derex/runner/compose_files/:/dump mysql bash -c "mysql -h mysql -psecret < /dump/mailslurper.sql 2> /dev/null || echo Mailsluper tables already present"
+    pip install --user git+https://github.com/Abstract-Tech/derex.runner.git
+    ddc up -d  # Start mysql, mongodb, rabbitmq and admin tools
+    ddc-ironwood resetdb  # Prime the mysql database
+    ddc resetmailslurper  # Prime the mailslurper mysql database
+    ddc-ironwood up -d  # Start LMS/CMS daemons and workers
 
 Then head to one of the started services:
 
@@ -27,6 +30,16 @@ Then head to one of the started services:
     * http://localhost:4300 Mailslurper (debug emails sent by the platform)
     * http://localhost:4400 Adminer (mysql administration tool)
     * http://localhost:9000 Portainer (docker administration tool)
+
+You can login to the CMS and LMS using one of these users (the password is always ``secret``):
+
+    * Username: ``user``, email ``user@example.com``
+      Represents a student user.
+    * Username: ``staff``, email ``staff@example.com``
+      Represents a member of the teaching staff.
+    * Username: ``superuser``, email ``superuser@example.com``
+      Represents an administrator of Open edX. This user
+      has full permissions inside the platform.
 
 Development setup
 -----------------

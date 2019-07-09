@@ -4,6 +4,8 @@ services:
   lms:
     image: derex/openedx-ironwood:latest
     command: sh -c 'gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:4700 --max-requests=1000 wsgi:application'
+    volumes:
+      - derex_ironwood_data:/openedx/data/
     ports:
       - 127.0.0.1:4700:4700
     container_name: derex_lms
@@ -11,6 +13,8 @@ services:
   cms:
     image: derex/openedx-ironwood:latest
     command: sh -c 'gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:4800 --max-requests=1000 wsgi:application'
+    volumes:
+      - derex_ironwood_data:/openedx/data/
     environment:
       SERVICE_VARIANT: cms
     ports:
@@ -21,6 +25,8 @@ services:
     image: derex/openedx-ironwood:latest
     command: sh -c './manage.py $${SERVICE_VARIANT} celery worker --loglevel=info --hostname=edx.$${SERVICE_VARIANT}.core.default --maxtasksperchild 100'
     container_name: derex_lms_worker
+    volumes:
+      - derex_ironwood_data:/openedx/data/
     environment:
       C_FORCE_ROOT: "True"
 
@@ -28,6 +34,8 @@ services:
     image: derex/openedx-ironwood:latest
     command: sh -c './manage.py $${SERVICE_VARIANT} celery worker --loglevel=info --hostname=edx.$${SERVICE_VARIANT}.core.default --maxtasksperchild 100'
     container_name: derex_cms_worker
+    volumes:
+      - derex_ironwood_data:/openedx/data/
     environment:
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
@@ -36,3 +44,6 @@ networks:
   default:
     external:
       name: derex
+
+volumes:
+  derex_ironwood_data:
