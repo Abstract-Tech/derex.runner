@@ -10,8 +10,6 @@ services:
     ports:
       - 127.0.0.1:5555:5555
     container_name: derex_flower
-    networks:
-      - derex
 
   lms:
     image: derex/openedx-ironwood:latest
