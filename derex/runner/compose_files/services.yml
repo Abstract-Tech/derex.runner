@@ -53,7 +53,7 @@ services:
       - 127.0.0.1:4300:4300
       - 127.0.0.1:4301:4301
     volumes:
-      - ../fixtures/mailslurper.json:/opt/mailslurper/config.json
+      - ./../fixtures/mailslurper.json:/opt/mailslurper/config.json
     depends_on:
       - mysql
 
