@@ -9,6 +9,8 @@ services:
     container_name: derex_flower
     depends_on:
       - rabbitmq
+    networks:
+      - derex
 
   adminer:
     image: adminer:4.7.1
