@@ -16,6 +16,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - derex_portainer_data:/data portainer/portainer
+    container_name: portainer
 
 volumes:
   derex_portainer_data:
