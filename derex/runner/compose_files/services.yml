@@ -44,13 +44,13 @@ services:
   mailslurper:
     image: marcopas/docker-mailslurper
     # Something needs to prime this with
-    # docker-compose -f derex/runner/templates/docker-compose.yml exec mysql /usr/bin/mysql -psecret -e "$(cat derex/runner/templates/mailslurper.sql)"
+    # docker-compose --project-name derex -f derex/runner/compose_files/services.yml exec mysql /usr/bin/mysql -psecret -e "$(cat derex/runner/fixtures/mailslurper.sql)"
     container_name: smtp
     ports:
       - 127.0.0.1:4300:4300
       - 127.0.0.1:4301:4301
     volumes:
-      - ./mailslurper.json:/opt/mailslurper/config.json
+      - ../fixtures/mailslurper.json:/opt/mailslurper/config.json
     depends_on:
       - mysql
 

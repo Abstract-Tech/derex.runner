@@ -72,7 +72,7 @@ def resetdb():
 def resetmailslurper():
     wait_for_mysql()
     execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
-    load_dump("compose_files/mailslurper.sql")
+    load_dump("fixtures/mailslurper.sql")
 
 
 def check_docker():
