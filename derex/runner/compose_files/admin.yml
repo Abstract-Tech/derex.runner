@@ -1,6 +1,15 @@
 # Services to monitor/inspect Open edX
-version: "3"
+version: "3.5"
 services:
+  flower:
+    image: derex/openedx-ironwood:latest
+    command: sh -c 'pip install flower; flower --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)") --port=5555'
+    ports:
+      - 127.0.0.1:5555:5555
+    container_name: derex_flower
+    depends_on:
+      - rabbitmq
+
   adminer:
     image: adminer:4.7.1
     ports:
@@ -8,6 +17,8 @@ services:
     container_name: adminer
     depends_on:
       - mysql
+    networks:
+      - derex
 
   portainer:
     image: portainer/portainer:1.21.0
@@ -17,7 +28,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - derex_portainer_data:/data portainer/portainer
     container_name: portainer
+    networks:
+      - derex
 
 volumes:
   derex_portainer_data:
     external: true
+
+networks:
+  derex:
+    name: derex

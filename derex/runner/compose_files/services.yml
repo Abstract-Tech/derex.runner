@@ -1,5 +1,5 @@
 # Services needed for Open edX to work
-version: "3"
+version: "3.5"
 services:
   mongodb:
     image: mongo:3.2.21
@@ -10,19 +10,19 @@ services:
         --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
     volumes:
       - derex_mongodb:/data/db
+    networks:
+      - derex
 
   mysql:
     image: mysql:5.6.36
     container_name: mysql
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
-    networks:
-      default:
-        aliases:
-          - db
     environment:
       MYSQL_ROOT_PASSWORD: secret
     volumes:
       - derex_mysql:/var/lib/mysql
+    networks:
+      - derex
 
   elasticsearch:
     image: elasticsearch:1.5.2
@@ -37,12 +37,16 @@ services:
         hard: -1
     volumes:
       - derex_elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - derex
 
   rabbitmq:
     image: rabbitmq:3.6.16-alpine
     container_name: rabbitmq
     volumes:
       - derex_rabbitmq:/var/lib/rabbitmq
+    networks:
+      - derex
 
   mailslurper:
     image: marcopas/docker-mailslurper
@@ -56,6 +60,8 @@ services:
       - ./../fixtures/mailslurper.json:/opt/mailslurper/config.json
     depends_on:
       - mysql
+    networks:
+      - derex
 
 volumes:
   derex_mongodb:
@@ -68,6 +74,5 @@ volumes:
     external: true
 
 networks:
-  default:
-    external:
-      name: derex
+  derex:
+    name: derex
