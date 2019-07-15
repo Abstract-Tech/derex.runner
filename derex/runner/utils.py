@@ -8,7 +8,7 @@ import logging
 from enum import Enum
 
 
-EXTRA_OPTS = ["--project-name", "derex"]
+EXTRA_OPTS: List[str] = []
 
 
 class Variant(Enum):
