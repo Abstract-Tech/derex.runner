@@ -4,7 +4,10 @@ services:
   mongodb:
     image: mongo:3.2.21
     container_name: mongodb
-    command: mongod --smallfiles --nojournal --storageEngine wiredTiger --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    command:
+      mongod --smallfiles --nojournal
+        --storageEngine wiredTiger
+        --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
     volumes:
       - derex_mongodb:/data/db
 
