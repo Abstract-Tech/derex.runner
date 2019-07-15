@@ -1,6 +1,18 @@
 # Open edX services
 version: "3"
 services:
+  flower:
+    image: derex/openedx-ironwood:latest
+    command:
+      sh -c 'pip install flower;
+        flower --port=5555
+        --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)")'
+    ports:
+      - 127.0.0.1:5555:5555
+    container_name: derex_flower
+    networks:
+      - derex
+
   lms:
     image: derex/openedx-ironwood:latest
     command: sh -c 'gunicorn --name $${SERVICE_VARIANT} --bind=0.0.0.0:4700 --max-requests=1000 wsgi:application'
