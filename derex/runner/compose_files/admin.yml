@@ -5,6 +5,7 @@ services:
     image: adminer:4.7.1
     ports:
       - 127.0.0.1:4400:8080
+    container_name: adminer
     depends_on:
       - mysql
 
