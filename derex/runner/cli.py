@@ -47,7 +47,8 @@ def ddc_ironwood():
     """
     check_docker()
     setup_logging()
-    if not check_services(["mysql", "mongodb", "rabbitmq"]):
+
+    if not check_services(["mysql", "mongodb", "rabbitmq"]) and sys.argv[1] != "down":
         print("Mysql/mongo/rabbitmq services not found.")
         print("Maybe you forgot to run")
         print("ddc up -d")
@@ -72,7 +73,7 @@ def resetdb():
 def resetmailslurper():
     wait_for_mysql()
     execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
-    load_dump("compose_files/mailslurper.sql")
+    load_dump("fixtures/mailslurper.sql")
 
 
 def check_docker():
