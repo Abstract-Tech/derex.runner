@@ -12,7 +12,6 @@ import pytest
 import io
 import os
 from contextlib import redirect_stdout
-import shutil
 
 
 runner = CliRunner()
