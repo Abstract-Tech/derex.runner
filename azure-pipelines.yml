@@ -42,7 +42,7 @@ steps:
     set -ex
     export DEREX_ADMIN_SERVICES=False
     ddc up -d
-    ddc --resetmailslurper
+    ddc --reset-mailslurper
   displayName: 'Start service daemons'
 
 - script: ddc-ironwood up -d
