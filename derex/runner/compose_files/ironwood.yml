@@ -1,5 +1,5 @@
 # Open edX services
-version: "3"
+version: "3.5"
 services:
   flower:
     image: derex/openedx-ironwood:latest
@@ -23,6 +23,8 @@ services:
     ports:
       - 127.0.0.1:4700:4700
     container_name: derex_lms
+    networks:
+      - derex
 
   cms:
     image: derex/openedx-ironwood:latest
@@ -38,6 +40,8 @@ services:
     ports:
       - 127.0.0.1:4800:4800
     container_name: derex_cms
+    networks:
+      - derex
 
   lms_worker:
     image: derex/openedx-ironwood:latest
@@ -51,6 +55,8 @@ services:
       - derex_ironwood_data:/openedx/data/
     environment:
       C_FORCE_ROOT: "True"
+    networks:
+      - derex
 
   cms_worker:
     image: derex/openedx-ironwood:latest
@@ -65,11 +71,12 @@ services:
     environment:
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
+    networks:
+      - derex
 
 networks:
-  default:
-    external:
-      name: derex
+  derex:
+    name: derex
 
 volumes:
   derex_ironwood_data:
