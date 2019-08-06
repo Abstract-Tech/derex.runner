@@ -43,7 +43,6 @@ def setup_plugin_manager():
 
 def run_compose(args: List[str], plugin: str = None, variant: str = "services"):
     create_deps()
-    old_argv = sys.argv
 
     plugin_manager = setup_plugin_manager()
     config = plugin_manager.get_plugin(plugin)
@@ -62,6 +61,7 @@ def run_compose(args: List[str], plugin: str = None, variant: str = "services"):
         logger.error("Can't load yaml options from settings")
         raise e
 
+    old_argv = sys.argv
     try:
         sys.argv = ["docker-compose"] + yaml_opts + COMPOSE_EXTRA_OPTS + args
         logger.info(f"Running %s", " ".join(sys.argv))
