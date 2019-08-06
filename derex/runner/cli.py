@@ -4,7 +4,7 @@
 import os
 import sys
 import pluggy
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import check_services
 from derex.runner.docker import reset_mysql
@@ -41,29 +41,24 @@ def setup_plugin_manager():
     return plugin_manager
 
 
-def run_compose(args: List[str], plugin: str = None, variant: str = "services"):
+def run_compose(args: List[str], variant: str = "services"):
     create_deps()
 
-    plugin_manager = setup_plugin_manager()
-    config = plugin_manager.get_plugin(plugin)
-
-    if config:
-        # We use the specified configuration
-        logging.info(f"Loaded settings from {config.__class__.__name__}")
-        settings = config.settings()
-    else:
-        # We use the last loaded configuration
-        settings = plugin_manager.hook.settings().pop(0)
-
     try:
-        yaml_opts = settings[variant]()
+        plugin_manager = setup_plugin_manager()
+        settings: Dict = {variant: []}
+        for plugin in plugin_manager.get_plugins():
+            plugin_settings = plugin.settings().get(variant)
+            if plugin_settings:
+                logger.info(f"Loading {plugin.__class__.__name__}")
+                settings[variant].extend(plugin_settings())
     except Exception as e:
         logger.error("Can't load yaml options from settings")
         raise e
 
     old_argv = sys.argv
     try:
-        sys.argv = ["docker-compose"] + yaml_opts + COMPOSE_EXTRA_OPTS + args
+        sys.argv = ["docker-compose"] + settings[variant] + COMPOSE_EXTRA_OPTS + args
         logger.info(f"Running %s", " ".join(sys.argv))
         main()
     finally:
@@ -78,10 +73,7 @@ def run_compose(args: List[str], plugin: str = None, variant: str = "services"):
     is_flag=True,
     help="Resets mailslurper database",
 )
-@click.option(
-    "--plugin", default=None, type=str, help="Plugin name to load configurations from"
-)
-def ddc(compose_args: Tuple[str, ...], plugin: str, reset_mailslurper: bool):
+def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool):
     """Derex docker-compose: run docker-compose with additional parameters.
     Adds docker compose file paths for services and administrative tools.
     If the environment variable DEREX_ADMIN_SERVICES is set to a falsey value,
@@ -95,7 +87,7 @@ def ddc(compose_args: Tuple[str, ...], plugin: str, reset_mailslurper: bool):
             return 1
         resetmailslurper()
         return 0
-    run_compose(list(compose_args), plugin=plugin)
+    run_compose(list(compose_args))
     return 0
 
 
@@ -104,10 +96,7 @@ def ddc(compose_args: Tuple[str, ...], plugin: str, reset_mailslurper: bool):
 @click.option(
     "--reset-mysql", default=False, is_flag=True, help="Resets the MySQL database"
 )
-@click.option(
-    "--plugin", default=None, type=str, help="Plugin name to load configurations from"
-)
-def ddc_ironwood(compose_args: Tuple[str, ...], plugin: str, reset_mysql: bool):
+def ddc_ironwood(compose_args: Tuple[str, ...], reset_mysql: bool):
     """Derex docker-compose running ironwood files: run docker-compose
     with additional parameters.
     Adds docker compose file paths for edx ironwood daemons.
@@ -128,7 +117,7 @@ def ddc_ironwood(compose_args: Tuple[str, ...], plugin: str, reset_mysql: bool):
         resetdb()
         return 0
 
-    run_compose(list(compose_args), plugin, variant="openedx")
+    run_compose(list(compose_args), variant="openedx")
     return 0
 
 
