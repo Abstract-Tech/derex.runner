@@ -1,3 +1,6 @@
+import pkg_resources
+
+
 truthy = frozenset(("t", "true", "y", "yes", "on", "1"))
 
 
@@ -13,3 +16,7 @@ def asbool(s):
         return s
     s = str(s).strip()
     return s.lower() in truthy
+
+
+def compose_path(name):
+    return pkg_resources.resource_filename(__name__, f"compose_files/{name}")
