@@ -47,7 +47,7 @@ def run_compose(args: List[str], variant: str = "services"):
     try:
         plugin_manager = setup_plugin_manager()
         settings: Dict = {variant: []}
-        for plugin in plugin_manager.get_plugins():
+        for plugin in reversed(list(plugin_manager.get_plugins())):
             plugin_settings = plugin.settings().get(variant)
             if plugin_settings:
                 logger.info(f"Loading {plugin.__class__.__name__}")
