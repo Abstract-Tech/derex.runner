@@ -10,7 +10,6 @@ mypy
 pip-tools
 pre-commit
 pytest
-pytest
 pytest-cov
 pytest-mock
 pytest-runner
