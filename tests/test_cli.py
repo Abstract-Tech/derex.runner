@@ -37,10 +37,15 @@ def test_ddc_ironwood(sys_argv, mocker):
     check_services = mocker.patch("derex.runner.cli.check_services")
 
     check_services.return_value = False
-    result = runner.invoke(ddc_ironwood, ["config"])
-    assert "ddc up -d" in result.output
+    for param in ["up", "start"]:
+        result = runner.invoke(ddc_ironwood, [param, "--dry-run"])
+        assert "ddc up -d" in result.output
 
     check_services.return_value = True
+    for param in ["up", "start"]:
+        result = runner.invoke(ddc_ironwood, [param, "--dry-run"])
+        assert "Would have run" in result.output
+
     result = runner.invoke(ddc_ironwood, ["config"])
     assert "cms_worker" in result.output
 

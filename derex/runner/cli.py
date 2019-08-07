@@ -41,7 +41,7 @@ def setup_plugin_manager():
     return plugin_manager
 
 
-def run_compose(args: List[str], variant: str = "services"):
+def run_compose(args: List[str], variant: str = "services", dry_run: bool = False):
     create_deps()
 
     try:
@@ -50,17 +50,21 @@ def run_compose(args: List[str], variant: str = "services"):
         for plugin in reversed(list(plugin_manager.get_plugins())):
             plugin_settings = plugin.settings().get(variant)
             if plugin_settings:
-                logger.info(f"Loading {plugin.__class__.__name__}")
+                click.echo(f"Loading {plugin.__class__.__name__}")
                 settings[variant].extend(plugin_settings())
     except Exception as e:
-        logger.error("Can't load yaml options from settings")
+        click.echo(click.style("Can't load yaml options from settings", fg="red"))
         raise e
 
     old_argv = sys.argv
     try:
         sys.argv = ["docker-compose"] + settings[variant] + COMPOSE_EXTRA_OPTS + args
-        logger.info(f"Running %s", " ".join(sys.argv))
-        main()
+        if not dry_run:
+            click.echo(f'Running {" ".join(sys.argv)}')
+            main()
+        else:
+            click.echo("Would have run")
+            click.echo(click.style(" ".join(sys.argv), fg="blue"))
     finally:
         sys.argv = old_argv
 
@@ -73,7 +77,13 @@ def run_compose(args: List[str], variant: str = "services"):
     is_flag=True,
     help="Resets mailslurper database",
 )
-def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool):
+@click.option(
+    "--dry-run",
+    default=False,
+    is_flag=True,
+    help="Don't actually do anything, just print what would have been run",
+)
+def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool, dry_run: bool):
     """Derex docker-compose: run docker-compose with additional parameters.
     Adds docker compose file paths for services and administrative tools.
     If the environment variable DEREX_ADMIN_SERVICES is set to a falsey value,
@@ -83,11 +93,11 @@ def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool):
     setup_logging()
     if reset_mailslurper:
         if not check_services(["mysql"]):
-            print("Mysql not found.\nMaybe you forgot to run\nddc up -d")
+            click.echo("Mysql not found.\nMaybe you forgot to run\nddc up -d")
             return 1
         resetmailslurper()
         return 0
-    run_compose(list(compose_args))
+    run_compose(list(compose_args), dry_run=dry_run)
     return 0
 
 
@@ -96,7 +106,13 @@ def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool):
 @click.option(
     "--reset-mysql", default=False, is_flag=True, help="Resets the MySQL database"
 )
-def ddc_ironwood(compose_args: Tuple[str, ...], reset_mysql: bool):
+@click.option(
+    "--dry-run",
+    default=False,
+    is_flag=True,
+    help="Don't actually do anything, just print what would have been run",
+)
+def ddc_ironwood(compose_args: Tuple[str, ...], reset_mysql: bool, dry_run: bool):
     """Derex docker-compose running ironwood files: run docker-compose
     with additional parameters.
     Adds docker compose file paths for edx ironwood daemons.
@@ -104,20 +120,19 @@ def ddc_ironwood(compose_args: Tuple[str, ...], reset_mysql: bool):
     check_docker()
     setup_logging()
 
-    if (
-        not check_services(["mysql", "mongodb", "rabbitmq"])
-        and "down" not in compose_args
+    if not check_services(["mysql", "mongodb", "rabbitmq"]) and any(
+        param in compose_args for param in ["up", "start"]
     ):
-        print("Mysql/mongo/rabbitmq services not found.")
-        print("Maybe you forgot to run")
-        print("ddc up -d")
+        click.echo("Mysql/mongo/rabbitmq services not found.")
+        click.echo("Maybe you forgot to run")
+        click.echo("ddc up -d")
         return -1
 
     if reset_mysql:
         resetdb()
         return 0
 
-    run_compose(list(compose_args), variant="openedx")
+    run_compose(list(compose_args), variant="openedx", dry_run=dry_run)
     return 0
 
 
