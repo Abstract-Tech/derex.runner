@@ -41,8 +41,8 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
     for opts in plugin_manager.hook.compose_options():
         if opts["variant"] == variant:
             click.echo(f"Loading {opts['name']}")
-            registry.register(
-                name=opts["name"], item=opts["options"], priority=opts["priority"]
+            registry.add(
+                key=opts["name"], value=opts["options"], location=opts["priority"]
             )
     settings = [el for lst in registry for el in lst]
     old_argv = sys.argv

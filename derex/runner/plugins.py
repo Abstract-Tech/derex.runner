@@ -2,7 +2,6 @@ from collections import namedtuple
 import os
 import pkg_resources
 from typing import List, Dict, Callable, Union
-import warnings
 import pluggy
 from derex.runner import config
 from derex.runner import plugin_spec
@@ -182,9 +181,3 @@ class Registry(object):
                 'must start with a ">" or "<".' % location
             )
         self.register(value, key, priority)
-        warnings.warn(
-            "Using the add method to register a processor or pattern is deprecated. "
-            "Use the `register` method instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
