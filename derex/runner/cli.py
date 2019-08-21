@@ -12,7 +12,7 @@ from derex.runner.docker import wait_for_mysql
 from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
 from derex.runner.docker import create_deps
-from derex.runner.plugins import ConfigSpec
+from derex.runner.plugins import setup_plugin_manager
 from derex.runner.config import BaseConfig
 import logging
 import click
@@ -31,14 +31,6 @@ def setup_logging():
     for logger in ("urllib3.connectionpool", "compose", "docker"):
         logging.getLogger(logger).setLevel(logging.WARN)
     logging.getLogger("").setLevel(logging.INFO)
-
-
-def setup_plugin_manager():
-    plugin_manager = pluggy.PluginManager("derex.runner")
-    plugin_manager.add_hookspecs(ConfigSpec)
-    plugin_manager.load_setuptools_entrypoints("derex.runner")
-    plugin_manager.register(BaseConfig())
-    return plugin_manager
 
 
 def run_compose(args: List[str], variant: str = "services", dry_run: bool = False):
