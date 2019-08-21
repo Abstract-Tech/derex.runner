@@ -13,7 +13,7 @@ from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
 from derex.runner.docker import create_deps
 from derex.runner.plugins import setup_plugin_manager
-from derex.runner.config import BaseConfig
+from derex.runner.plugins import Registry
 import logging
 import click
 
@@ -36,21 +36,18 @@ def setup_logging():
 def run_compose(args: List[str], variant: str = "services", dry_run: bool = False):
     create_deps()
 
-    try:
-        plugin_manager = setup_plugin_manager()
-        settings: Dict = {variant: []}
-        for plugin in reversed(list(plugin_manager.get_plugins())):
-            plugin_settings = plugin.settings().get(variant)
-            if plugin_settings:
-                click.echo(f"Loading {plugin.__class__.__name__}")
-                settings[variant].extend(plugin_settings())
-    except Exception as e:
-        click.echo(click.style("Can't load yaml options from settings", fg="red"))
-        raise e
-
+    plugin_manager = setup_plugin_manager()
+    registry = Registry()
+    for opts in plugin_manager.hook.compose_options():
+        if opts["variant"] == variant:
+            click.echo(f"Loading {opts['name']}")
+            registry.register(
+                name=opts["name"], item=opts["options"], priority=opts["priority"]
+            )
+    settings = [el for lst in registry for el in lst]
     old_argv = sys.argv
     try:
-        sys.argv = ["docker-compose"] + settings[variant] + COMPOSE_EXTRA_OPTS + args
+        sys.argv = ["docker-compose"] + settings + COMPOSE_EXTRA_OPTS + args
         if not dry_run:
             click.echo(f'Running {" ".join(sys.argv)}')
             main()
