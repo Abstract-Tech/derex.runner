@@ -2,8 +2,10 @@
 
 """Console script for derex.runner."""
 from pathlib import Path
+import io
 import os
 import sys
+import tarfile
 import pluggy
 from typing import List, Tuple, Dict
 import docker
@@ -78,17 +80,25 @@ def run_project(path: str):
                     [f"RUN pip install -r /tmp/requirements/{requirments_file}"]
                 )
 
-    if os.path.exists(os.path.join(path, "themes")):
+    themes_path = os.path.join(path, "themes")
+    if os.path.exists(themes_path):
         dockerfile_contents.extend(
             ["COPY themes /openedx/themes/", "RUN /openedx/bin/compile_assets.sh"]
         )
-
-    # Write out the dockerfile for now
-    with open(os.path.join(path, "Dockerfile"), "w") as dockerfile:
-        dockerfile.write("\n".join(dockerfile_contents))
+    dockerfile_text = "\n".join(dockerfile_contents).encode()
+    dockerfile = io.BytesIO(dockerfile_text)
+    context = io.BytesIO()
+    context_tar = tarfile.open(fileobj=context, mode="w:gz")
+    info = tarfile.TarInfo(name="Dockerfile")
+    info.size = len(dockerfile_text)
+    context_tar.addfile(info, fileobj=dockerfile)
+    context_tar.add(requirements_path, arcname="requirements")
+    context_tar.add(themes_path, arcname="themes")
+    context_tar.close()
+    context.seek(0)
 
     docker_client = docker.from_env()
-    docker_client.images.build(path=path)
+    docker_client.images.build(fileobj=context, custom_context=True, encoding="gzip")
     return 0
 
 
