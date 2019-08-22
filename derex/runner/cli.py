@@ -3,6 +3,7 @@
 """Console script for derex.runner."""
 from pathlib import Path
 import io
+import json
 import os
 import sys
 import tarfile
@@ -111,9 +112,10 @@ def build_image(path: str):
     context_tar.add(themes_path, arcname="themes")
     context_tar.close()
     context.seek(0)
-
-    docker_client = docker.from_env()
-    docker_client.images.build(fileobj=context, custom_context=True, encoding="gzip")
+    docker_client = docker.APIClient()
+    output = docker_client.build(fileobj=context, custom_context=True, encoding="gzip")
+    for line in output:
+        print(json.loads(line)["stream"], end="")
     return 0
 
 
