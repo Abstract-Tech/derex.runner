@@ -39,6 +39,7 @@ setup(
         "console_scripts": [
             "ddc=derex.runner.cli:ddc",
             "ddc-ironwood=derex.runner.cli:ddc_ironwood",
+            "run-project=derex.runner.cli:run_project"
         ]
     },
     description="Run Open edX docker images",

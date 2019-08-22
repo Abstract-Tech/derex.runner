@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """Console script for derex.runner."""
+from pathlib import Path
 import os
 import sys
 import pluggy
 from typing import List, Tuple, Dict
+import docker
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import check_services
 from derex.runner.docker import reset_mysql
@@ -56,6 +58,42 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
             click.echo(click.style(" ".join(sys.argv), fg="blue"))
     finally:
         sys.argv = old_argv
+
+
+@click.command()
+@click.argument("path", nargs=1)
+def run_project(path: str):
+    dockerfile_contents = ["FROM derex/openedx-ironwood:latest"]
+
+    if not os.path.exists(path):
+        click.echo(f"Can't find directory at {path}")
+        return 1
+    path = str(Path.cwd() / path) # Convert to absolute path
+    if os.path.exists(os.path.join(path, "requirements")):
+        dockerfile_contents.extend([
+            f"COPY {os.path.join(path, 'requirements')} /tmp/requirements/",
+        ])
+        for requirments_file in os.listdir(os.path.join(path, "requirements")):
+            if requirments_file.endswith(".txt"):
+                dockerfile_contents.extend([
+                    f"RUN pip install -r /tmp/requirements/{requirments_file}"
+                ])
+
+    if os.path.exists(os.path.join(path, "themes")):
+        dockerfile_contents.extend([
+            f"COPY {os.path.join(path, 'themes')} /openedx/themes/",
+            "RUN /openedx/bin/compile_assets.sh"
+        ])
+    
+    # Write out the dockerfile for now
+    with open(os.path.join(path, "Dockerfile"), "w") as dockerfile:
+        dockerfile.write("\n".join(dockerfile_contents))
+
+    dockerfile = open(os.path.join(path, "Dockerfile"))
+    import pdb;pdb.set_trace()
+    docker_client = docker.from_env()
+    docker_client.images.build(fileobj=dockerfile, custom_context=path)
+    return 0
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
