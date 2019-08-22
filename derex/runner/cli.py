@@ -18,6 +18,7 @@ from derex.runner.docker import load_dump
 from derex.runner.docker import create_deps
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.plugins import Registry
+from derex.runner.utils import project_dir
 import logging
 import click
 
@@ -62,9 +63,23 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
         sys.argv = old_argv
 
 
-@click.command()
-@click.argument("path", nargs=1)
-def run_project(path: str):
+@click.command(context_settings=dict(ignore_unknown_options=True))
+@click.argument("compose_args", nargs=-1)
+@click.option(
+    "--build",
+    help="build docker image for this project",
+    type=click.Choice(["requirements", "themes", "all"]),
+    default=None,
+)
+def ddc_local(compose_args: Tuple[str, ...], build: str):
+    if build == "all":
+        click.echo("Building docker image")
+        build_image(project_dir(os.getcwd()))
+
+
+def build_image(path: str):
+    """Build the docker image for the project specified by `path`.
+    """
     dockerfile_contents = ["FROM derex/openedx-ironwood:latest"]
 
     if not os.path.exists(path):
