@@ -68,31 +68,27 @@ def run_project(path: str):
     if not os.path.exists(path):
         click.echo(f"Can't find directory at {path}")
         return 1
-    path = str(Path.cwd() / path) # Convert to absolute path
-    if os.path.exists(os.path.join(path, "requirements")):
-        dockerfile_contents.extend([
-            f"COPY {os.path.join(path, 'requirements')} /tmp/requirements/",
-        ])
-        for requirments_file in os.listdir(os.path.join(path, "requirements")):
+
+    requirements_path = os.path.join(path, "requirements")
+    if os.path.exists(requirements_path):
+        dockerfile_contents.extend(["COPY requirements /tmp/requirements/"])
+        for requirments_file in os.listdir(requirements_path):
             if requirments_file.endswith(".txt"):
-                dockerfile_contents.extend([
-                    f"RUN pip install -r /tmp/requirements/{requirments_file}"
-                ])
+                dockerfile_contents.extend(
+                    [f"RUN pip install -r /tmp/requirements/{requirments_file}"]
+                )
 
     if os.path.exists(os.path.join(path, "themes")):
-        dockerfile_contents.extend([
-            f"COPY {os.path.join(path, 'themes')} /openedx/themes/",
-            "RUN /openedx/bin/compile_assets.sh"
-        ])
-    
+        dockerfile_contents.extend(
+            ["COPY themes /openedx/themes/", "RUN /openedx/bin/compile_assets.sh"]
+        )
+
     # Write out the dockerfile for now
     with open(os.path.join(path, "Dockerfile"), "w") as dockerfile:
         dockerfile.write("\n".join(dockerfile_contents))
 
-    dockerfile = open(os.path.join(path, "Dockerfile"))
-    import pdb;pdb.set_trace()
     docker_client = docker.from_env()
-    docker_client.images.build(fileobj=dockerfile, custom_context=path)
+    docker_client.images.build(path=path)
     return 0
 
 
