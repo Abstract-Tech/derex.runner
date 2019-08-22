@@ -18,8 +18,8 @@ Run the following commands: ::
 
     pip install --user git+https://github.com/Abstract-Tech/derex.runner.git
     ddc up -d  # Start mysql, mongodb, rabbitmq and admin tools
-    ddc-ironwood resetdb  # Prime the mysql database
-    ddc resetmailslurper  # Prime the mailslurper mysql database
+    ddc-ironwood --reset-mysql  # Prime the mysql database
+    ddc --reset-mailslurper  # Prime the mailslurper mysql database
     ddc-ironwood up -d  # Start LMS/CMS daemons and workers
 
 Then head to one of the started services:

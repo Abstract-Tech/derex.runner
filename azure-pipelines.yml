@@ -42,13 +42,13 @@ steps:
     set -ex
     export DEREX_ADMIN_SERVICES=False
     ddc up -d
-    ddc resetmailslurper
+    ddc --reset-mailslurper
   displayName: 'Start service daemons'
 
 - script: ddc-ironwood up -d
   displayName: 'Start edX daemons'
 
-- script: ddc-ironwood resetdb
+- script: ddc-ironwood --reset-mysql
   displayName: 'Prime mysql database'
 
 - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine

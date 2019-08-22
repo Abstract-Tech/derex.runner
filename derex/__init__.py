@@ -1,6 +1,1 @@
-# -*- coding: utf-8 -*-
-
-from pkg_resources import declare_namespace
-
-
-declare_namespace(__name__)
+__path__: str = __import__("pkgutil").extend_path(__path__, __name__)
