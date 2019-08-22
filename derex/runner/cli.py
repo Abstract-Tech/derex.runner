@@ -69,23 +69,20 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
 @click.option(
     "--build",
     help="build docker image for this project",
-    type=click.Choice(["requirements", "themes", "all"]),
+    type=click.Choice(["requirements", "themes"]),
     default=None,
 )
 def ddc_local(compose_args: Tuple[str, ...], build: str):
-    if build == "all":
-        click.echo("Building docker image")
-        build_image(project_dir(os.getcwd()))
+    if build == "requirements":
+        click.echo("Building docker image with project requirements")
+        build_requirements_image(project_dir(os.getcwd()))
 
 
-def build_image(path: str):
-    """Build the docker image for the project specified by `path`.
+def build_requirements_image(path: str):
+    """Build the docker image the includes project requirements for the project
+    specified by `path`.
     """
     dockerfile_contents = ["FROM derex/openedx-ironwood:latest"]
-
-    if not os.path.exists(path):
-        click.echo(f"Can't find directory at {path}")
-        return 1
 
     requirements_path = os.path.join(path, "requirements")
     if os.path.exists(requirements_path):
@@ -115,8 +112,10 @@ def build_image(path: str):
     docker_client = docker.APIClient()
     output = docker_client.build(fileobj=context, custom_context=True, encoding="gzip")
     for line in output:
-        print(json.loads(line)["stream"], end="")
-    return 0
+        line_decoded = json.loads(line)
+        print(line_decoded.get("stream", ""), end="")
+        if "aux" in line_decoded:
+            print(f'Built image: {line_decoded["aux"]["ID"]}')
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
