@@ -2,23 +2,21 @@
 
 """Console script for derex.runner."""
 from pathlib import Path
-import io
-import json
 import os
 import sys
-import tarfile
 import pluggy
 from typing import List, Tuple, Dict
 import docker
-from derex.runner.docker import execute_mysql_query
+from derex.runner.docker import build_image
 from derex.runner.docker import check_services
-from derex.runner.docker import reset_mysql
-from derex.runner.docker import wait_for_mysql
+from derex.runner.docker import create_deps
+from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
-from derex.runner.docker import create_deps
-from derex.runner.plugins import setup_plugin_manager
+from derex.runner.docker import reset_mysql
+from derex.runner.docker import wait_for_mysql
 from derex.runner.plugins import Registry
+from derex.runner.plugins import setup_plugin_manager
 from derex.runner.utils import project_dir
 import logging
 import click
@@ -98,24 +96,8 @@ def build_requirements_image(path: str):
         dockerfile_contents.extend(
             ["COPY themes /openedx/themes/", "RUN /openedx/bin/compile_assets.sh"]
         )
-    dockerfile_text = "\n".join(dockerfile_contents).encode()
-    dockerfile = io.BytesIO(dockerfile_text)
-    context = io.BytesIO()
-    context_tar = tarfile.open(fileobj=context, mode="w:gz")
-    info = tarfile.TarInfo(name="Dockerfile")
-    info.size = len(dockerfile_text)
-    context_tar.addfile(info, fileobj=dockerfile)
-    context_tar.add(requirements_path, arcname="requirements")
-    context_tar.add(themes_path, arcname="themes")
-    context_tar.close()
-    context.seek(0)
-    docker_client = docker.APIClient()
-    output = docker_client.build(fileobj=context, custom_context=True, encoding="gzip")
-    for line in output:
-        line_decoded = json.loads(line)
-        print(line_decoded.get("stream", ""), end="")
-        if "aux" in line_decoded:
-            print(f'Built image: {line_decoded["aux"]["ID"]}')
+    dockerfile_text = "\n".join(dockerfile_contents)
+    build_image(dockerfile_text, [requirements_path, themes_path])
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))

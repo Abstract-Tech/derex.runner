@@ -3,10 +3,13 @@
 """
 import pkg_resources
 import docker
+import io
+import json
 import logging
+import tarfile
 import time
-from typing import Iterable
-from pathlib import Path as path
+from pathlib import Path
+from typing import Iterable, List
 from requests.exceptions import RequestException
 
 
@@ -95,7 +98,7 @@ def wait_for_mysql(max_seconds: int = 20):
 def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
-    dump_path = path(pkg_resources.resource_filename(__name__, relpath))
+    dump_path = Path(pkg_resources.resource_filename(__name__, relpath))
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")
     try:
@@ -108,3 +111,25 @@ def load_dump(relpath):
         )
     except docker.errors.ContainerError as exc:
         logger.exception(exc)
+
+
+def build_image(dockerfile_text: str, paths: List[str]):
+    dockerfile = io.BytesIO(dockerfile_text.encode())
+    context = io.BytesIO()
+    context_tar = tarfile.open(fileobj=context, mode="w:gz")
+    info = tarfile.TarInfo(name="Dockerfile")
+    info.size = len(dockerfile_text)
+    context_tar.addfile(info, fileobj=dockerfile)
+    for path in paths:
+        context_tar.add(path, arcname=Path(path).name)
+    context_tar.close()
+    context.seek(0)
+    docker_client = docker.APIClient()
+    output = docker_client.build(fileobj=context, custom_context=True, encoding="gzip")
+    for line in output:
+        line_decoded = json.loads(line)
+        print(line_decoded.get("stream", ""), end="")
+        if "error" in line_decoded:
+            print(line_decoded.get("error", ""))
+        if "aux" in line_decoded:
+            print(f'Built image: {line_decoded["aux"]["ID"]}')
