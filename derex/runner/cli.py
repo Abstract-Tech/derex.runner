@@ -42,12 +42,23 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
 
     plugin_manager = setup_plugin_manager()
     registry = Registry()
-    for opts in plugin_manager.hook.compose_options():
-        if opts["variant"] == variant:
-            logger.debug(f"Loading {opts['name']}")
-            registry.add(
-                key=opts["name"], value=opts["options"], location=opts["priority"]
-            )
+    if variant == "local":
+        try:
+            project_dir = get_project_dir(os.getcwd())
+        except ValueError:
+            click.echo("You need to run this command in a derex project")
+            sys.exit(1)
+        for opts in plugin_manager.hook.local_compose_options(project_root=project_dir):
+            if opts["variant"] == variant:
+                registry.add(
+                    key=opts["name"], value=opts["options"], location=opts["priority"]
+                )
+    else:
+        for opts in plugin_manager.hook.compose_options():
+            if opts["variant"] == variant:
+                registry.add(
+                    key=opts["name"], value=opts["options"], location=opts["priority"]
+                )
     settings = [el for lst in registry for el in lst]
     old_argv = sys.argv
     try:
