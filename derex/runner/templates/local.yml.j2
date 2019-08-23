@@ -2,7 +2,7 @@
 version: "3.5"
 services:
   flower:
-    image: {{ docker_image }}
+    image: {{ themes_image }}
     command:
       sh -c 'pip install flower;
         flower --port=5555
@@ -12,7 +12,7 @@ services:
     container_name: {{ project_name }}_flower
 
   lms:
-    image: {{ docker_image }}
+    image: {{ themes_image }}
     command:
       sh -c 'gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
@@ -27,7 +27,7 @@ services:
       - derex
 
   cms:
-    image: {{ docker_image }}
+    image: {{ themes_image }}
     command:
       sh -c 'gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
@@ -44,7 +44,7 @@ services:
       - derex
 
   lms_worker:
-    image: {{ docker_image }}
+    image: {{ themes_image }}
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
@@ -59,7 +59,7 @@ services:
       - derex
 
   cms_worker:
-    image: {{ docker_image }}
+    image: {{ themes_image }}
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info

@@ -5,6 +5,8 @@ from derex.runner.utils import asbool
 from derex.runner.utils import compose_path
 from derex.runner.utils import get_project_config
 from derex.runner.utils import get_project_dir
+from derex.runner.utils import get_requirements_tag
+from derex.runner.utils import get_themes_tag
 from jinja2 import Template
 from pathlib import Path
 from typing import List, Dict, Callable, Union
@@ -86,9 +88,12 @@ def generate_local_docker_compose(project_root: Union[Path, str]) -> Path:
         pkg_resources.resource_filename(__name__, "templates/local.yml.j2")
     )
     tmpl = Template(template_path.read_text())
-    docker_image = project_config["project_name"]  # XXX TODO
+    themes_image = get_themes_tag(project_root)
+    requirements_image = get_themes_tag(project_root)
     text = tmpl.render(
-        docker_image=docker_image, project_name=project_config["project_name"]
+        themes_image=themes_image,
+        project_name=project_config["project_name"],
+        requirements_image=requirements_image,
     )
     local_compose_path.write_text(text)
     return local_compose_path

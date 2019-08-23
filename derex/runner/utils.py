@@ -44,6 +44,16 @@ def get_project_dir(path: Union[Path, str]):
     )
 
 
+def get_themes_tag(path: Union[str, Path]):
+    themes_path = Path(path) / "themes"
+    return get_image_tag([themes_path])
+
+
+def get_requirements_tag(path: Union[str, Path]):
+    requirements_path = Path(path) / "requirements"
+    return get_image_tag([requirements_path])
+
+
 def get_image_tag(paths: List):
     """Given a list of paths returns a string suitabile to be used as tag for a docker image
     """

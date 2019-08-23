@@ -4,6 +4,7 @@
 from pathlib import Path
 import os
 import sys
+import logging
 import pluggy
 from typing import List, Tuple, Dict
 import docker
@@ -17,14 +18,14 @@ from derex.runner.docker import reset_mysql
 from derex.runner.docker import wait_for_mysql
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
-from derex.runner.utils import get_project_dir
-from derex.runner.utils import get_project_config
-from derex.runner.utils import get_project_name
-from derex.runner.utils import get_project_base_image
 from derex.runner.utils import get_image_tag
-import logging
+from derex.runner.utils import get_project_base_image
+from derex.runner.utils import get_project_config
+from derex.runner.utils import get_project_dir
+from derex.runner.utils import get_project_name
+from derex.runner.utils import get_requirements_tag
+from derex.runner.utils import get_themes_tag
 import click
-
 from compose.cli.main import main
 
 
@@ -137,16 +138,6 @@ def build_requirements_image(path: str):
                 )
     dockerfile_text = "\n".join(dockerfile_contents)
     build_image(dockerfile_text, paths_to_copy, tag=get_requirements_tag(path))
-
-
-def get_themes_tag(path: str):
-    themes_path = Path(path) / "themes"
-    return get_image_tag([themes_path])
-
-
-def get_requirements_tag(path: str):
-    requirements_path = Path(path) / "requirements"
-    return get_image_tag([requirements_path])
 
 
 BUILD_ASSETS_SCRIPT = (
