@@ -19,6 +19,9 @@ class Project:
         for k, v in self.config.items():
             setattr(self, k, v)
 
+    def __eq__(self, other):
+        return self.root == other.root
+
     @property
     def requirements_image_tag(self):
         """Returns a string suitabile to be used as tag for a docker image
