@@ -74,6 +74,9 @@ def ddc_local(compose_args: Tuple[str, ...], build: str):
     if build == "requirements":
         click.echo("Building docker image with project requirements")
         build_requirements_image(project_dir(os.getcwd()))
+    elif build == "themes":
+        click.echo("Building docker image with themes")
+        build_themes_image(project_dir(os.getcwd()))
 
 
 def build_requirements_image(path: str):
@@ -83,21 +86,42 @@ def build_requirements_image(path: str):
     dockerfile_contents = ["FROM derex/openedx-ironwood:latest"]
 
     requirements_path = os.path.join(path, "requirements")
+    paths_to_copy: List[str] = []
     if os.path.exists(requirements_path):
+        paths_to_copy = [requirements_path]
         dockerfile_contents.extend(["COPY requirements /tmp/requirements/"])
         for requirments_file in os.listdir(requirements_path):
             if requirments_file.endswith(".txt"):
                 dockerfile_contents.extend(
                     [f"RUN pip install -r /tmp/requirements/{requirments_file}"]
                 )
+    dockerfile_text = "\n".join(dockerfile_contents)
+    build_image(dockerfile_text, paths_to_copy)
+
+
+BUILD_ASSETS_SCRIPT = (
+    "PATH=/openedx/edx-platform/node_modules/.bin:/openedx/nodeenv/bin:/openedx/bin:${PATH};"
+    "compile_assets.sh;"
+    "cleanup_assets.sh;"
+    "symlink_duplicates.py /openedx/staticfiles;"
+)
+
+
+def build_themes_image(path: str):
+    """Build the docker image the includes project requirements for the project
+    specified by `path`.
+    """
+    dockerfile_contents = ["FROM derex/openedx-ironwood:latest"]
 
     themes_path = os.path.join(path, "themes")
+    paths_to_copy: List[str] = []
     if os.path.exists(themes_path):
+        paths_to_copy = [themes_path]
         dockerfile_contents.extend(
-            ["COPY themes /openedx/themes/", "RUN /openedx/bin/compile_assets.sh"]
+            ["COPY themes /openedx/themes/", f"RUN sh -c '{BUILD_ASSETS_SCRIPT}'"]
         )
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, [requirements_path, themes_path])
+    build_image(dockerfile_text, paths_to_copy)
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
