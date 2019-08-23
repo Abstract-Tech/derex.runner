@@ -41,8 +41,11 @@ def test_asbool():
 def test_dirhash():
     from derex.runner.utils import dirhash
 
-    requirements_hash = dirhash("fixtures/minimal/requirements")
-    themes_hash = dirhash("fixtures/minimal/themes")
+    def mypath(arg):
+        return Path(__file__).parent / arg
+
+    requirements_hash = dirhash(mypath("fixtures/minimal/requirements"))
+    themes_hash = dirhash(mypath("fixtures/minimal/themes"))
 
     assert requirements_hash != themes_hash
 
