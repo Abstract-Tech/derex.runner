@@ -14,6 +14,6 @@ def test_project():
     assert type(project.config) == dict
     assert project.requirements_dir == MINIMAL_PROJ / "requirements"
     assert project.themes_dir == MINIMAL_PROJ / "themes"
-    assert project.project_name == "minimal"
+    assert project.name == "minimal"
     assert project.requirements_image_tag == "minimal/openedx-requirements:b964b4"
     assert project.themes_image_tag == "minimal/openedx-themes:0c4b97"

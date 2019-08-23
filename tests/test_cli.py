@@ -11,6 +11,8 @@ import contextlib
 import sys
 import pytest
 import os
+
+from derex.runner.project import Project
 from .fixtures import MINIMAL_PROJ, working_directory
 
 
@@ -71,9 +73,12 @@ def test_ddc_local():
 
     with working_directory(MINIMAL_PROJ):
         output = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
+        assert "Successfully built" in output.stdout
+        assert "Successfully tagged" in output.stdout
 
-    assert "Successfully built" in output.stdout
-    assert "Successfully tagged" in output.stdout
+        output = runner.invoke(ddc_local, ["config"])
+        assert Project().name in output.stdout
+        assert os.path.isdir(Project().root / ".derex")
 
 
 @pytest.fixture
