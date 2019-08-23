@@ -1,4 +1,5 @@
 from typing import Dict, List, Union
+from derex.runner.project import Project
 import pluggy
 
 
@@ -25,7 +26,7 @@ def compose_options() -> Dict[str, Union[str, float, int, List[str]]]:
 
 @hookspec
 def local_compose_options(
-    project_root: str
+    project: Project
 ) -> Dict[str, Union[str, float, int, List[str]]]:
     """Return a dict describing how to add this plugin to a local project.
     The dict `name` and `priority` keys will be used to determine ordering.

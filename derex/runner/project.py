@@ -16,8 +16,8 @@ class Project:
         self.path = Path(path)
         self.themes_dir = self.path / "themes"
         self.requirements_dir = self.path / "requirements"
-        for k, v in self.config.items():
-            setattr(self, k, v)
+        self.name = self.config["project_name"]
+        self.base_image = self.config.get("base_image", "derex/openedx-ironwood:latest")
 
     def __eq__(self, other):
         return self.root == other.root
@@ -29,7 +29,7 @@ class Project:
         hasher = hashlib.sha256()
         hasher.update(get_dir_hash(self.requirements_dir).encode("utf-8"))
         version = hasher.hexdigest()[:6]
-        return f"{self.project_name}/openedx-requirements:{version}"
+        return f"{self.name}/openedx-requirements:{version}"
 
     @property
     def themes_image_tag(self):
@@ -38,7 +38,7 @@ class Project:
         hasher = hashlib.sha256()
         hasher.update(get_dir_hash(self.themes_dir).encode("utf-8"))
         version = hasher.hexdigest()[:6]
-        return f"{self.project_name}/openedx-themes:{version}"
+        return f"{self.name}/openedx-themes:{version}"
 
     @property
     def config(self):

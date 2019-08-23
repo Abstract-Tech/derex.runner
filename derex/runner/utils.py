@@ -14,56 +14,6 @@ def compose_path(name):
     return pkg_resources.resource_filename(__name__, f"compose_files/{name}")
 
 
-def get_project_name():
-    return get_project_config()["project_name"]
-
-
-def get_project_base_image():
-    return get_project_config().get("base_image", "derex/openedx-ironwood:latest")
-
-
-def get_project_config():
-    """Return the parsed configuration of this project.
-    """
-    dir = get_project_dir(os.getcwd())
-    filename = dir / CONF_FILENAME
-    return yaml.load(filename.open())
-
-
-def get_project_dir(path: Union[Path, str]):
-    """Find the project directory walking up the filesystem starting on the
-    given path until a configuration file is found.
-    """
-    current = Path(path)
-    while current != current.parent:
-        if (current / CONF_FILENAME).is_file():
-            return current
-        current = current.parent
-    raise ValueError(
-        f"No directory found with a {CONF_FILENAME} file in it, starting from {path}"
-    )
-
-
-def get_themes_tag(path: Union[str, Path]):
-    themes_path = Path(path) / "themes"
-    return get_image_tag([themes_path])
-
-
-def get_requirements_tag(path: Union[str, Path]):
-    requirements_path = Path(path) / "requirements"
-    return get_image_tag([requirements_path])
-
-
-def get_image_tag(paths: List):
-    """Given a list of paths returns a string suitabile to be used as tag for a docker image
-    """
-    hasher = hashlib.sha256()
-    for path in paths:
-        hasher.update(get_dir_hash(path).encode("utf-8"))
-    version = hasher.hexdigest()[:6]
-    return f"{get_project_name()}/openedx:{version}"
-
-
 def get_dir_hash(
     dirname: Union[Path, str],
     excluded_files: List = [],

@@ -6,7 +6,7 @@ import os
 import sys
 import logging
 import pluggy
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 import docker
 from derex.runner.docker import build_image
 from derex.runner.docker import check_services
@@ -18,13 +18,7 @@ from derex.runner.docker import reset_mysql
 from derex.runner.docker import wait_for_mysql
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
-from derex.runner.utils import get_image_tag
-from derex.runner.utils import get_project_base_image
-from derex.runner.utils import get_project_config
-from derex.runner.utils import get_project_dir
-from derex.runner.utils import get_project_name
-from derex.runner.utils import get_requirements_tag
-from derex.runner.utils import get_themes_tag
+from derex.runner.project import Project
 import click
 from compose.cli.main import main
 
@@ -39,22 +33,21 @@ def setup_logging():
     logging.getLogger("").setLevel(logging.INFO)
 
 
-def run_compose(args: List[str], variant: str = "services", dry_run: bool = False):
+def run_compose(
+    args: List[str],
+    variant: str = "services",
+    dry_run: bool = False,
+    project: Optional[Project] = None,
+):
     create_deps()
 
     plugin_manager = setup_plugin_manager()
     registry = Registry()
-    if variant == "local":
-        try:
-            project_dir = get_project_dir(os.getcwd())
-        except ValueError:
-            click.echo("You need to run this command in a derex project")
-            sys.exit(1)
-        for opts in plugin_manager.hook.local_compose_options(project_root=project_dir):
-            if opts["variant"] == variant:
-                registry.add(
-                    key=opts["name"], value=opts["options"], location=opts["priority"]
-                )
+    if project:
+        for opts in plugin_manager.hook.local_compose_options(project=project):
+            registry.add(
+                key=opts["name"], value=opts["options"], location=opts["priority"]
+            )
     else:
         for opts in plugin_manager.hook.compose_options():
             if opts["variant"] == variant:
@@ -95,14 +88,17 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
 def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: bool):
     check_docker()
     setup_logging()
+    try:
+        project = Project()
+    except ValueError:
+        click.echo("You need to run this command in a derex project")
+        sys.exit(1)
     if build in ["requirements", "themes"]:
-        click.echo(
-            f'Building docker image with "{get_project_name()}" project requirements'
-        )
-        build_requirements_image(get_project_dir(os.getcwd()))
+        click.echo(f'Building docker image with "{project.name}" project requirements')
+        build_requirements_image(project)
     if build == "themes":
-        click.echo(f'Building docker image with "{get_project_name()}" themes')
-        build_themes_image(get_project_dir(os.getcwd()))
+        click.echo(f'Building docker image with "{project.name}" themes')
+        build_themes_image(project)
     if build:
         return
 
@@ -117,27 +113,26 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
     if reset_mysql:
         resetdb()
         return
-    run_compose(list(compose_args), variant="local", dry_run=dry_run)
+    run_compose(list(compose_args), project=project, dry_run=dry_run)
 
 
-def build_requirements_image(path: str):
+def build_requirements_image(project: Project):
     """Build the docker image the includes project requirements for the project
     specified by `path`.
     """
-    dockerfile_contents = [f"FROM {get_project_base_image()}"]
+    dockerfile_contents = [f"FROM {project.base_image}"]
 
-    requirements_path = os.path.join(path, "requirements")
     paths_to_copy: List[str] = []
-    if os.path.exists(requirements_path):
-        paths_to_copy = [requirements_path]
+    if project.requirements_dir.is_dir():
+        paths_to_copy = [str(project.requirements_dir)]
         dockerfile_contents.extend(["COPY requirements /tmp/requirements/"])
-        for requirments_file in os.listdir(requirements_path):
+        for requirments_file in os.listdir(project.requirements_dir):
             if requirments_file.endswith(".txt"):
                 dockerfile_contents.extend(
                     [f"RUN pip install -r /tmp/requirements/{requirments_file}"]
                 )
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, paths_to_copy, tag=get_requirements_tag(path))
+    build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_tag)
 
 
 BUILD_ASSETS_SCRIPT = (
@@ -148,21 +143,20 @@ BUILD_ASSETS_SCRIPT = (
 )
 
 
-def build_themes_image(path: str):
+def build_themes_image(project: Project):
     """Build the docker image the includes project requirements for the project
     specified by `path`.
     """
-    dockerfile_contents = [f"FROM {get_requirements_tag(path)}"]
+    dockerfile_contents = [f"FROM {project.requirements_image_tag}"]
 
-    themes_path = os.path.join(path, "themes")
     paths_to_copy: List[str] = []
-    if os.path.exists(themes_path):
-        paths_to_copy = [themes_path]
+    if project.themes_dir.is_dir():
+        paths_to_copy = [str(project.themes_dir)]
         dockerfile_contents.extend(
             ["COPY themes /openedx/themes/", f"RUN sh -c '{BUILD_ASSETS_SCRIPT}'"]
         )
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, paths_to_copy, tag=get_themes_tag(path))
+    build_image(dockerfile_text, paths_to_copy, tag=project.themes_image_tag)
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
