@@ -14,6 +14,10 @@ def compose_path(name):
     return pkg_resources.resource_filename(__name__, f"compose_files/{name}")
 
 
+def get_project_name():
+    return get_project_config()["project_name"]
+
+
 def get_project_config():
     """Return the parsed configuration of this project.
     """
@@ -36,14 +40,25 @@ def get_project_dir(path: Union[Path, str]):
     )
 
 
-def dirhash(
+def get_image_tag(paths: List):
+    """Given a list of paths returns a string suitabile to be used as tag for a docker image
+    """
+    hasher = hashlib.sha256()
+    for path in paths:
+        hasher.update(get_dir_hash(path).encode("utf-8"))
+    version = hasher.hexdigest()[:6]
+    return f"{get_project_name()}/openedx:{version}"
+
+
+def get_dir_hash(
     dirname: Union[Path, str],
     excluded_files: List = [],
     ignore_hidden: bool = False,
     followlinks: bool = False,
     excluded_extensions: List = [],
 ):
-
+    """Given a directory return an hash based on its contents
+    """
     if not os.path.isdir(dirname):
         raise TypeError(f"{dirname} is not a directory.")
 
@@ -77,8 +92,6 @@ def dirhash(
                             break
                         hasher.update(data)
                 hashvalues.append(hasher.hexdigest())
-
-            print(hashvalues)
 
     hasher = hashlib.sha256()
     for hashvalue in sorted(hashvalues):

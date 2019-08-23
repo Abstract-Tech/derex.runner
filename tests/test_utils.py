@@ -38,16 +38,15 @@ def test_asbool():
     assert asbool(None) is False
 
 
-def test_dirhash():
-    from derex.runner.utils import dirhash
+def test_get_image_tag():
+    from derex.runner.utils import get_image_tag
 
-    def mypath(arg):
-        return Path(__file__).parent / arg
+    with working_directory(MINIMAL_PROJ):
+        requirements_image_tag = get_image_tag([MINIMAL_PROJ / "requirements"])
+        themes_image_tag = get_image_tag([MINIMAL_PROJ / "themes"])
 
-    requirements_hash = dirhash(mypath("fixtures/minimal/requirements"))
-    themes_hash = dirhash(mypath("fixtures/minimal/themes"))
-
-    assert requirements_hash != themes_hash
+    assert requirements_image_tag != themes_image_tag
+    assert len(requirements_image_tag) == len(themes_image_tag) == 22
 
 
 @contextlib.contextmanager

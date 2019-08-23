@@ -18,6 +18,9 @@ from derex.runner.docker import wait_for_mysql
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.utils import get_project_dir
+from derex.runner.utils import get_project_config
+from derex.runner.utils import get_project_name
+from derex.runner.utils import get_image_tag
 import logging
 import click
 
@@ -77,10 +80,12 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, dry_run: bool):
     check_docker()
     setup_logging()
     if build in ["requirements", "themes"]:
-        click.echo("Building docker image with project requirements")
+        click.echo(
+            f'Building docker image with "{get_project_name()}" project requirements'
+        )
         build_requirements_image(get_project_dir(os.getcwd()))
     if build == "themes":
-        click.echo("Building docker image with themes")
+        click.echo(f'Building docker image with "{get_project_name()}" themes')
         build_themes_image(get_project_dir(os.getcwd()))
     run_compose(list(compose_args), variant="local", dry_run=dry_run)
 
@@ -102,7 +107,7 @@ def build_requirements_image(path: str):
                     [f"RUN pip install -r /tmp/requirements/{requirments_file}"]
                 )
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, paths_to_copy)
+    build_image(dockerfile_text, paths_to_copy, tag=get_image_tag(paths_to_copy))
 
 
 BUILD_ASSETS_SCRIPT = (
@@ -127,7 +132,7 @@ def build_themes_image(path: str):
             ["COPY themes /openedx/themes/", f"RUN sh -c '{BUILD_ASSETS_SCRIPT}'"]
         )
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, paths_to_copy)
+    build_image(dockerfile_text, paths_to_copy, tag=get_image_tag(paths_to_copy))
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))

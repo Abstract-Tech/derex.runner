@@ -113,7 +113,7 @@ def load_dump(relpath):
         logger.exception(exc)
 
 
-def build_image(dockerfile_text: str, paths: List[str]):
+def build_image(dockerfile_text: str, paths: List[str], tag: str):
     dockerfile = io.BytesIO(dockerfile_text.encode())
     context = io.BytesIO()
     context_tar = tarfile.open(fileobj=context, mode="w:gz")
@@ -125,7 +125,9 @@ def build_image(dockerfile_text: str, paths: List[str]):
     context_tar.close()
     context.seek(0)
     docker_client = docker.APIClient()
-    output = docker_client.build(fileobj=context, custom_context=True, encoding="gzip")
+    output = docker_client.build(
+        fileobj=context, custom_context=True, encoding="gzip", tag=tag
+    )
     for line in output:
         line_decoded = json.loads(line)
         print(line_decoded.get("stream", ""), end="")

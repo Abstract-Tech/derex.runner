@@ -6,11 +6,13 @@
 from itertools import repeat
 from types import SimpleNamespace
 from click.testing import CliRunner
+from pathlib import Path
 import contextlib
 import sys
 import pytest
 import os
 
+MINIMAL_PROJ = Path(__file__).parent / "fixtures" / "minimal"
 
 runner = CliRunner()
 
@@ -64,6 +66,16 @@ def test_ddc_ironwood_reset_mysql(sys_argv, mocker):
     assert result.exit_code == 0
 
 
+def test_ddc_local():
+    from derex.runner.cli import ddc_local
+
+    with working_directory(MINIMAL_PROJ):
+        output = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
+
+    assert "Successfully built" in output.stdout
+    assert "Successfully tagged" in output.stdout
+
+
 @pytest.fixture
 def sys_argv(mocker):
     @contextlib.contextmanager
@@ -76,3 +88,14 @@ def sys_argv(mocker):
                     raise
 
     return my_cm
+
+
+@contextlib.contextmanager
+def working_directory(path: Path):
+    """Changes working directory and returns to previous on exit."""
+    prev_cwd = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
