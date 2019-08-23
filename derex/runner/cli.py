@@ -83,12 +83,15 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
     default=None,
 )
 @click.option(
+    "--reset-mysql", default=False, is_flag=True, help="Resets the MySQL database"
+)
+@click.option(
     "--dry-run",
     default=False,
     is_flag=True,
     help="Don't actually do anything, just print what would have been run",
 )
-def ddc_local(compose_args: Tuple[str, ...], build: str, dry_run: bool):
+def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: bool):
     check_docker()
     setup_logging()
     if build in ["requirements", "themes"]:
@@ -99,6 +102,20 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, dry_run: bool):
     if build == "themes":
         click.echo(f'Building docker image with "{get_project_name()}" themes')
         build_themes_image(get_project_dir(os.getcwd()))
+    if build:
+        return
+
+    if not check_services(["mysql", "mongodb", "rabbitmq"]) and any(
+        param in compose_args for param in ["up", "start"]
+    ):
+        click.echo("Mysql/mongo/rabbitmq services not found.")
+        click.echo("Maybe you forgot to run")
+        click.echo("ddc up -d")
+        return
+
+    if reset_mysql:
+        resetdb()
+        return
     run_compose(list(compose_args), variant="local", dry_run=dry_run)
 
 
@@ -224,12 +241,20 @@ def ddc_ironwood(compose_args: Tuple[str, ...], reset_mysql: bool, dry_run: bool
     return 0
 
 
-def resetdb():
+def resetdb(project_name="derex"):
     """Reset the mysql database of LMS/CMS
     """
     wait_for_mysql()
-    execute_mysql_query("CREATE DATABASE IF NOT EXISTS derex")
+    execute_mysql_query(
+        f"CREATE DATABASE IF NOT EXISTS {get_mysql_db_name(project_name)}"
+    )
     reset_mysql()
+
+
+def get_mysql_db_name(project_name):
+    """Given a project name return a mysql database name
+    """
+    return project_name
 
 
 def resetmailslurper():
