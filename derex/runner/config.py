@@ -12,7 +12,12 @@ class BaseServices:
     def compose_options() -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.compose_options docstring
         """
-        options = ["-f", compose_path("services.yml")]
+        options = [
+            "--project-name",
+            "derex_services",
+            "-f",
+            compose_path("services.yml"),
+        ]
         if asbool(os.environ.get("DEREX_ADMIN_SERVICES", True)):
             options += ["-f", compose_path("admin.yml")]
         return {
@@ -30,7 +35,12 @@ class BaseOpenEdX:
         """See derex.runner.plugin_spec.compose_options docstring
         """
         return {
-            "options": ["-f", compose_path("ironwood.yml")],
+            "options": [
+                "--project-name",
+                "derex_ironwood",
+                "-f",
+                compose_path("ironwood.yml"),
+            ],
             "name": "base",
             "priority": "_begin",
             "variant": "openedx",
