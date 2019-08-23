@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-from pathlib import Path
-import contextlib
-import os
-
-
-MINIMAL_PROJ = Path(__file__).parent / "fixtures" / "minimal"
+from .fixtures import MINIMAL_PROJ, working_directory
 
 
 def test_get_project_config():
@@ -47,14 +42,3 @@ def test_get_image_tag():
 
     assert requirements_image_tag != themes_image_tag
     assert len(requirements_image_tag) == len(themes_image_tag) == 22
-
-
-@contextlib.contextmanager
-def working_directory(path: Path):
-    """Changes working directory and returns to previous on exit."""
-    prev_cwd = Path.cwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)

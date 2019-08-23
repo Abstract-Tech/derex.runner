@@ -11,8 +11,8 @@ import contextlib
 import sys
 import pytest
 import os
+from .fixtures import MINIMAL_PROJ, working_directory
 
-MINIMAL_PROJ = Path(__file__).parent / "fixtures" / "minimal"
 
 runner = CliRunner()
 
@@ -88,14 +88,3 @@ def sys_argv(mocker):
                     raise
 
     return my_cm
-
-
-@contextlib.contextmanager
-def working_directory(path: Path):
-    """Changes working directory and returns to previous on exit."""
-    prev_cwd = Path.cwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
