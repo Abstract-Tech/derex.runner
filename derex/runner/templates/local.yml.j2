@@ -9,7 +9,7 @@ services:
         --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)")'
     ports:
       - 127.0.0.1:5555:5555
-    container_name: derex_flower
+    container_name: {{ project_name }}_flower
 
   lms:
     image: {{ docker_image }}
@@ -22,7 +22,7 @@ services:
       - {{ project_name }}_data:/openedx/data/
     ports:
       - 127.0.0.1:4700:4700
-    container_name: derex_lms
+    container_name: {{ project_name }}_lms
     networks:
       - derex
 
@@ -39,7 +39,7 @@ services:
       SERVICE_VARIANT: cms
     ports:
       - 127.0.0.1:4800:4800
-    container_name: derex_cms
+    container_name: {{ project_name }}_cms
     networks:
       - derex
 
@@ -50,7 +50,7 @@ services:
         celery worker --loglevel=info
         --hostname=edx.$${SERVICE_VARIANT}.core.default
         --maxtasksperchild 100'
-    container_name: derex_lms_worker
+    container_name: {{ project_name }}_lms_worker
     volumes:
       - {{ project_name }}_data:/openedx/data/
     environment:
@@ -65,7 +65,7 @@ services:
         celery worker --loglevel=info
         --hostname=edx.$${SERVICE_VARIANT}.core.default
         --maxtasksperchild 100'
-    container_name: derex_cms_worker
+    container_name: {{ project_name }}_cms_worker
     volumes:
       - {{ project_name }}_data:/openedx/data/
     environment:
