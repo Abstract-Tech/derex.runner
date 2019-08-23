@@ -119,7 +119,17 @@ def build_requirements_image(path: str):
                     [f"RUN pip install -r /tmp/requirements/{requirments_file}"]
                 )
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, paths_to_copy, tag=get_image_tag(paths_to_copy))
+    build_image(dockerfile_text, paths_to_copy, tag=get_requirements_tag(path))
+
+
+def get_themes_tag(path: str):
+    themes_path = Path(path) / "themes"
+    return get_image_tag([themes_path])
+
+
+def get_requirements_tag(path: str):
+    requirements_path = Path(path) / "requirements"
+    return get_image_tag([requirements_path])
 
 
 BUILD_ASSETS_SCRIPT = (
@@ -134,7 +144,7 @@ def build_themes_image(path: str):
     """Build the docker image the includes project requirements for the project
     specified by `path`.
     """
-    dockerfile_contents = [f"FROM {get_project_base_image()}"]
+    dockerfile_contents = [f"FROM {get_requirements_tag(path)}"]
 
     themes_path = os.path.join(path, "themes")
     paths_to_copy: List[str] = []
@@ -144,7 +154,7 @@ def build_themes_image(path: str):
             ["COPY themes /openedx/themes/", f"RUN sh -c '{BUILD_ASSETS_SCRIPT}'"]
         )
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, paths_to_copy, tag=get_image_tag(paths_to_copy))
+    build_image(dockerfile_text, paths_to_copy, tag=get_themes_tag(path))
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
