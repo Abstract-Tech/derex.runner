@@ -27,9 +27,6 @@ from compose.cli.main import main
 logger = logging.getLogger(__name__)
 
 
-COMPOSE_EXTRA_OPTS: List[str] = []
-
-
 def setup_logging():
     logging.basicConfig()
     for logger in ("urllib3.connectionpool", "compose", "docker"):
@@ -44,14 +41,14 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
     registry = Registry()
     for opts in plugin_manager.hook.compose_options():
         if opts["variant"] == variant:
-            click.echo(f"Loading {opts['name']}")
+            logger.debug(f"Loading {opts['name']}")
             registry.add(
                 key=opts["name"], value=opts["options"], location=opts["priority"]
             )
     settings = [el for lst in registry for el in lst]
     old_argv = sys.argv
     try:
-        sys.argv = ["docker-compose"] + settings + COMPOSE_EXTRA_OPTS + args
+        sys.argv = ["docker-compose"] + settings + args
         if not dry_run:
             click.echo(f'Running {" ".join(sys.argv)}')
             main()
