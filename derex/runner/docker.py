@@ -69,7 +69,7 @@ def execute_mysql_query(query: str):
     """
     container = client.containers.get("mysql")
     res = container.exec_run(f'mysql -psecret -e "{query}"')
-    assert res.exit_code == 0
+    assert res.exit_code == 0, f"Error running {query}"
 
 
 def reset_mysql():

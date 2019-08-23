@@ -20,6 +20,12 @@ services:
         wsgi:application'
     volumes:
       - {{ project_name }}_data:/openedx/data/
+      - {{ project_root }}/settings:/openedx/edx-platform/lms/envs/{{ project_name }}
+      - {{ project_root }}/settings:/openedx/edx-platform/cms/envs/{{ project_name }}
+    environment:
+      DJANGO_SETTINGS_MODULE: lms.envs.{{ project_name }}.base
+      SETTINGS: {{ project_name }}.base
+      MYSQL_DB: {{ project_name }}_edxapp
     ports:
       - 127.0.0.1:4700:4700
     container_name: {{ project_name }}_lms

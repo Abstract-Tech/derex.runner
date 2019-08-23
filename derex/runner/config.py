@@ -93,6 +93,7 @@ def generate_local_docker_compose(project_root: Union[Path, str]) -> Path:
     text = tmpl.render(
         themes_image=themes_image,
         project_name=project_config["project_name"],
+        project_root=str(project_root),
         requirements_image=requirements_image,
     )
     local_compose_path.write_text(text)

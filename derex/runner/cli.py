@@ -245,7 +245,7 @@ def resetdb(project_name="derex"):
 def get_mysql_db_name(project_name):
     """Given a project name return a mysql database name
     """
-    return project_name
+    return f"{project_name}_edxapp"
 
 
 def resetmailslurper():
