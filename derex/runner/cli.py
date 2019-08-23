@@ -67,13 +67,22 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
     type=click.Choice(["requirements", "themes"]),
     default=None,
 )
-def ddc_local(compose_args: Tuple[str, ...], build: str):
+@click.option(
+    "--dry-run",
+    default=False,
+    is_flag=True,
+    help="Don't actually do anything, just print what would have been run",
+)
+def ddc_local(compose_args: Tuple[str, ...], build: str, dry_run: bool):
+    check_docker()
+    setup_logging()
     if build in ["requirements", "themes"]:
         click.echo("Building docker image with project requirements")
         build_requirements_image(project_dir(os.getcwd()))
     if build == "themes":
         click.echo("Building docker image with themes")
         build_themes_image(project_dir(os.getcwd()))
+    run_compose(list(compose_args), variant="local", dry_run=dry_run)
 
 
 def build_requirements_image(path: str):
