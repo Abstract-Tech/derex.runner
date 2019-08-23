@@ -38,6 +38,15 @@ def test_asbool():
     assert asbool(None) is False
 
 
+def test_dirhash():
+    from derex.runner.utils import dirhash
+
+    requirements_hash = dirhash("fixtures/minimal/requirements")
+    themes_hash = dirhash("fixtures/minimal/themes")
+
+    assert requirements_hash != themes_hash
+
+
 @contextlib.contextmanager
 def working_directory(path: Path):
     """Changes working directory and returns to previous on exit."""

@@ -1,6 +1,8 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 import os
+import re
+import hashlib
 import pkg_resources
 import yaml
 
@@ -32,6 +34,56 @@ def project_dir(path: Union[Path, str]):
     raise ValueError(
         f"No directory found with a {CONF_FILENAME} file in it, starting from {path}"
     )
+
+
+def dirhash(
+    dirname: Union[Path, str],
+    excluded_files: List = [],
+    ignore_hidden: bool = False,
+    followlinks: bool = False,
+    excluded_extensions: List = [],
+):
+
+    if not os.path.isdir(dirname):
+        raise TypeError(f"{dirname} is not a directory.")
+
+    hashvalues = []
+    for root, dirs, files in os.walk(dirname, topdown=True, followlinks=followlinks):
+        if ignore_hidden and re.search(r"/\.", root):
+            continue
+
+        dirs.sort()
+        files.sort()
+
+        for filename in files:
+            if ignore_hidden and filename.startswith("."):
+                continue
+
+            if filename.split(".")[-1:][0] in excluded_extensions:
+                continue
+
+            if filename in excluded_files:
+                continue
+
+            hasher = hashlib.sha256()
+            filepath = os.path.join(root, filename)
+            if not os.path.exists(filepath):
+                hashvalues.append(hasher.hexdigest())
+            else:
+                with open(filepath, "rb") as fileobj:
+                    while True:
+                        data = fileobj.read(64 * 1024)
+                        if not data:
+                            break
+                        hasher.update(data)
+                hashvalues.append(hasher.hexdigest())
+
+            print(hashvalues)
+
+    hasher = hashlib.sha256()
+    for hashvalue in sorted(hashvalues):
+        hasher.update(hashvalue.encode("utf-8"))
+    return hasher.hexdigest()
 
 
 truthy = frozenset(("t", "true", "y", "yes", "on", "1"))
