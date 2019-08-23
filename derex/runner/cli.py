@@ -17,7 +17,7 @@ from derex.runner.docker import reset_mysql
 from derex.runner.docker import wait_for_mysql
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
-from derex.runner.utils import project_dir
+from derex.runner.utils import get_project_dir
 import logging
 import click
 
@@ -78,10 +78,10 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, dry_run: bool):
     setup_logging()
     if build in ["requirements", "themes"]:
         click.echo("Building docker image with project requirements")
-        build_requirements_image(project_dir(os.getcwd()))
+        build_requirements_image(get_project_dir(os.getcwd()))
     if build == "themes":
         click.echo("Building docker image with themes")
-        build_themes_image(project_dir(os.getcwd()))
+        build_themes_image(get_project_dir(os.getcwd()))
     run_compose(list(compose_args), variant="local", dry_run=dry_run)
 
 

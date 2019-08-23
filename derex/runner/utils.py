@@ -14,15 +14,15 @@ def compose_path(name):
     return pkg_resources.resource_filename(__name__, f"compose_files/{name}")
 
 
-def project_config():
+def get_project_config():
     """Return the parsed configuration of this project.
     """
-    dir = project_dir(os.getcwd())
+    dir = get_project_dir(os.getcwd())
     filename = dir / CONF_FILENAME
     return yaml.load(filename.open())
 
 
-def project_dir(path: Union[Path, str]):
+def get_project_dir(path: Union[Path, str]):
     """Find the project directory walking up the filesystem starting on the
     given path until a configuration file is found.
     """

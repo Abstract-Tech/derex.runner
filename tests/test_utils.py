@@ -7,22 +7,22 @@ import os
 MINIMAL_PROJ = Path(__file__).parent / "fixtures" / "minimal"
 
 
-def test_project_config():
+def test_get_project_config():
     """
     """
-    from derex.runner.utils import project_config
+    from derex.runner.utils import get_project_config
 
     with working_directory(MINIMAL_PROJ):
-        res = project_config()
+        res = get_project_config()
     assert res["project_name"] == "minimal"
 
 
-def test_project_dir():
+def test_get_project_dir():
     """
     """
-    from derex.runner.utils import project_dir
+    from derex.runner.utils import get_project_dir
 
-    assert project_dir(MINIMAL_PROJ) == project_dir(MINIMAL_PROJ / "themes")
+    assert get_project_dir(MINIMAL_PROJ) == get_project_dir(MINIMAL_PROJ / "themes")
 
 
 def test_asbool():
