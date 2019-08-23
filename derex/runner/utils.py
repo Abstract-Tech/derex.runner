@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, List
+from typing import List, Optional, Union
 import os
 import re
 import hashlib

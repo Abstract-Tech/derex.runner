@@ -10,17 +10,14 @@ from typing import List, Tuple, Dict, Optional
 import docker
 from derex.runner.docker import build_image
 from derex.runner.docker import check_services
-from derex.runner.docker import create_deps
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
 from derex.runner.docker import reset_mysql
 from derex.runner.docker import wait_for_mysql
-from derex.runner.plugins import Registry
-from derex.runner.plugins import setup_plugin_manager
 from derex.runner.project import Project
+from derex.runner.compose_utils import run_compose
 import click
-from compose.cli.main import main
 
 
 logger = logging.getLogger(__name__)
@@ -31,41 +28,6 @@ def setup_logging():
     for logger in ("urllib3.connectionpool", "compose", "docker"):
         logging.getLogger(logger).setLevel(logging.WARN)
     logging.getLogger("").setLevel(logging.INFO)
-
-
-def run_compose(
-    args: List[str],
-    variant: str = "services",
-    dry_run: bool = False,
-    project: Optional[Project] = None,
-):
-    create_deps()
-
-    plugin_manager = setup_plugin_manager()
-    registry = Registry()
-    if project:
-        for opts in plugin_manager.hook.local_compose_options(project=project):
-            registry.add(
-                key=opts["name"], value=opts["options"], location=opts["priority"]
-            )
-    else:
-        for opts in plugin_manager.hook.compose_options():
-            if opts["variant"] == variant:
-                registry.add(
-                    key=opts["name"], value=opts["options"], location=opts["priority"]
-                )
-    settings = [el for lst in registry for el in lst]
-    old_argv = sys.argv
-    try:
-        sys.argv = ["docker-compose"] + settings + args
-        if not dry_run:
-            click.echo(f'Running {" ".join(sys.argv)}')
-            main()
-        else:
-            click.echo("Would have run")
-            click.echo(click.style(" ".join(sys.argv), fg="blue"))
-    finally:
-        sys.argv = old_argv
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
