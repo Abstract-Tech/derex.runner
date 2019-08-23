@@ -18,6 +18,10 @@ def get_project_name():
     return get_project_config()["project_name"]
 
 
+def get_project_base_image():
+    return get_project_config().get("base_image", "derex/openedx-ironwood:latest")
+
+
 def get_project_config():
     """Return the parsed configuration of this project.
     """

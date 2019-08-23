@@ -20,6 +20,7 @@ from derex.runner.plugins import setup_plugin_manager
 from derex.runner.utils import get_project_dir
 from derex.runner.utils import get_project_config
 from derex.runner.utils import get_project_name
+from derex.runner.utils import get_project_base_image
 from derex.runner.utils import get_image_tag
 import logging
 import click
@@ -105,7 +106,7 @@ def build_requirements_image(path: str):
     """Build the docker image the includes project requirements for the project
     specified by `path`.
     """
-    dockerfile_contents = ["FROM derex/openedx-ironwood:latest"]
+    dockerfile_contents = [f"FROM {get_project_base_image()}"]
 
     requirements_path = os.path.join(path, "requirements")
     paths_to_copy: List[str] = []
@@ -133,7 +134,7 @@ def build_themes_image(path: str):
     """Build the docker image the includes project requirements for the project
     specified by `path`.
     """
-    dockerfile_contents = ["FROM derex/openedx-ironwood:latest"]
+    dockerfile_contents = [f"FROM {get_project_base_image()}"]
 
     themes_path = os.path.join(path, "themes")
     paths_to_copy: List[str] = []
