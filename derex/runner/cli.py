@@ -71,10 +71,10 @@ def run_compose(args: List[str], variant: str = "services", dry_run: bool = Fals
     default=None,
 )
 def ddc_local(compose_args: Tuple[str, ...], build: str):
-    if build == "requirements":
+    if build in ["requirements", "themes"]:
         click.echo("Building docker image with project requirements")
         build_requirements_image(project_dir(os.getcwd()))
-    elif build == "themes":
+    if build == "themes":
         click.echo("Building docker image with themes")
         build_themes_image(project_dir(os.getcwd()))
 
