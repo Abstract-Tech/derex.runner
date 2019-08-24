@@ -1,17 +1,20 @@
-from derex.runner.plugins import setup_plugin_manager
-from pathlib import Path
+from compose.cli.main import main
 from derex.runner.docker import create_deps
 from derex.runner.plugins import Registry
-from typing import List, Optional, Union
-from compose.cli.main import main
+from derex.runner.plugins import setup_plugin_manager
+from pathlib import Path
+from typing import List
+from typing import Optional
+from typing import Union
+
 import click
-import os
-import re
+import derex
 import hashlib
+import os
 import pkg_resources
+import re
 import sys
 import yaml
-import derex
 
 
 def run_compose(

@@ -1,12 +1,16 @@
 from collections import namedtuple
+from derex.runner import config
+from derex.runner import hookimpl
+from derex.runner import plugin_spec
+from derex.runner.utils import asbool
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Union
+
 import os
 import pkg_resources
-from typing import List, Dict, Callable, Union
 import pluggy
-from derex.runner import config
-from derex.runner import plugin_spec
-from derex.runner import hookimpl
-from derex.runner.utils import asbool
 
 
 def setup_plugin_manager():

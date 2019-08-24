@@ -1,9 +1,11 @@
+from derex.runner.utils import get_dir_hash
+from pathlib import Path
+from typing import Union
+
+import hashlib
 import os
 import yaml
-import hashlib
-from typing import Union
-from pathlib import Path
-from derex.runner.utils import get_dir_hash
+
 
 CONF_FILENAME = ".derex.config.yaml"
 

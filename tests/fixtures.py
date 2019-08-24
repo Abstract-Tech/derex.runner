@@ -1,6 +1,7 @@
-import os
-import contextlib
 from pathlib import Path
+
+import contextlib
+import os
 
 
 MINIMAL_PROJ = Path(__file__).parent / "fixtures" / "minimal"

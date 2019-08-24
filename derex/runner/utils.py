@@ -1,9 +1,12 @@
 from pathlib import Path
-from typing import List, Optional, Union
-import os
-import re
+from typing import List
+from typing import Optional
+from typing import Union
+
 import hashlib
+import os
 import pkg_resources
+import re
 import yaml
 
 

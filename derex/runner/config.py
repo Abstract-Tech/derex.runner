@@ -1,12 +1,16 @@
-import os
-import pkg_resources
 from derex.runner import hookimpl
 from derex.runner.project import Project
 from derex.runner.utils import asbool
 from derex.runner.utils import compose_path
 from jinja2 import Template
 from pathlib import Path
-from typing import List, Dict, Callable, Union
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Union
+
+import os
+import pkg_resources
 import pluggy
 
 

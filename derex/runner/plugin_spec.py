@@ -1,5 +1,8 @@
-from typing import Dict, List, Union
 from derex.runner.project import Project
+from typing import Dict
+from typing import List
+from typing import Union
+
 import pluggy
 
 

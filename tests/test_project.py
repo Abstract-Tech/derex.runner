@@ -1,6 +1,6 @@
+from .fixtures import MINIMAL_PROJ
+from .fixtures import working_directory
 from derex.runner.project import Project
-
-from .fixtures import MINIMAL_PROJ, working_directory
 
 
 def test_project():

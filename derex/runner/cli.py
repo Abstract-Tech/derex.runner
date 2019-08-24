@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Console script for derex.runner."""
-from pathlib import Path
-import os
-import sys
-import logging
-import pluggy
-from typing import List, Tuple, Dict, Optional
-import docker
+from derex.runner.compose_utils import run_compose
 from derex.runner.docker import build_image
 from derex.runner.docker import check_services
 from derex.runner.docker import execute_mysql_query
@@ -16,8 +10,18 @@ from derex.runner.docker import load_dump
 from derex.runner.docker import reset_mysql
 from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
-from derex.runner.compose_utils import run_compose
+from pathlib import Path
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+
 import click
+import docker
+import logging
+import os
+import pluggy
+import sys
 
 
 logger = logging.getLogger(__name__)

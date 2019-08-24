@@ -3,18 +3,19 @@
 
 """Tests for `derex.runner` package."""
 
-from itertools import repeat
-from types import SimpleNamespace
+from .fixtures import MINIMAL_PROJ
+from .fixtures import working_directory
 from click.testing import CliRunner
-from pathlib import Path
-import contextlib
-import sys
-import pytest
-import os
-import traceback
-
 from derex.runner.project import Project
-from .fixtures import MINIMAL_PROJ, working_directory
+from itertools import repeat
+from pathlib import Path
+from types import SimpleNamespace
+
+import contextlib
+import os
+import pytest
+import sys
+import traceback
 
 
 runner = CliRunner()

@@ -1,16 +1,18 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
-import pkg_resources
+from pathlib import Path
+from requests.exceptions import RequestException
+from typing import Iterable
+from typing import List
+
 import docker
 import io
 import json
 import logging
+import pkg_resources
 import tarfile
 import time
-from pathlib import Path
-from typing import Iterable, List
-from requests.exceptions import RequestException
 
 
 client = docker.from_env()

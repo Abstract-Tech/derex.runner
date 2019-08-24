@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from .fixtures import MINIMAL_PROJ, working_directory
+from .fixtures import MINIMAL_PROJ
+from .fixtures import working_directory
 
 
 def test_asbool():
