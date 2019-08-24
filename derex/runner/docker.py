@@ -46,13 +46,6 @@ def ensure_volumes_present():
         client.volumes.create(volume)
 
 
-def create_deps():
-    """Make sure the resources we depened on (network and volumes) are present.
-    Create them if not.
-    """
-    ensure_volumes_present()
-
-
 def check_services(services: Iterable[str] = ("mysql")) -> bool:
     """Check if the services needed for running Open edX are running.
     """
