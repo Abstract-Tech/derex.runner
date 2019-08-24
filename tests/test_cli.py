@@ -11,6 +11,7 @@ import contextlib
 import sys
 import pytest
 import os
+import traceback
 
 from derex.runner.project import Project
 from .fixtures import MINIMAL_PROJ, working_directory
@@ -25,11 +26,13 @@ def test_ddc(sys_argv):
 
     os.environ["DEREX_ADMIN_SERVICES"] = "False"
     result = runner.invoke(ddc, ["config"])
+    assert_result_ok(result)
     assert "mongodb" in result.output
     assert "adminer" not in result.output
 
     os.environ["DEREX_ADMIN_SERVICES"] = "True"
     result = runner.invoke(ddc, ["config"])
+    assert_result_ok(result)
     assert "adminer" in result.output
 
 
@@ -43,14 +46,17 @@ def test_ddc_ironwood(sys_argv, mocker):
     check_services.return_value = False
     for param in ["up", "start"]:
         result = runner.invoke(ddc_ironwood, [param, "--dry-run"])
+        assert_result_ok(result)
         assert "ddc up -d" in result.output
 
     check_services.return_value = True
     for param in ["up", "start"]:
         result = runner.invoke(ddc_ironwood, [param, "--dry-run"])
+        assert_result_ok(result)
         assert "Would have run" in result.output
 
     result = runner.invoke(ddc_ironwood, ["config"])
+    assert_result_ok(result)
     assert "cms_worker" in result.output
 
 
@@ -65,6 +71,7 @@ def test_ddc_ironwood_reset_mysql(sys_argv, mocker):
     ] + list(repeat(SimpleNamespace(exit_code=0), 10))
 
     result = runner.invoke(ddc_ironwood, ["--reset-mysql"])
+    assert_result_ok(result)
     assert result.exit_code == 0
 
 
@@ -73,12 +80,23 @@ def test_ddc_local():
 
     with working_directory(MINIMAL_PROJ):
         result = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
+        assert_result_ok(result)
         assert "Successfully built" in result.output
         assert "Successfully tagged" in result.output
 
         result = runner.invoke(ddc_local, ["config"])
+        assert_result_ok(result)
         assert Project().name in result.output
         assert os.path.isdir(Project().root / ".derex")
+
+
+def assert_result_ok(result):
+    """Makes sure the click script exited on purpose, and not by accident
+    because of an exception.
+    """
+    if not isinstance(result.exc_info[1], SystemExit):
+        tb_info = "\n".join(traceback.format_tb(result.exc_info[2]))
+        assert result.exit_code == 0, tb_info
 
 
 @pytest.fixture
