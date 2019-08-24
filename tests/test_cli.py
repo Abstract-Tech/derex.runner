@@ -72,12 +72,12 @@ def test_ddc_local():
     from derex.runner.cli import ddc_local
 
     with working_directory(MINIMAL_PROJ):
-        output = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
-        assert "Successfully built" in output.stdout
-        assert "Successfully tagged" in output.stdout
+        result = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
+        assert "Successfully built" in result.output
+        assert "Successfully tagged" in result.output
 
-        output = runner.invoke(ddc_local, ["config"])
-        assert Project().name in output.stdout
+        result = runner.invoke(ddc_local, ["config"])
+        assert Project().name in result.output
         assert os.path.isdir(Project().root / ".derex")
 
 
