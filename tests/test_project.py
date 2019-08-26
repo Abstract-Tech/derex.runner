@@ -1,9 +1,10 @@
 from .fixtures import MINIMAL_PROJ
 from .fixtures import working_directory
-from derex.runner.project import Project
 
 
 def test_project():
+    from derex.runner.project import Project
+
     with working_directory(MINIMAL_PROJ):
         project = Project()
 
@@ -17,3 +18,10 @@ def test_project():
     assert project.name == "minimal"
     assert project.requirements_image_tag == "minimal/openedx-requirements:b964b4"
     assert project.themes_image_tag == "minimal/openedx-themes:0c4b97"
+
+
+def test_default_project():
+    from derex.runner.project import DefaultProject
+
+    project = DefaultProject()
+    assert project.name

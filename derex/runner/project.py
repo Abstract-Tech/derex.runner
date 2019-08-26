@@ -1,5 +1,6 @@
 from derex.runner.utils import get_dir_hash
 from pathlib import Path
+from typing import Optional
 from typing import Union
 
 import hashlib
@@ -11,6 +12,8 @@ CONF_FILENAME = ".derex.config.yaml"
 
 
 class Project:
+    path: Optional[Path]
+
     def __init__(self, path: Union[Path, str] = None):
         if not path:
             path = os.getcwd()
@@ -62,3 +65,17 @@ class Project:
         raise ValueError(
             f"No directory found with a {CONF_FILENAME} file in it, starting from {self.path}"
         )
+
+
+class DefaultProject(Project):
+    """A class that subclasses `Project` with static values.
+    Useful to pass around a `Project` object with defaults, when no project is
+    currently active.
+    """
+
+    def __init__(self, _=None):
+        pass
+
+    path = None
+    name = "derex"
+    root = name  # XXX This should go: the path should be the path to the root

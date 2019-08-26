@@ -77,7 +77,7 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
         return
 
     if reset_mysql:
-        resetdb()
+        resetdb(project)
         return
     run_compose(list(compose_args), project=project, dry_run=dry_run)
 
@@ -192,13 +192,11 @@ def ddc_ironwood(compose_args: Tuple[str, ...], reset_mysql: bool, dry_run: bool
     return 0
 
 
-def resetdb(project_name="derex"):
+def resetdb(project: Project = None):
     """Reset the mysql database of LMS/CMS
     """
     wait_for_mysql()
-    execute_mysql_query(
-        f"CREATE DATABASE IF NOT EXISTS {get_mysql_db_name(project_name)}"
-    )
+    execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS derex")
     reset_mysql()
 
 
