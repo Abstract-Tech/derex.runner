@@ -12,70 +12,70 @@ CONF_FILENAME = ".derex.config.yaml"
 
 
 class Project:
-    path: Optional[Path]
+    """Represents a derex.runner project, i.e. a directory with a
+    `.derex.config.yaml` file and optionally a "themes", "settings" and
+    "requirements" directory.
+    """
+
+    #: The root path to this project
+    root: Path
+
+    #: The directory containing requirements, if defined
+    requirements_dir: Optional[Path] = None
+
+    #: The directory containing themes, if defined
+    themes_dir: Optional[Path] = None
+
+    # The image tag of the image that includes requirements
+    requirements_image_tag: str
+
+    # The image tag of the image that includes requirements and themes
+    themes_image_tag: str
+
+    # The image tag of the final image containing everything needed for this project
+    image_tag: str
 
     def __init__(self, path: Union[Path, str] = None):
         if not path:
             path = os.getcwd()
-
-        self.path = Path(path)
-        self.themes_dir = self.path / "themes"
-        self.requirements_dir = self.path / "requirements"
-        self.name = self.config["project_name"]
+        self.root = find_project_root(Path(path))
+        config_path = self.root / CONF_FILENAME
+        self.config = yaml.load(config_path.open())
         self.base_image = self.config.get("base_image", "derex/openedx-ironwood:latest")
+        if "project_name" not in self.config:
+            raise ValueError(f"A project_name was not specified in {config_path}")
+        self.name = self.config["project_name"]
 
-    def __eq__(self, other):
-        return self.root == other.root
+        requirements_dir = self.root / "requirements"
+        if requirements_dir.is_dir():
+            self.requirements_dir = requirements_dir
+            img_hash = get_dir_hash(self.requirements_dir)
+            self.requirements_image_tag = (
+                f"{self.name}/openedx-requirements:{img_hash[:6]}"
+            )
+        else:
+            self.requirements_image_tag = self.base_image
 
-    @property
-    def requirements_image_tag(self):
-        """Returns a string suitabile to be used as tag for a docker image
-        """
-        hasher = hashlib.sha256()
-        hasher.update(get_dir_hash(self.requirements_dir).encode("utf-8"))
-        version = hasher.hexdigest()[:6]
-        return f"{self.name}/openedx-requirements:{version}"
+        themes_dir = self.root / "themes"
+        if themes_dir.is_dir():
+            self.themes_dir = themes_dir
+            img_hash = get_dir_hash(self.themes_dir)
+            self.themes_image_tag = f"{self.name}/openedx-themes:{img_hash[:6]}"
+        else:
+            self.themes_image_tag = self.requirements_image_tag
 
-    @property
-    def themes_image_tag(self):
-        """Returns a string suitabile to be used as tag for a docker image
-        """
-        hasher = hashlib.sha256()
-        hasher.update(get_dir_hash(self.themes_dir).encode("utf-8"))
-        version = hasher.hexdigest()[:6]
-        return f"{self.name}/openedx-themes:{version}"
-
-    @property
-    def config(self):
-        """Return the parsed configuration of this project.
-        """
-        filepath = self.root / CONF_FILENAME
-        return yaml.load(filepath.open())
-
-    @property
-    def root(self):
-        """Find the project directory walking up the filesystem starting on the
-        given path until a configuration file is found.
-        """
-        current = self.path
-        while current != current.parent:
-            if (current / CONF_FILENAME).is_file():
-                return current
-            current = current.parent
-        raise ValueError(
-            f"No directory found with a {CONF_FILENAME} file in it, starting from {self.path}"
-        )
+        self.image_tag = self.themes_image_tag
 
 
-class DefaultProject(Project):
-    """A class that subclasses `Project` with static values.
-    Useful to pass around a `Project` object with defaults, when no project is
-    currently active.
+def find_project_root(path: Path) -> Path:
+    """Find the project directory walking up the filesystem starting on the
+    given path until a configuration file is found.
     """
-
-    def __init__(self, _=None):
-        pass
-
-    path = None
-    name = "derex"
-    root = name  # XXX This should go: the path should be the path to the root
+    current = path
+    while current != current.parent:
+        if (current / CONF_FILENAME).is_file():
+            return current
+        current = current.parent
+    raise ValueError(
+        f"No directory found with a {CONF_FILENAME} file in it, starting from {path}"
+    )

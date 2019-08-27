@@ -89,7 +89,7 @@ def build_requirements_image(project: Project):
     dockerfile_contents = [f"FROM {project.base_image}"]
 
     paths_to_copy: List[str] = []
-    if project.requirements_dir.is_dir():
+    if project.requirements_dir:
         paths_to_copy = [str(project.requirements_dir)]
         dockerfile_contents.extend(["COPY requirements /tmp/requirements/"])
         for requirments_file in os.listdir(project.requirements_dir):
@@ -116,7 +116,7 @@ def build_themes_image(project: Project):
     dockerfile_contents = [f"FROM {project.requirements_image_tag}"]
 
     paths_to_copy: List[str] = []
-    if project.themes_dir.is_dir():
+    if project.themes_dir:
         paths_to_copy = [str(project.themes_dir)]
         dockerfile_contents.extend(
             ["COPY themes /openedx/themes/", f"RUN sh -c '{BUILD_ASSETS_SCRIPT}'"]
