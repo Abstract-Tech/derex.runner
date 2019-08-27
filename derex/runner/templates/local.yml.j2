@@ -1,82 +1,100 @@
+{%- macro volumes(project) -%}
+      {%- if project.settings_dir -%}
+      - {{ project.root }}/settings:/openedx/edx-platform/lms/envs/{{ project.name }}
+      - {{ project.root }}/settings:/openedx/edx-platform/cms/envs/{{ project.name }}
+      {%- endif -%}
+{%- endmacro -%}
+{%- macro environment(project) -%}
+      {%- if project.settings_dir -%}
+      DJANGO_SETTINGS_MODULE: lms.envs.{{ project.name }}.base
+      SETTINGS: {{ project.name }}.base
+      {%- endif %}
+      MYSQL_DB: {{ project.mysql_db_name }}
+{%- endmacro -%}
 # Open edX services
 version: "3.5"
 services:
   flower:
-    image: {{ themes_image }}
+    image: {{ project.image_tag }}
     command:
       sh -c 'pip install flower;
         flower --port=5555
         --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)")'
     ports:
       - 127.0.0.1:5555:5555
-    container_name: {{ project_name }}_flower
+    container_name: {{ project.name }}_flower
+    networks:
+      - derex
 
   lms:
-    image: {{ themes_image }}
+    image: {{ project.image_tag }}
     command:
       sh -c 'gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
         --max-requests=1000
         wsgi:application'
     volumes:
-      - {{ project_name }}_data:/openedx/data/
-      - {{ project_root }}/settings:/openedx/edx-platform/lms/envs/{{ project_name }}
-      - {{ project_root }}/settings:/openedx/edx-platform/cms/envs/{{ project_name }}
+      {{ volumes(project) }}
+      - {{ project.name }}_data:/openedx/data/
     environment:
-      DJANGO_SETTINGS_MODULE: lms.envs.{{ project_name }}.base
-      SETTINGS: {{ project_name }}.base
-      MYSQL_DB: {{ project_name }}_edxapp
+      {{ environment(project) }}
     ports:
       - 127.0.0.1:4700:4700
-    container_name: {{ project_name }}_lms
+    container_name: {{ project.name }}_lms
     networks:
       - derex
 
   cms:
-    image: {{ themes_image }}
+    image: {{ project.image_tag }}
     command:
       sh -c 'gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
         --max-requests=1000
         wsgi:application'
     volumes:
-      - {{ project_name }}_data:/openedx/data/
+      {{ volumes(project) }}
+      - {{ project.name }}_data:/openedx/data/
     environment:
       SERVICE_VARIANT: cms
+      {{ environment(project) }}
     ports:
       - 127.0.0.1:4800:4800
-    container_name: {{ project_name }}_cms
+    container_name: {{ project.name }}_cms
     networks:
       - derex
 
   lms_worker:
-    image: {{ themes_image }}
+    image: {{ project.image_tag }}
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
         --hostname=edx.$${SERVICE_VARIANT}.core.default
         --maxtasksperchild 100'
-    container_name: {{ project_name }}_lms_worker
+    container_name: {{ project.name }}_lms_worker
     volumes:
-      - {{ project_name }}_data:/openedx/data/
+      {{ volumes(project) }}
+      - {{ project.name }}_data:/openedx/data/
     environment:
       C_FORCE_ROOT: "True"
+      {{ environment(project) }}
     networks:
       - derex
 
   cms_worker:
-    image: {{ themes_image }}
+    image: {{ project.image_tag }}
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
         --hostname=edx.$${SERVICE_VARIANT}.core.default
         --maxtasksperchild 100'
-    container_name: {{ project_name }}_cms_worker
+    container_name: {{ project.name }}_cms_worker
     volumes:
-      - {{ project_name }}_data:/openedx/data/
+      {{ volumes(project) }}
+      - {{ project.name }}_data:/openedx/data/
     environment:
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
+      {{ environment(project) }}
     networks:
       - derex
 
@@ -85,4 +103,4 @@ networks:
     name: derex
 
 volumes:
-  {{ project_name }}_data:
+  {{ project.name }}_data:

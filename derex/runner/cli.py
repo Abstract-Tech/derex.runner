@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """Console script for derex.runner."""
+from derex.runner.compose_utils import reset_mysql
 from derex.runner.compose_utils import run_compose
 from derex.runner.docker import build_image
 from derex.runner.docker import check_services
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
-from derex.runner.docker import reset_mysql
 from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
 from pathlib import Path
@@ -157,53 +157,12 @@ def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool, dry_run: bool):
     return 0
 
 
-@click.command(context_settings=dict(ignore_unknown_options=True))
-@click.argument("compose_args", nargs=-1)
-@click.option(
-    "--reset-mysql", default=False, is_flag=True, help="Resets the MySQL database"
-)
-@click.option(
-    "--dry-run",
-    default=False,
-    is_flag=True,
-    help="Don't actually do anything, just print what would have been run",
-)
-def ddc_ironwood(compose_args: Tuple[str, ...], reset_mysql: bool, dry_run: bool):
-    """Derex docker-compose running ironwood files: run docker-compose
-    with additional parameters.
-    Adds docker compose file paths for edx ironwood daemons.
-    """
-    check_docker()
-    setup_logging()
-
-    if not check_services(["mysql", "mongodb", "rabbitmq"]) and any(
-        param in compose_args for param in ["up", "start"]
-    ):
-        click.echo("Mysql/mongo/rabbitmq services not found.")
-        click.echo("Maybe you forgot to run")
-        click.echo("ddc up -d")
-        return -1
-
-    if reset_mysql:
-        resetdb()
-        return 0
-
-    run_compose(list(compose_args), variant="openedx", dry_run=dry_run)
-    return 0
-
-
-def resetdb(project: Project = None):
+def resetdb(project: Project):
     """Reset the mysql database of LMS/CMS
     """
     wait_for_mysql()
-    execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS derex")
-    reset_mysql()
-
-
-def get_mysql_db_name(project_name):
-    """Given a project name return a mysql database name
-    """
-    return f"{project_name}_edxapp"
+    execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
+    reset_mysql(project)
 
 
 def resetmailslurper():

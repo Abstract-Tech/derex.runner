@@ -1,6 +1,7 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+from derex.runner.project import Project
 from pathlib import Path
 from requests.exceptions import RequestException
 from typing import Iterable
@@ -65,16 +66,6 @@ def execute_mysql_query(query: str):
     container = client.containers.get("mysql")
     res = container.exec_run(f'mysql -psecret -e "{query}"')
     assert res.exit_code == 0, f"Error running {query}"
-
-
-def reset_mysql():
-    """Run script from derex/openedx image to reset the mysql db.
-    """
-    logger.warning("Resetting mysql database")
-    output = client.containers.run(
-        "derex/openedx-ironwood", "restore_dump.py", network="derex", remove=True
-    )
-    logger.warning(output.decode("utf8").strip())
 
 
 def wait_for_mysql(max_seconds: int = 20):

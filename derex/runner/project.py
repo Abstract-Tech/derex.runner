@@ -26,6 +26,9 @@ class Project:
     #: The directory containing themes, if defined
     themes_dir: Optional[Path] = None
 
+    # The directory containing project settings (that feed django.conf.settings)
+    settings_dir: Optional[Path] = None
+
     # The image tag of the image that includes requirements
     requirements_image_tag: str
 
@@ -34,6 +37,9 @@ class Project:
 
     # The image tag of the final image containing everything needed for this project
     image_tag: str
+
+    # Name of the database this project uses
+    mysql_db_name: str
 
     def __init__(self, path: Union[Path, str] = None):
         if not path:
@@ -64,7 +70,14 @@ class Project:
         else:
             self.themes_image_tag = self.requirements_image_tag
 
+        settings_dir = self.root / "settings"
+        if settings_dir.is_dir():
+            self.settings_dir = settings_dir
+            # TODO: run some sanity checks on the settings dir and raise an
+            # exception if they fail
+
         self.image_tag = self.themes_image_tag
+        self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
 
 
 def find_project_root(path: Path) -> Path:

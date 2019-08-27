@@ -45,14 +45,14 @@ steps:
     ddc --reset-mailslurper
   displayName: 'Start service daemons'
 
-- script: ddc-ironwood up -d
+- script: cd tests/fixtures/minimal; ddc-local up -d
   displayName: 'Start edX daemons'
 
-- script: ddc-ironwood --reset-mysql
+- script: cd tests/fixtures/minimal; ddc-local --reset-mysql
   displayName: 'Prime mysql database'
 
 - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
-  displayName: 'Start nginx'
+  displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
 
 - script: |
     ddc logs

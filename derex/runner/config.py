@@ -78,11 +78,6 @@ def generate_local_docker_compose(project: Project) -> Path:
         pkg_resources.resource_filename(__name__, "templates/local.yml.j2")
     )
     tmpl = Template(template_path.read_text())
-    text = tmpl.render(
-        project_name=project.name,
-        project_root=project.root,
-        themes_image=project.themes_image_tag,
-        requirements_image=project.requirements_image_tag,
-    )
+    text = tmpl.render(project=project)
     local_compose_path.write_text(text)
     return local_compose_path

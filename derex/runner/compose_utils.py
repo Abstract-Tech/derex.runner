@@ -2,6 +2,7 @@ from compose.cli.main import main
 from derex.runner.docker import ensure_volumes_present
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
+from derex.runner.project import Project
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -10,11 +11,15 @@ from typing import Union
 import click
 import derex
 import hashlib
+import logging
 import os
 import pkg_resources
 import re
 import sys
 import yaml
+
+
+logger = logging.getLogger(__name__)
 
 
 def run_compose(
@@ -53,3 +58,10 @@ def run_compose(
             click.echo(click.style(" ".join(sys.argv), fg="blue"))
     finally:
         sys.argv = old_argv
+
+
+def reset_mysql(project: Project):
+    """Run script from derex/openedx image to reset the mysql db.
+    """
+    logger.warning("Resetting mysql database")
+    run_compose(["run", "--rm", "lms", "restore_dump.py"], project=project)
