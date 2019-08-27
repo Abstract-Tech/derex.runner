@@ -37,7 +37,7 @@ def test_ddc(sys_argv):
     assert "adminer" in result.output
 
 
-def test_ddc_local(sys_argv, mocker):
+def test_ddc_local(sys_argv, mocker, minimal_proj):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli import ddc_local
 
@@ -61,7 +61,7 @@ def test_ddc_local(sys_argv, mocker):
     assert "cms_worker" in result.output
 
 
-def test_ddc_local_reset_mysql(sys_argv, mocker):
+def test_ddc_local_reset_mysql(sys_argv, mocker, minimal_proj):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli import ddc_local
 
@@ -98,17 +98,3 @@ def assert_result_ok(result):
     if not isinstance(result.exc_info[1], SystemExit):
         tb_info = "\n".join(traceback.format_tb(result.exc_info[2]))
         assert result.exit_code == 0, tb_info
-
-
-@pytest.fixture
-def sys_argv(mocker):
-    @contextlib.contextmanager
-    def my_cm(eargs):
-        with mocker.mock_module.patch.object(sys, "argv", eargs):
-            try:
-                yield
-            except SystemExit as exc:
-                if exc.code != 0:
-                    raise
-
-    return my_cm
