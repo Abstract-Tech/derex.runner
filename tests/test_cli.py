@@ -3,7 +3,7 @@
 
 """Tests for `derex.runner` package."""
 
-from .fixtures import MINIMAL_PROJ
+from .fixtures import COMPLETE_PROJ
 from .fixtures import working_directory
 from click.testing import CliRunner
 from derex.runner.project import Project
@@ -79,7 +79,7 @@ def test_ddc_ironwood_reset_mysql(sys_argv, mocker):
 def test_ddc_local():
     from derex.runner.cli import ddc_local
 
-    with working_directory(MINIMAL_PROJ):
+    with working_directory(COMPLETE_PROJ):
         result = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
         assert_result_ok(result)
         assert "Successfully built" in result.output

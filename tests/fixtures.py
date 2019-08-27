@@ -5,6 +5,7 @@ import os
 
 
 MINIMAL_PROJ = Path(__file__).parent / "fixtures" / "minimal"
+COMPLETE_PROJ = Path(__file__).parent / "fixtures" / "complete"
 
 
 @contextlib.contextmanager
