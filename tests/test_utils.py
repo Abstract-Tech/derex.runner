@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from .fixtures import MINIMAL_PROJ
-from .fixtures import working_directory
-
-
 def test_asbool():
     """It's lifted from pyramid.settings, but testing it here won't harm.
     """

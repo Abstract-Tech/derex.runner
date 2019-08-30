@@ -1,12 +1,11 @@
-from .fixtures import COMPLETE_PROJ
-from .fixtures import MINIMAL_PROJ
-from .fixtures import working_directory
+from .conftest import COMPLETE_PROJ
+from .conftest import MINIMAL_PROJ
 
 
-def test_complete_project():
+def test_complete_project(workdir):
     from derex.runner.project import Project
 
-    with working_directory(COMPLETE_PROJ / "themes"):
+    with workdir(COMPLETE_PROJ / "themes"):
         project = Project()
 
     project_loaded_with_path = Project(COMPLETE_PROJ)
@@ -21,10 +20,10 @@ def test_complete_project():
     assert project.themes_image_tag == "complete/openedx-themes:b5642a"
 
 
-def test_minimal_project():
+def test_minimal_project(workdir):
     from derex.runner.project import Project
 
-    with working_directory(MINIMAL_PROJ):
+    with workdir(MINIMAL_PROJ):
         project = Project()
 
     assert type(project.config) == dict

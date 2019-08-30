@@ -3,8 +3,8 @@
 
 """Tests for `derex.runner` package."""
 
-from .fixtures import COMPLETE_PROJ
-from .fixtures import working_directory
+from .conftest import COMPLETE_PROJ
+from .conftest import MINIMAL_PROJ
 from click.testing import CliRunner
 from derex.runner.project import Project
 from itertools import repeat
@@ -76,10 +76,10 @@ def test_ddc_local_reset_mysql(sys_argv, mocker, minimal_proj):
     assert result.exit_code == 0
 
 
-def test_ddc_local_build():
+def test_ddc_local_build(workdir):
     from derex.runner.cli import ddc_local
 
-    with working_directory(COMPLETE_PROJ):
+    with workdir(COMPLETE_PROJ):
         result = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
         assert_result_ok(result)
         assert "Successfully built" in result.output
