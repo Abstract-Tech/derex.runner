@@ -1,5 +1,8 @@
-from .conftest import COMPLETE_PROJ
-from .conftest import MINIMAL_PROJ
+from pathlib import Path
+
+
+MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
+COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 
 
 def test_complete_project(workdir):

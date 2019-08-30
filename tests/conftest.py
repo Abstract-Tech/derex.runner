@@ -6,8 +6,7 @@ import pytest
 import sys
 
 
-MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
-COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
+# Do not trust the value of __file__ in this module: on Azure it's wrong
 
 
 @pytest.fixture
@@ -23,16 +22,6 @@ def workdir():
             os.chdir(prev_cwd)
 
     return workdir_decorator
-
-
-@pytest.yield_fixture
-def minimal_proj():
-    prev_cwd = Path.cwd()
-    os.chdir(MINIMAL_PROJ)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
 
 
 @pytest.fixture

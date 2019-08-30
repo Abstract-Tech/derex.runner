@@ -3,8 +3,6 @@
 
 """Tests for `derex.runner` package."""
 
-from .conftest import COMPLETE_PROJ
-from .conftest import MINIMAL_PROJ
 from click.testing import CliRunner
 from derex.runner.project import Project
 from itertools import repeat
@@ -18,6 +16,8 @@ import sys
 import traceback
 
 
+MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
+COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 runner = CliRunner()
 
 
@@ -37,7 +37,7 @@ def test_ddc(sys_argv):
     assert "adminer" in result.output
 
 
-def test_ddc_local(sys_argv, mocker, minimal_proj):
+def test_ddc_local(sys_argv, mocker, workdir):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli import ddc_local
 
@@ -46,13 +46,15 @@ def test_ddc_local(sys_argv, mocker, minimal_proj):
 
     check_services.return_value = False
     for param in ["up", "start"]:
-        result = runner.invoke(ddc_local, [param, "--dry-run"])
+        with workdir(MINIMAL_PROJ):
+            result = runner.invoke(ddc_local, [param, "--dry-run"])
         assert_result_ok(result)
         assert "ddc up -d" in result.output
 
     check_services.return_value = True
     for param in ["up", "start"]:
-        result = runner.invoke(ddc_local, [param, "--dry-run"])
+        with workdir(MINIMAL_PROJ):
+            result = runner.invoke(ddc_local, [param, "--dry-run"])
         assert_result_ok(result)
         assert "Would have run" in result.output
 
