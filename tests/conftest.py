@@ -6,8 +6,8 @@ import pytest
 import sys
 
 
-MINIMAL_PROJ = Path(__file__).parent / "fixtures" / "minimal"
-COMPLETE_PROJ = Path(__file__).parent / "fixtures" / "complete"
+MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
+COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 
 
 @pytest.fixture

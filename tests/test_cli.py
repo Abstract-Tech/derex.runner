@@ -80,7 +80,7 @@ def test_ddc_local_build(workdir):
     from derex.runner.cli import ddc_local
 
     with workdir(COMPLETE_PROJ):
-        result = runner.invoke(ddc_local, ["--build=themes", "--dry-run"])
+        result = runner.invoke(ddc_local, ["--build=themes"])
         assert_result_ok(result)
         assert "Successfully built" in result.output
         assert "Successfully tagged" in result.output
