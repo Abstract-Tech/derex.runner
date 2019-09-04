@@ -42,10 +42,10 @@ def setup_logging():
     help=(
         "Build docker image for this project.\n"
         "Argument can be one in:\n"
-        "* requirements (build the image that contains python requirements)\n"
-        "* themes (build the image that includes compiled themes)\n"
-        "* final (build the final image for this project)\n"
-        "* final-refresh (also pull base docker image before starting)\n"
+        "* requirements\n(build the image that contains python requirements)\n"
+        "* themes\n(build the image that includes compiled themes)\n"
+        "* final\n(build the final image for this project)\n"
+        "* final-refresh\n(also pull base docker image before starting)\n"
     ),
     type=click.Choice(["requirements", "themes", "final", "final-refresh"]),
     default=None,
