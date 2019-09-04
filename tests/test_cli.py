@@ -58,13 +58,15 @@ def test_ddc_local(sys_argv, mocker, workdir):
         assert_result_ok(result)
         assert "Would have run" in result.output
 
-    result = runner.invoke(ddc_local, ["config"])
+    with workdir(MINIMAL_PROJ):
+        result = runner.invoke(ddc_local, ["config"])
     assert_result_ok(result)
     assert "cms_worker" in result.output
 
 
-def test_ddc_local_reset_mysql(sys_argv, mocker, minimal_proj):
+def test_ddc_local_reset_mysql(sys_argv, mocker, workdir):
     """Test the open edx ironwood docker compose shortcut."""
+    from derex.runner.cli import ddc
     from derex.runner.cli import ddc_local
 
     mocker.patch("derex.runner.cli.check_services", return_value=True)
@@ -73,7 +75,9 @@ def test_ddc_local_reset_mysql(sys_argv, mocker, minimal_proj):
         SimpleNamespace(exit_code=-1)
     ] + list(repeat(SimpleNamespace(exit_code=0), 10))
 
-    result = runner.invoke(ddc_local, ["--reset-mysql"])
+    with workdir(MINIMAL_PROJ):
+        result = runner.invoke(ddc, ["up", "-d"])
+        result = runner.invoke(ddc_local, ["--reset-mysql"])
     assert_result_ok(result)
     assert result.exit_code == 0
 
