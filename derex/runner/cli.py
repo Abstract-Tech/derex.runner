@@ -8,6 +8,7 @@ from derex.runner.docker import check_services
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
+from derex.runner.docker import pull_image
 from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
 from pathlib import Path
@@ -38,8 +39,15 @@ def setup_logging():
 @click.argument("compose_args", nargs=-1)
 @click.option(
     "--build",
-    help="build docker image for this project",
-    type=click.Choice(["requirements", "themes"]),
+    help=(
+        "Build docker image for this project.\n"
+        "Argument can be one in:\n"
+        "* requirements (build the image that contains python requirements)\n"
+        "* themes (build the image that includes compiled themes)\n"
+        "* final (build the final image for this project)\n"
+        "* final-refresh (also pull base docker image before starting)\n"
+    ),
+    type=click.Choice(["requirements", "themes", "final", "final-refresh"]),
     default=None,
 )
 @click.option(
@@ -59,10 +67,12 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
     except ValueError:
         click.echo("You need to run this command in a derex project")
         sys.exit(1)
-    if build in ["requirements", "themes"]:
+    if build == "final-refresh":
+        pull_image(project.base_image)
+    if build in ["requirements", "themes", "final", "final-refresh"]:
         click.echo(f'Building docker image with "{project.name}" project requirements')
         build_requirements_image(project)
-    if build == "themes":
+    if build in ["themes", "final", "final-refresh"]:
         click.echo(f'Building docker image with "{project.name}" themes')
         build_themes_image(project)
     if build:

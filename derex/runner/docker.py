@@ -121,3 +121,16 @@ def build_image(dockerfile_text: str, paths: List[str], tag: str):
             print(line_decoded.get("error", ""))
         if "aux" in line_decoded:
             print(f'Built image: {line_decoded["aux"]["ID"]}')
+
+
+def pull_image(image_tag: str):
+    """Pull the given image to the local docker daemon.
+    """
+    docker_client = docker.APIClient()
+    # digest = docker_client.inspect_distribution(image_tag)["Descriptor"]["digest"]
+    print(f"Pulling image {image_tag}")
+    for out in docker_client.pull(image_tag, stream=True, decode=True):
+        if "progress" in out:
+            print(f'{out["id"]}: {out["progress"]}', end="\r")
+        else:
+            print(out["status"])
