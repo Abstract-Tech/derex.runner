@@ -40,6 +40,7 @@ services:
       {{ environment(project) }}
     ports:
       - 127.0.0.1:4700:4700
+      - 127.0.0.1:4701:4701
     container_name: {{ project.name }}_lms
     networks:
       - derex
@@ -59,6 +60,7 @@ services:
       {{ environment(project) }}
     ports:
       - 127.0.0.1:4800:4800
+      - 127.0.0.1:4801:4801
     container_name: {{ project.name }}_cms
     networks:
       - derex
