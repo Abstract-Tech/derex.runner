@@ -1,3 +1,6 @@
+from openedx.core.lib.derived import derive_settings
+from path import Path
+
 import os
 import sys
 
@@ -13,3 +16,6 @@ else:
 
 if "runserver" in sys.argv:
     SITE_NAME = SITE_NAME[:-1] + "1"
+
+COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))  # type: ignore  # noqa
+derive_settings(__name__)
