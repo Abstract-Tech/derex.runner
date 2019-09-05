@@ -1,7 +1,10 @@
 {%- macro volumes(project) -%}
       {%- if project.settings_dir -%}
-      - {{ project.root }}/settings:/openedx/edx-platform/lms/envs/{{ project.name }}
-      - {{ project.root }}/settings:/openedx/edx-platform/cms/envs/{{ project.name }}
+      - {{ project.settings_dir }}:/openedx/edx-platform/lms/envs/{{ project.name }}
+      - {{ project.settings_dir }}:/openedx/edx-platform/cms/envs/{{ project.name }}
+      {%- endif -%}
+      {%- if project.requirements_dir %}
+      - {{ project.requirements_dir }}:/openedx/derex.requirements
       {%- endif -%}
 {%- endmacro -%}
 {%- macro environment(project) -%}

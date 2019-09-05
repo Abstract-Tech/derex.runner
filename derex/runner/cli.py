@@ -101,11 +101,13 @@ def build_requirements_image(project: Project):
     paths_to_copy: List[str] = []
     if project.requirements_dir:
         paths_to_copy = [str(project.requirements_dir)]
-        dockerfile_contents.extend(["COPY requirements /tmp/requirements/"])
+        dockerfile_contents.extend(["COPY requirements /openedx/derex.requirements/"])
         for requirments_file in os.listdir(project.requirements_dir):
             if requirments_file.endswith(".txt"):
                 dockerfile_contents.extend(
-                    [f"RUN pip install -r /tmp/requirements/{requirments_file}"]
+                    [
+                        f"RUN pip install -r /openedx/derex.requirements/{requirments_file}"
+                    ]
                 )
     dockerfile_text = "\n".join(dockerfile_contents)
     build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_tag)
