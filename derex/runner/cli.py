@@ -81,12 +81,15 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
     if not check_services(["mysql", "mongodb", "rabbitmq"]) and any(
         param in compose_args for param in ["up", "start"]
     ):
-        click.echo("Mysql/mongo/rabbitmq services not found.")
-        click.echo("Maybe you forgot to run")
-        click.echo("ddc up -d")
+        click.echo(
+            "Mysql/mongo/rabbitmq services not found.\nMaybe you forgot to run\nddc up -d"
+        )
         return
 
     if reset_mysql:
+        if not check_services(["mysql"]):
+            click.echo("Mysql service not found.\nMaybe you forgot to run\nddc up -d")
+            return
         resetdb(project)
         return
     run_compose(list(compose_args), project=project, dry_run=dry_run)
