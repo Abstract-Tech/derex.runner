@@ -45,6 +45,13 @@ steps:
     ddc --reset-mailslurper
   displayName: 'Start service daemons'
 
+- script: |
+    set -ex
+    cd tests/fixtures/complete
+    ddc-local --reset-mysql
+    ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+  displayName: 'Test complete project fixtures'
+
 - script: cd tests/fixtures/minimal; ddc-local up -d
   displayName: 'Start edX daemons'
 

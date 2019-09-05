@@ -29,6 +29,9 @@ class Project:
     # The directory containing project settings (that feed django.conf.settings)
     settings_dir: Optional[Path] = None
 
+    # The directory containing project database fixtures (used on --reset-mysql)
+    fixtures_dir: Optional[Path] = None
+
     # The image tag of the image that includes requirements
     requirements_image_tag: str
 
@@ -75,6 +78,10 @@ class Project:
             self.settings_dir = settings_dir
             # TODO: run some sanity checks on the settings dir and raise an
             # exception if they fail
+
+        fixtures_dir = self.root / "fixtures"
+        if fixtures_dir.is_dir():
+            self.fixtures_dir = fixtures_dir
 
         self.image_tag = self.themes_image_tag
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
