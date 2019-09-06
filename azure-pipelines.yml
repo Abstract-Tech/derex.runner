@@ -62,7 +62,6 @@ steps:
   displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
 
 - script: |
-    ddc logs
     echo 127.0.0.1 localhost studio.localhost | sudo tee -a /etc/hosts
     sleep 3  # Give the services a little time to start up
   displayName: Add studio.localhost to /etc/hosts
@@ -81,3 +80,10 @@ steps:
     ddc-local --build final-refresh
     dive --ci $(ddc-local config|grep complete/openedx-|head -n1|sed s/image://)
   displayName: 'Build the complete image and test it with dive'
+
+- script: |
+    ddc logs
+    cd tests/fixtures/minimal; ddc-local logs; cd -
+    cd tests/fixtures/complete; ddc-local logs; cd -
+  condition: always()
+  displayName: 'Show logs'
