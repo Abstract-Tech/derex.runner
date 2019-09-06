@@ -134,11 +134,10 @@ def build_themes_image(project: Project):
         for theme in project.themes_dir.iterdir():
             dockerfile_contents.extend(
                 [
-                    f"COPY themes/{theme.name} /openedx/themes/",
-                    f"RUN sh -c compile_assets.sh {theme.name}",
+                    f"COPY themes/{theme.name} /openedx/themes/{theme.name}",
+                    f"RUN sh -c 'compile_assets.sh {theme.name} && cleanup_assets.sh'",
                 ]
             )
-        dockerfile_contents.extend([f"RUN sh -c cleanup_assets.sh"])
 
     dockerfile_text = "\n".join(dockerfile_contents)
     build_image(dockerfile_text, paths_to_copy, tag=project.themes_image_tag)
