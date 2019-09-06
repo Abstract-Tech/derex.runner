@@ -117,10 +117,8 @@ def build_requirements_image(project: Project):
 
 
 BUILD_ASSETS_SCRIPT = (
-    "PATH=/openedx/edx-platform/node_modules/.bin:/openedx/nodeenv/bin:/openedx/bin:${PATH};"
-    "compile_assets.sh;"
-    "cleanup_assets.sh;"
-    "symlink_duplicates.py /openedx/staticfiles;"
+    "PATH=/openedx/edx-platform/node_modules/.bin:/openedx/bin:${PATH};"
+    "/opt/derex/bin/prepare_assets.sh;"
 )
 
 
@@ -133,9 +131,15 @@ def build_themes_image(project: Project):
     paths_to_copy: List[str] = []
     if project.themes_dir:
         paths_to_copy = [str(project.themes_dir)]
-        dockerfile_contents.extend(
-            ["COPY themes /openedx/themes/", f"RUN sh -c '{BUILD_ASSETS_SCRIPT}'"]
-        )
+        for theme in project.themes_dir.iterdir():
+            dockerfile_contents.extend(
+                [
+                    f"COPY themes/{theme.name} /openedx/themes/",
+                    f"RUN sh -c compile_assets.sh {theme.name}",
+                ]
+            )
+        dockerfile_contents.extend([f"RUN sh -c cleanup_assets.sh"])
+
     dockerfile_text = "\n".join(dockerfile_contents)
     build_image(dockerfile_text, paths_to_copy, tag=project.themes_image_tag)
 
