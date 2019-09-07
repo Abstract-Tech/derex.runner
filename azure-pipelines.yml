@@ -79,6 +79,7 @@ steps:
     cd tests/fixtures/minimal
     ddc-local --build final-refresh
     dive --ci $(ddc-local config|grep complete/openedx-|head -n1|sed s/image://)
+  condition: always()
   displayName: 'Build the complete image and test it with dive'
 
 - script: |
