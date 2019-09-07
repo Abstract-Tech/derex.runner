@@ -96,8 +96,7 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
 
 
 def build_requirements_image(project: Project):
-    """Build the docker image the includes project requirements for the project
-    specified by `path`.
+    """Build the docker image the includes project requirements for the given project.
     """
     dockerfile_contents = [f"FROM {project.base_image}"]
 
@@ -123,22 +122,18 @@ BUILD_ASSETS_SCRIPT = (
 
 
 def build_themes_image(project: Project):
-    """Build the docker image the includes project requirements for the project
-    specified by `path`.
+    """Build the docker image the includes themes for the given project.
+    Dev tools will be left in the image, so this will be a "fat" image, not the final one
+    to be distributed/deployed.
     """
     dockerfile_contents = [f"FROM {project.requirements_image_tag}"]
 
     paths_to_copy: List[str] = []
     if project.themes_dir:
         paths_to_copy = [str(project.themes_dir)]
-        compile_script = []
-        for theme in project.themes_dir.iterdir():
-            compile_script.append(f"compile_assets.sh {theme.name}")
-            dockerfile_contents.extend(
-                [f"COPY themes/{theme.name} /openedx/themes/{theme.name}"]
-            )
-        compile_script.append("cleanup_assets.sh")
-        dockerfile_contents.append(f'RUN sh -c \'{" && ".join(compile_script)}\'')
+        dockerfile_contents.append(f"COPY themes/ /openedx/themes/")
+        compile_command = f"compile_assets.sh {' '.join(theme.name for theme in project.themes_dir.iterdir())}"
+        dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
 
     dockerfile_text = "\n".join(dockerfile_contents)
     build_image(dockerfile_text, paths_to_copy, tag=project.themes_image_tag)
