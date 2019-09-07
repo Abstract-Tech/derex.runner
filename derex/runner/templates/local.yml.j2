@@ -9,6 +9,9 @@
       {%- if project.fixtures_dir %}
       - {{ project.fixtures_dir }}:/openedx/fixtures
       {%- endif -%}
+      {%- if project.themes_dir %}
+      - {{ project.themes_dir }}:/openedx/themes
+      {%- endif -%}
 {%- endmacro -%}
 {%- macro environment(project) -%}
       {%- if project.settings_dir -%}
