@@ -36,25 +36,6 @@ class BaseServices:
         }
 
 
-class BaseOpenEdX:
-    @staticmethod
-    @hookimpl
-    def compose_options() -> Dict[str, Union[str, List[str]]]:
-        """See derex.runner.plugin_spec.compose_options docstring
-        """
-        return {
-            "options": [
-                "--project-name",
-                "derex_ironwood",
-                "-f",
-                compose_path("ironwood.yml"),
-            ],
-            "name": "base",
-            "priority": "_begin",
-            "variant": "openedx",
-        }
-
-
 class LocalOpenEdX:
     @staticmethod
     @hookimpl
