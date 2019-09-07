@@ -38,7 +38,7 @@ services:
   lms:
     image: {{ project.image_tag }}
     command:
-      sh -c 'gunicorn --name $${SERVICE_VARIANT}
+      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
         --max-requests=1000
         wsgi:application'
@@ -57,7 +57,7 @@ services:
   cms:
     image: {{ project.image_tag }}
     command:
-      sh -c 'gunicorn --name $${SERVICE_VARIANT}
+      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
         --max-requests=1000
         wsgi:application'
