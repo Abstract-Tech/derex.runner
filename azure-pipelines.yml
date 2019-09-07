@@ -73,10 +73,10 @@ steps:
   displayName: 'Curl the CMS'
 
 - script: |
-    wget https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
-    sudo apt-get install ./dive_0.8.0_linux_amd64.deb
+    wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
+    DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.8.0_linux_amd64.deb
 
-    cd tests/fixtures/minimal
+    cd tests/fixtures/complete
     ddc-local --build final-refresh
     dive --ci $(ddc-local config|grep complete/openedx-|head -n1|sed s/image://)
   condition: always()
