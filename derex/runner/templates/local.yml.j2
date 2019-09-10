@@ -79,7 +79,8 @@ services:
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
-        --hostname=edx.$${SERVICE_VARIANT}.core.default
+        --hostname=edx.$${SERVICE_VARIANT}
+        --concurrency=1
         --maxtasksperchild 100'
     container_name: {{ project.name }}_lms_worker
     volumes:
