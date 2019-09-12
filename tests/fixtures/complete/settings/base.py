@@ -20,17 +20,4 @@ else:
 if "runserver" in sys.argv:
     SITE_NAME = SITE_NAME[:-1] + "1"
 
-STATIC_ROOT_BASE = "/openedx/staticfiles"
-
-MEDIA_ROOT = "/openedx/media"
-VIDEO_TRANSCRIPTS_SETTINGS["location"] = MEDIA_ROOT  # type: ignore  # noqa
-VIDEO_IMAGE_SETTINGS["STORAGE_KWARGS"]["location"] = MEDIA_ROOT  # type: ignore  # noqa
-PROFILE_IMAGE_BACKEND["options"]["location"] = MEDIA_ROOT  # type: ignore  # noqa
-COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))  # type: ignore  # noqa
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-plugin_settings.add_plugins(
-    __name__, PROJECT_TYPE, plugin_constants.SettingsType.PRODUCTION
-)
-
 derive_settings(__name__)
