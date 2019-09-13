@@ -1,0 +1,34 @@
+[
+    {
+        "model": "sites.site",
+        "pk": 2,
+        "fields": {
+            "domain": "localhost:4700",
+            "name": "localhost:4700"
+        }
+    },
+    {
+        "model": "theming.sitetheme",
+        "pk": 1,
+        "fields": {
+            "site": 2,
+            "theme_dir_name": "demo-theme"
+        }
+    },
+    {
+        "model": "sites.site",
+        "pk": 3,
+        "fields": {
+            "domain": "localhost:4701",
+            "name": "localhost:4701"
+        }
+    },
+    {
+        "model": "theming.sitetheme",
+        "pk": 2,
+        "fields": {
+            "site": 3,
+            "theme_dir_name": "demo-theme"
+        }
+    }
+]

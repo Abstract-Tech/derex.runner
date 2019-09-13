@@ -1,17 +1,6 @@
 # Services to monitor/inspect Open edX
 version: "3.5"
 services:
-  flower:
-    image: derex/openedx-ironwood:latest
-    command: sh -c 'pip install flower; flower --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)") --port=5555'
-    ports:
-      - 127.0.0.1:5555:5555
-    container_name: derex_flower
-    depends_on:
-      - rabbitmq
-    networks:
-      - derex
-
   adminer:
     image: adminer:4.7.1
     ports:

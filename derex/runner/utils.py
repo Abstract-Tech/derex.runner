@@ -1,4 +1,69 @@
+from pathlib import Path
+from typing import List
+from typing import Optional
+from typing import Union
+
+import hashlib
+import os
 import pkg_resources
+import re
+import yaml
+
+
+CONF_FILENAME = ".derex.config.yaml"
+
+
+def compose_path(name):
+    return pkg_resources.resource_filename(__name__, f"compose_files/{name}")
+
+
+def get_dir_hash(
+    dirname: Union[Path, str],
+    excluded_files: List = [],
+    ignore_hidden: bool = False,
+    followlinks: bool = False,
+    excluded_extensions: List = [],
+):
+    """Given a directory return an hash based on its contents
+    """
+    if not os.path.isdir(dirname):
+        raise TypeError(f"{dirname} is not a directory.")
+
+    hashvalues = []
+    for root, dirs, files in os.walk(dirname, topdown=True, followlinks=followlinks):
+        if ignore_hidden and re.search(r"/\.", root):
+            continue
+
+        dirs.sort()
+        files.sort()
+
+        for filename in files:
+            if ignore_hidden and filename.startswith("."):
+                continue
+
+            if filename.split(".")[-1:][0] in excluded_extensions:
+                continue
+
+            if filename in excluded_files:
+                continue
+
+            hasher = hashlib.sha256()
+            filepath = os.path.join(root, filename)
+            if not os.path.exists(filepath):
+                hashvalues.append(hasher.hexdigest())
+            else:
+                with open(filepath, "rb") as fileobj:
+                    while True:
+                        data = fileobj.read(64 * 1024)
+                        if not data:
+                            break
+                        hasher.update(data)
+                hashvalues.append(hasher.hexdigest())
+
+    hasher = hashlib.sha256()
+    for hashvalue in sorted(hashvalues):
+        hasher.update(hashvalue.encode("utf-8"))
+    return hasher.hexdigest()
 
 
 truthy = frozenset(("t", "true", "y", "yes", "on", "1"))
@@ -16,7 +81,3 @@ def asbool(s):
         return s
     s = str(s).strip()
     return s.lower() in truthy
-
-
-def compose_path(name):
-    return pkg_resources.resource_filename(__name__, f"compose_files/{name}")

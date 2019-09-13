@@ -13,7 +13,13 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["Click>=6.0", "docker-compose", "pyyaml>=4.2b4,<4.3", "pluggy"]
+requirements = [
+    "Click>=6.0",
+    "docker-compose",
+    "pyyaml>=4.2b4,<4.3",
+    "pluggy",
+    "jinja2",
+]
 
 setup_requirements = ["pytest-runner"]
 
@@ -39,6 +45,7 @@ setup(
         "console_scripts": [
             "ddc=derex.runner.cli:ddc",
             "ddc-ironwood=derex.runner.cli:ddc_ironwood",
+            "ddc-local=derex.runner.cli:ddc_local",
         ]
     },
     description="Run Open edX docker images",

@@ -1,19 +1,23 @@
 from collections import namedtuple
+from derex.runner import config
+from derex.runner import hookimpl
+from derex.runner import plugin_spec
+from derex.runner.utils import asbool
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Union
+
 import os
 import pkg_resources
-from typing import List, Dict, Callable, Union
 import pluggy
-from derex.runner import config
-from derex.runner import plugin_spec
-from derex.runner import hookimpl
-from derex.runner.utils import asbool
 
 
 def setup_plugin_manager():
     plugin_manager = pluggy.PluginManager("derex.runner")
     plugin_manager.add_hookspecs(plugin_spec)
     plugin_manager.load_setuptools_entrypoints("derex.runner")
-    plugin_manager.register(config.BaseOpenEdX)
+    plugin_manager.register(config.LocalOpenEdX)
     plugin_manager.register(config.BaseServices)
     return plugin_manager
 

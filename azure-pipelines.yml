@@ -45,23 +45,47 @@ steps:
     ddc --reset-mailslurper
   displayName: 'Start service daemons'
 
-- script: ddc-ironwood up -d
+- script: |
+    set -ex
+    cd tests/fixtures/complete
+    ddc-local --reset-mysql
+    ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+  displayName: 'Test complete project fixtures'
+
+- script: cd tests/fixtures/minimal; ddc-local up -d
   displayName: 'Start edX daemons'
 
-- script: ddc-ironwood --reset-mysql
+- script: cd tests/fixtures/minimal; ddc-local --reset-mysql
   displayName: 'Prime mysql database'
 
 - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
-  displayName: 'Start nginx'
+  displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
 
 - script: |
-    ddc logs
     echo 127.0.0.1 localhost studio.localhost | sudo tee -a /etc/hosts
     sleep 3  # Give the services a little time to start up
   displayName: Add studio.localhost to /etc/hosts
 
-- script: curl http://localhost/
+- script: curl http://localhost:4700/
   displayName: 'Curl the LMS'
 
-- script: curl http://studio.localhost/
+- script: curl http://studio.localhost:4800/
   displayName: 'Curl the CMS'
+
+- script: |
+    wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
+    DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.8.0_linux_amd64.deb
+
+    cd tests/fixtures/complete
+    ddc-local --build final-refresh
+    dive --ci $(ddc-local config|grep complete/openedx-|head -n1|sed s/image://)
+    /bin/true # Do not make the build fail because of this step, for now
+  condition: always()
+  displayName: 'Build the complete image and test it with dive'
+
+- script: |
+    ddc logs
+    cd tests/fixtures/minimal; ddc-local logs; cd -
+    cd tests/fixtures/complete; ddc-local logs; cd -
+  condition: always()
+  displayName: 'Show logs'
