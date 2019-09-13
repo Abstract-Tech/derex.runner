@@ -26,7 +26,7 @@
 version: "3.5"
 services:
   flower:
-    image: derex/openedx-dev
+    image: derex/openedx-ironwood
     command:
       sh -c 'exec flower --port=5555
         --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)")'
@@ -37,7 +37,7 @@ services:
       - derex
 
   lms:
-    image: derex/openedx-dev
+    image: derex/openedx-ironwood
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
@@ -55,7 +55,7 @@ services:
       - derex
 
   cms:
-    image: derex/openedx-dev
+    image: derex/openedx-ironwood
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
@@ -74,7 +74,7 @@ services:
       - derex
 
   lms_worker:
-    image: derex/openedx-dev
+    image: derex/openedx-ironwood
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
@@ -91,7 +91,7 @@ services:
       - derex
 
   cms_worker:
-    image: derex/openedx-dev
+    image: derex/openedx-ironwood
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
