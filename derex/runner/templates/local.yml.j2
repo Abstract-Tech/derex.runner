@@ -1,29 +1,36 @@
-{%- macro volumes(project) -%}
-      - derex_{{ project.name }}_media:/openedx/media
-      - derex_{{ project.name }}_data:/openedx/data/
-      {% if project.settings_dir -%}
-      - {{ project.settings_dir }}:/openedx/edx-platform/lms/envs/{{ project.name }}
-      - {{ project.settings_dir }}:/openedx/edx-platform/cms/envs/{{ project.name }}
-      {%- endif -%}
-      {%- if project.requirements_dir %}
-      - {{ project.requirements_dir }}:/openedx/derex.requirements
-      {%- endif -%}
-      {%- if project.fixtures_dir %}
-      - {{ project.fixtures_dir }}:/openedx/fixtures
-      {%- endif -%}
-      {%- if project.themes_dir %}
-      - {{ project.themes_dir }}:/openedx/themes
-      {%- endif -%}
-{%- endmacro -%}
-{%- macro environment(project) -%}
-      {%- if project.settings_dir -%}
-      DJANGO_SETTINGS_MODULE: lms.envs.{{ project.name }}.base
-      SETTINGS: {{ project.name }}.base
-      {%- endif %}
-      MYSQL_DB: {{ project.mysql_db_name }}
-{%- endmacro -%}
 # Open edX services
 version: "3.5"
+
+x-common:
+  &common-conf
+  image: derex/openedx-ironwood
+  tmpfs:
+    - /tmp/
+  networks:
+    - derex
+  volumes:
+    - derex_{{ project.name }}_media:/openedx/media
+    - derex_{{ project.name }}_data:/openedx/data/
+    {% if project.settings_dir -%}
+    - {{ project.settings_dir }}:/openedx/edx-platform/lms/envs/{{ project.name }}
+    - {{ project.settings_dir }}:/openedx/edx-platform/cms/envs/{{ project.name }}
+    {%- endif -%}
+    {%- if project.requirements_dir %}
+    - {{ project.requirements_dir }}:/openedx/derex.requirements
+    {%- endif -%}
+    {%- if project.fixtures_dir %}
+    - {{ project.fixtures_dir }}:/openedx/fixtures
+    {%- endif -%}
+    {%- if project.themes_dir %}
+    - {{ project.themes_dir }}:/openedx/themes
+    {%- endif %}
+  environment:
+    {% if project.settings_dir -%}
+    DJANGO_SETTINGS_MODULE: lms.envs.{{ project.name }}.base
+    SETTINGS: {{ project.name }}.base
+    {%- endif %}
+    MYSQL_DB: {{ project.mysql_db_name }}
+
 services:
   flower:
     image: derex/openedx-ironwood
@@ -37,44 +44,33 @@ services:
       - derex
 
   lms:
-    image: derex/openedx-ironwood
+    <<: *common-conf
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
         --max-requests=1000
         wsgi:application'
-    volumes:
-      {{ volumes(project) }}
-    environment:
-      {{ environment(project) }}
     ports:
       - 127.0.0.1:4700:4700
       - 127.0.0.1:4701:4701
     container_name: {{ project.name }}_lms
-    networks:
-      - derex
 
   cms:
-    image: derex/openedx-ironwood
+    <<: *common-conf
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
         --max-requests=1000
         wsgi:application'
-    volumes:
-      {{ volumes(project) }}
     environment:
       SERVICE_VARIANT: cms
-      {{ environment(project) }}
     ports:
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801
     container_name: {{ project.name }}_cms
-    networks:
-      - derex
 
   lms_worker:
-    image: derex/openedx-ironwood
+    <<: *common-conf
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
@@ -82,30 +78,20 @@ services:
         --concurrency=1
         --maxtasksperchild 100'
     container_name: {{ project.name }}_lms_worker
-    volumes:
-      {{ volumes(project) }}
     environment:
       C_FORCE_ROOT: "True"
-      {{ environment(project) }}
-    networks:
-      - derex
 
   cms_worker:
-    image: derex/openedx-ironwood
+    <<: *common-conf
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
         --hostname=edx.$${SERVICE_VARIANT}.core.default
         --maxtasksperchild 100'
     container_name: {{ project.name }}_cms_worker
-    volumes:
-      {{ volumes(project) }}
     environment:
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
-      {{ environment(project) }}
-    networks:
-      - derex
 
 networks:
   derex:
