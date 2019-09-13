@@ -16,11 +16,15 @@ Make sure you have python 3.6 or later and docker installed.
 
 Run the following commands: ::
 
-    pip install --user git+https://github.com/Abstract-Tech/derex.runner.git
+    git clone git@github.com:Abstract-Tech/derex.runner.git
+    cd derex.runner
+    direnv allow
+    pip install -r requirements.txt -e .
+    cd tests/fixtures/minimal/
     ddc up -d  # Start mysql, mongodb, rabbitmq and admin tools
-    ddc-ironwood --reset-mysql  # Prime the mysql database
     ddc --reset-mailslurper  # Prime the mailslurper mysql database
-    ddc-ironwood up -d  # Start LMS/CMS daemons and workers
+    ddc-local --reset-mysql  # Prime the mysql database
+    ddc-local up -d  # Start LMS/CMS daemons and workers
 
 Then head to one of the started services:
 
