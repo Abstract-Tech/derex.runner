@@ -70,12 +70,17 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
     if build == "final-refresh":
         pull_image(project.base_image)
     if build in ["requirements", "themes", "final", "final-refresh"]:
-        click.echo(f'Building docker image with "{project.name}" project requirements')
+        click.echo(
+            f'Building docker image {project.requirements_image_tag} with "{project.name}" project requirements'
+        )
         build_requirements_image(project)
     if build in ["themes", "final", "final-refresh"]:
-        click.echo(f'Building docker image with "{project.name}" themes')
+        click.echo(
+            f'Building docker image {project.themes_image_tag} with "{project.name}" themes'
+        )
         build_themes_image(project)
     if build:
+        click.echo(f"Built image {project.themes_image_tag}")
         return
 
     if not check_services(["mysql", "mongodb", "rabbitmq"]) and any(
@@ -136,7 +141,9 @@ def build_themes_image(project: Project):
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
 
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(dockerfile_text, paths_to_copy, tag=project.themes_image_tag)
+    build_image(
+        dockerfile_text, paths_to_copy, tag=project.themes_image_tag, tag_final=True
+    )
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))

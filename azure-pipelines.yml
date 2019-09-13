@@ -73,15 +73,16 @@ steps:
   displayName: 'Curl the CMS'
 
 - script: |
+    set -ex
     wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
     DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.8.0_linux_amd64.deb
 
     cd tests/fixtures/complete
     ddc-local --build final-refresh
-    dive --ci $(ddc-local config|grep complete/openedx-|head -n1|sed s/image://)
-    /bin/true # Do not make the build fail because of this step, for now
+    dive --ci complete/openedx-themes
   condition: always()
   displayName: 'Build the complete image and test it with dive'
+  continueOnError: true  # Do not make the build fail because of this step, for now
 
 - script: |
     ddc logs

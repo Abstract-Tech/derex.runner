@@ -99,7 +99,9 @@ def load_dump(relpath):
         logger.exception(exc)
 
 
-def build_image(dockerfile_text: str, paths: List[str], tag: str):
+def build_image(
+    dockerfile_text: str, paths: List[str], tag: str, tag_final: bool = False
+):
     dockerfile = io.BytesIO(dockerfile_text.encode())
     context = io.BytesIO()
     context_tar = tarfile.open(fileobj=context, mode="w:gz")
@@ -121,6 +123,11 @@ def build_image(dockerfile_text: str, paths: List[str], tag: str):
             print(line_decoded.get("error", ""))
         if "aux" in line_decoded:
             print(f'Built image: {line_decoded["aux"]["ID"]}')
+    if tag_final:
+        final_tag = tag.rpartition(":")[0] + ":latest"
+        for image in docker_client.images():
+            if image.get("RepoTags") and tag in image["RepoTags"]:
+                docker_client.tag(image["Id"], final_tag)
 
 
 def pull_image(image_tag: str):
