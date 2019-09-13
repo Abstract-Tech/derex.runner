@@ -120,12 +120,6 @@ def build_requirements_image(project: Project):
     build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_tag)
 
 
-BUILD_ASSETS_SCRIPT = (
-    "PATH=/openedx/edx-platform/node_modules/.bin:/openedx/bin:${PATH};"
-    "/opt/derex/bin/prepare_assets.sh;"
-)
-
-
 def build_themes_image(project: Project):
     """Build the docker image the includes themes for the given project.
     Dev tools will be left in the image, so this will be a "fat" image, not the final one
