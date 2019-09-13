@@ -28,8 +28,7 @@ services:
   flower:
     image: derex/openedx-dev
     command:
-      sh -c 'pip install flower;
-        flower --port=5555
+      sh -c 'exec flower --port=5555
         --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)")'
     ports:
       - 127.0.0.1:5555:5555
