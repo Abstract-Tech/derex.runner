@@ -26,7 +26,7 @@
 version: "3.5"
 services:
   flower:
-    image: {{ project.image_tag }}
+    image: derex/openedx-dev
     command:
       sh -c 'pip install flower;
         flower --port=5555
@@ -38,7 +38,7 @@ services:
       - derex
 
   lms:
-    image: {{ project.image_tag }}
+    image: derex/openedx-dev
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
@@ -56,7 +56,7 @@ services:
       - derex
 
   cms:
-    image: {{ project.image_tag }}
+    image: derex/openedx-dev
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
@@ -75,7 +75,7 @@ services:
       - derex
 
   lms_worker:
-    image: {{ project.image_tag }}
+    image: derex/openedx-dev
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info
@@ -92,7 +92,7 @@ services:
       - derex
 
   cms_worker:
-    image: {{ project.image_tag }}
+    image: derex/openedx-dev
     command:
       sh -c './manage.py $${SERVICE_VARIANT}
         celery worker --loglevel=info

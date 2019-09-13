@@ -132,7 +132,7 @@ def build_themes_image(project: Project):
     if project.themes_dir:
         paths_to_copy = [str(project.themes_dir)]
         dockerfile_contents.append(f"COPY themes/ /openedx/themes/")
-        compile_command = f"compile_assets.sh {' '.join(theme.name for theme in project.themes_dir.iterdir())}"
+        compile_command = f"/opt/derex/bin/compile_assets.sh {' '.join(theme.name for theme in project.themes_dir.iterdir())}"
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
 
     dockerfile_text = "\n".join(dockerfile_contents)
