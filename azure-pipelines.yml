@@ -76,7 +76,6 @@ steps:
     set -ex
     wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
     DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.8.0_linux_amd64.deb
-
     cd tests/fixtures/complete
     ddc-local --build final-refresh
     dive --ci complete/openedx-themes
