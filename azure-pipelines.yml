@@ -89,6 +89,11 @@ steps:
 
 - script: |
     ddc logs
-    cd tests/fixtures/complete; ddc-local logs; cd -
+    cd tests/fixtures/complete; ddc-local logs
   condition: always()
   displayName: 'Show logs'
+
+- script: |
+    cd tests/fixtures/complete; ddc-local config
+  condition: always()
+  displayName: 'Show ddc-local config'
