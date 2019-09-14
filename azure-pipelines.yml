@@ -85,7 +85,7 @@ steps:
   condition: always()
   displayName: 'Build the complete image and test it with dive'
   continueOnError: true  # Do not make the build fail because of this step, for now
-  timeoutInMinutes: 20
+  timeoutInMinutes: 40
 
 - script: |
     ddc logs
