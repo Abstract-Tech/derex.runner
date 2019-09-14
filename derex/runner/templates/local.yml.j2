@@ -25,9 +25,26 @@ x-common:
     - {{ project.themes_dir }}:/openedx/themes
     {%- endif %}
   environment:
+    &common-env
     {% if project.settings_dir -%}
     DJANGO_SETTINGS_MODULE: lms.envs.{{ project.name }}.base
     SETTINGS: {{ project.name }}.base
+    {%- else -%}
+    DJANGO_SETTINGS_MODULE: lms.envs.derex.base
+    SETTINGS: derex.base
+    {%- endif %}
+    MYSQL_DB: {{ project.mysql_db_name }}
+
+
+x-common-cms:
+  environment:
+    &cms-env
+    {% if project.settings_dir -%}
+    DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
+    SETTINGS: {{ project.name }}.base
+    {%- else -%}
+    DJANGO_SETTINGS_MODULE: cms.envs.derex.base
+    SETTINGS: derex.base
     {%- endif %}
     MYSQL_DB: {{ project.mysql_db_name }}
 
@@ -63,7 +80,9 @@ services:
         --max-requests=1000
         wsgi:application'
     environment:
+      <<: *cms-env
       SERVICE_VARIANT: cms
+      DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
     ports:
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801
@@ -79,6 +98,7 @@ services:
         --maxtasksperchild 100'
     container_name: {{ project.name }}_lms_worker
     environment:
+      <<: *common-env
       C_FORCE_ROOT: "True"
 
   cms_worker:
@@ -90,6 +110,7 @@ services:
         --maxtasksperchild 100'
     container_name: {{ project.name }}_cms_worker
     environment:
+      <<: *cms-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
 
