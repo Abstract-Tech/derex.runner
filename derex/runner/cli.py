@@ -100,23 +100,25 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
     run_compose(list(compose_args), project=project, dry_run=dry_run)
 
 
+def docker_commands_to_install_requirements(project: Project):
+    dockerfile_contents = []
+    if project.requirements_dir:
+        dockerfile_contents.append(f"COPY requirements /openedx/derex.requirements/")
+        for requirments_file in os.listdir(project.requirements_dir):
+            if requirments_file.endswith(".txt"):
+                dockerfile_contents.append(
+                    f"RUN pip install -r /openedx/derex.requirements/{requirments_file} --no-cache"
+                )
+    return dockerfile_contents
+
+
 def build_requirements_image(project: Project):
     """Build the docker image the includes project requirements for the given project.
     """
     dockerfile_contents = [f"FROM {project.base_image}"]
-
-    paths_to_copy: List[str] = []
-    if project.requirements_dir:
-        paths_to_copy = [str(project.requirements_dir)]
-        dockerfile_contents.extend(["COPY requirements /openedx/derex.requirements/"])
-        for requirments_file in os.listdir(project.requirements_dir):
-            if requirments_file.endswith(".txt"):
-                dockerfile_contents.extend(
-                    [
-                        f"RUN pip install -r /openedx/derex.requirements/{requirments_file}"
-                    ]
-                )
+    dockerfile_contents.extend(docker_commands_to_install_requirements(project))
     dockerfile_text = "\n".join(dockerfile_contents)
+    paths_to_copy = [str(project.requirements_dir)]
     build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_tag)
 
 
@@ -125,22 +127,33 @@ def build_themes_image(project: Project):
     Dev tools will be left in the image, so this will be a "fat" image, not the final one
     to be distributed/deployed.
     """
-    dockerfile_contents = [f"FROM {project.requirements_image_tag}"]
+    dockerfile_contents = [f"FROM {project.requirements_image_tag} as collectstatic"]
 
-    paths_to_copy: List[str] = []
-    if project.themes_dir:
-        paths_to_copy = [str(project.themes_dir)]
-        dockerfile_contents.append(f"COPY themes/ /openedx/themes/")
-        compile_command = (
-            "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}; "
-            f"paver compile_sass --theme-dirs /openedx/themes/ --themes {' '.join(theme.name for theme in project.themes_dir.iterdir())} && "
-            'SERVICE_VARIANT=lms python manage.py lms --settings=derex.assets collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput &&'
-            'SERVICE_VARIANT=cms python manage.py cms --settings=derex.assets collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput &&'
-            'rmlint -s 1K -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d -q'
-        )
-        dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
+    dockerfile_contents.append(f"COPY themes/ /openedx/themes/")
+    compile_command = (
+        "cd /openedx/edx-platform;"
+        "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}; "
+        # The rmlint optmization breaks the build process.
+        # We "materialize" the node_modules directory and remove symlinks
+        # that will be overwritten (and most likely re-optimized by rmlint)
+        "cp -rL node_modules/ node_modules.copy; rm node_modules -r; mv node_modules.copy node_modules;"
+        "git checkout HEAD -- common;"
+        "git clean -fdx common/static;"
+        "export NO_PREREQ_INSTALL=True; export NO_PYTHON_UNINSTALL=True; paver update_assets --settings derex.assets;"
+        'rmlint -s 1K -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d -q'
+    )
+    dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
+
+    dockerfile_contents.extend(
+        [
+            "FROM derex/openedx-nostatic",
+            "COPY --from=collectstatic /openedx/staticfiles /openedx/staticfiles",
+        ]
+    )
+    dockerfile_contents.extend(docker_commands_to_install_requirements(project))
 
     dockerfile_text = "\n".join(dockerfile_contents)
+    paths_to_copy = [str(project.themes_dir), str(project.requirements_dir)]
     build_image(
         dockerfile_text, paths_to_copy, tag=project.themes_image_tag, tag_final=True
     )
