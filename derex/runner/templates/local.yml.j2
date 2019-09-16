@@ -63,10 +63,7 @@ services:
   lms:
     <<: *common-conf
     command:
-      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
-        --bind=0.0.0.0:4700
-        --max-requests=1000
-        wsgi:application'
+      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver 0:4700'
     ports:
       - 127.0.0.1:4700:4700
       - 127.0.0.1:4701:4701
@@ -75,10 +72,7 @@ services:
   cms:
     <<: *common-conf
     command:
-      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
-        --bind=0.0.0.0:4800
-        --max-requests=1000
-        wsgi:application'
+      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver 0:4800'
     environment:
       <<: *cms-env
       SERVICE_VARIANT: cms
