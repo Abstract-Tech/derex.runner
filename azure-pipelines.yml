@@ -66,10 +66,10 @@ steps:
     sleep 3  # Give the services a little time to start up
   displayName: Add studio.localhost to /etc/hosts
 
-- script: curl http://localhost:4700/
+- script: curl -f http://localhost:4700/
   displayName: 'Curl the LMS'
 
-- script: curl http://studio.localhost:4800/
+- script: curl -f http://studio.localhost:4800/
   displayName: 'Curl the CMS'
 
 - script: |
