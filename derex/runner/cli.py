@@ -135,7 +135,8 @@ def build_themes_image(project: Project):
             "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}; "
             f"paver compile_sass --theme-dirs /openedx/themes/ --themes {' '.join(theme.name for theme in project.themes_dir.iterdir())} && "
             'SERVICE_VARIANT=lms python manage.py lms --settings=derex.assets collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput &&'
-            'SERVICE_VARIANT=cms python manage.py cms --settings=derex.assets collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput'
+            'SERVICE_VARIANT=cms python manage.py cms --settings=derex.assets collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput &&'
+            "rmlint -s 1K -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && ./rmlint.sh -d -q"
         )
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
 
