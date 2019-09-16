@@ -131,7 +131,12 @@ def build_themes_image(project: Project):
     if project.themes_dir:
         paths_to_copy = [str(project.themes_dir)]
         dockerfile_contents.append(f"COPY themes/ /openedx/themes/")
-        compile_command = f"git -C /openedx/edx-platform/ checkout HEAD -- .; /opt/derex/bin/compile_assets.sh {' '.join(theme.name for theme in project.themes_dir.iterdir())} && /opt/derex/bin/cleanup_assets.sh"
+        compile_command = (
+            "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}; "
+            f"paver compile_sass --theme-dirs /openedx/themes/ --themes {' '.join(theme.name for theme in project.themes_dir.iterdir())} && "
+            'SERVICE_VARIANT=lms python manage.py lms --settings=derex.assets collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput &&'
+            'SERVICE_VARIANT=cms python manage.py cms --settings=derex.assets collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput'
+        )
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
 
     dockerfile_text = "\n".join(dockerfile_contents)
