@@ -77,6 +77,9 @@ steps:
     cd tests/fixtures/complete
     ddc-local --build final-refresh
     docker images
+    # This should not be needed, but for some reason Azure does not tag the image
+    docker tag $(docker images -q|head -n1) complete/openedx-themes
+    docker images
 
     echo Installing dive
     wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
