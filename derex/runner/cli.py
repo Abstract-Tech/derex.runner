@@ -134,14 +134,13 @@ def build_themes_image(project: Project):
         "cd /openedx/edx-platform;"
         "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}; "
         # The rmlint optmization breaks the build process.
-        # We "materialize" the node_modules directory and remove symlinks
-        # that will be overwritten (and most likely re-optimized by rmlint)
-        "cp -rL node_modules/ node_modules.copy; rm node_modules -r; mv node_modules.copy node_modules;"
+        # We clean the repo files
         "git checkout HEAD -- common;"
         "git clean -fdx common/static;"
         "export NO_PREREQ_INSTALL=True; export NO_PYTHON_UNINSTALL=True; paver update_assets --settings derex.assets;"
         'rmlint -s 1K -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d -q'
     )
+
     dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
 
     dockerfile_contents.extend(
