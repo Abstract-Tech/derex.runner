@@ -82,6 +82,37 @@ services:
       - 127.0.0.1:4801:4801
     container_name: {{ project.name }}_cms
 
+{% if final_image %}
+  lms_final:
+    <<: *common-conf
+    image: {{ final_image }}
+    command:
+      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
+        --bind=0.0.0.0:4710
+        --max-requests=1000
+        wsgi:application'
+    ports:
+      - 127.0.0.1:4710:4710
+      - 127.0.0.1:4711:4711
+    container_name: {{ project.name }}_lms_final
+
+  cms_final:
+    <<: *common-conf
+    image: {{ final_image }}
+    command:
+      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
+        --bind=0.0.0.0:4810
+        --max-requests=1000
+        wsgi:application'
+    environment:
+      <<: *cms-env
+      SERVICE_VARIANT: cms
+      DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
+    ports:
+      - 127.0.0.1:4810:4810
+      - 127.0.0.1:4811:4811
+    container_name: {{ project.name }}_cms_final
+{% endif %}
   lms_worker:
     <<: *common-conf
     command:

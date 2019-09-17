@@ -7,8 +7,10 @@ from pathlib import Path
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Union
 
+import docker
 import os
 import pkg_resources
 import pluggy
@@ -58,7 +60,23 @@ def generate_local_docker_compose(project: Project) -> Path:
     template_path = Path(
         pkg_resources.resource_filename(__name__, "templates/local.yml.j2")
     )
+    final_image = get_final_image(project)
     tmpl = Template(template_path.read_text())
-    text = tmpl.render(project=project)
+    text = tmpl.render(project=project, final_image=final_image)
     local_compose_path.write_text(text)
     return local_compose_path
+
+
+def get_final_image(project: Project) -> Optional[str]:
+    """If the final image for the project is available, return it.
+    If not, return the most recent image available.
+    """
+    needle, _, _ = project.image_tag.rpartition(":")
+    docker_client = docker.APIClient()
+    images = docker_client.images()
+    images.sort(key=lambda el: el["Created"], reverse=True)
+    for image in images:
+        for tag in image["RepoTags"]:
+            if needle in tag:
+                return tag
+    return None
