@@ -138,6 +138,8 @@ def build_themes_image(project: Project):
         # We clean the repo files
         "git checkout HEAD -- common;"
         "git clean -fdx common/static;"
+        # Remove all but the basic theme
+        "rm -r themes/[!o]*;"
         # Make sure ./manage.py sets the SERVICE_VARIANT variable each time it's invoked
         "unset SERVICE_VARIANT;"
         "export NO_PREREQ_INSTALL=True; export NO_PYTHON_UNINSTALL=True; paver update_assets --settings derex.assets;"
