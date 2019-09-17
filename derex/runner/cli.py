@@ -130,6 +130,8 @@ def build_themes_image(project: Project):
 
     dockerfile_contents.append(f"COPY themes/ /openedx/themes/")
     compile_command = (
+        # Remove files from the previous image
+        "rm -rf /openedx/staticfiles;"
         "cd /openedx/edx-platform;"
         "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}; "
         # The rmlint optmization breaks the build process.
