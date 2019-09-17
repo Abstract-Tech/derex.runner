@@ -140,7 +140,7 @@ def build_themes_image(project: Project):
         # Make sure ./manage.py sets the SERVICE_VARIANT variable each time it's invoked
         "unset SERVICE_VARIANT;"
         "export NO_PREREQ_INSTALL=True; export NO_PYTHON_UNINSTALL=True; paver update_assets --settings derex.assets;"
-        'rmlint -s 1K -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d -q'
+        'rmlint -s 1K -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null'
     )
 
     dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
