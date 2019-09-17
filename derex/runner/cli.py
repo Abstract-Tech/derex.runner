@@ -8,7 +8,7 @@ from derex.runner.docker import check_services
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
 from derex.runner.docker import load_dump
-from derex.runner.docker import pull_image
+from derex.runner.docker import pull_images
 from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
 from pathlib import Path
@@ -68,7 +68,7 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
         click.echo("You need to run this command in a derex project")
         sys.exit(1)
     if build == "final-refresh":
-        pull_image(project.base_image)
+        pull_images([project.base_image, project.final_base_image])
     if build in ["requirements", "themes", "final", "final-refresh"]:
         click.echo(
             f'Building docker image {project.requirements_image_tag} with "{project.name}" project requirements'
@@ -147,7 +147,7 @@ def build_themes_image(project: Project):
 
     dockerfile_contents.extend(
         [
-            "FROM derex/openedx-nostatic",
+            f"FROM {project.final_base_image}",
             "COPY --from=collectstatic /openedx/staticfiles /openedx/staticfiles",
         ]
     )

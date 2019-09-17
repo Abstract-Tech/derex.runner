@@ -20,6 +20,12 @@ class Project:
     #: The root path to this project
     root: Path
 
+    #: The tag of the base image with dev goodies and precompiled assets
+    base_image: str
+
+    # Tne image tag of the base image for the final production project build
+    final_base_image: str
+
     #: The directory containing requirements, if defined
     requirements_dir: Optional[Path] = None
 
@@ -51,6 +57,9 @@ class Project:
         config_path = self.root / CONF_FILENAME
         self.config = yaml.load(config_path.open())
         self.base_image = self.config.get("base_image", "derex/openedx-ironwood:latest")
+        self.final_base_image = self.config.get(
+            "final_base_image", "derex/openedx-nostatic:latest"
+        )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
         self.name = self.config["project_name"]
