@@ -1,33 +1,17 @@
 [
     {
         "model": "sites.site",
-        "pk": 2,
+        "pk": 1,
         "fields": {
-            "domain": "localhost:4700",
-            "name": "localhost:4700"
+            "domain": "localhost",
+            "name": "localhost"
         }
     },
     {
         "model": "theming.sitetheme",
         "pk": 1,
         "fields": {
-            "site": 2,
-            "theme_dir_name": "demo-theme"
-        }
-    },
-    {
-        "model": "sites.site",
-        "pk": 3,
-        "fields": {
-            "domain": "localhost:4701",
-            "name": "localhost:4701"
-        }
-    },
-    {
-        "model": "theming.sitetheme",
-        "pk": 2,
-        "fields": {
-            "site": 3,
+            "site": 1,
             "theme_dir_name": "demo-theme"
         }
     }
