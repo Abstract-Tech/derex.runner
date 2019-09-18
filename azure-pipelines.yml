@@ -92,6 +92,16 @@ steps:
   timeoutInMinutes: 40
 
 - script: |
+    cd tests/fixtures/complete; ddc-local up -d
+  displayName: 'Start final image lms/cms'
+
+- script: curl -f http://localhost:4710/
+  displayName: 'Curl the final LMS'
+
+- script: curl -f http://studio.localhost:4810/
+  displayName: 'Curl the final CMS'
+
+- script: |
     ddc logs
     cd tests/fixtures/complete; ddc-local logs
   condition: always()
