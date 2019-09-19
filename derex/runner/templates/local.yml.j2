@@ -113,31 +113,19 @@ services:
       - 127.0.0.1:4811:4811
     container_name: {{ project.name }}_cms_final
 {% endif %}
-  lms_worker:
+  worker:
     <<: *common-conf
     command:
-      sh -c './manage.py $${SERVICE_VARIANT}
-        celery worker --loglevel=info
+      sh -c 'celery worker
+        -A edx_celery.APP
+        --loglevel=info
         --hostname=edx.$${SERVICE_VARIANT}
         --concurrency=1
-        --maxtasksperchild 100'
-    container_name: {{ project.name }}_lms_worker
+        --maxtasksperchild 1000'
+    container_name: {{ project.name }}_worker
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
-
-  cms_worker:
-    <<: *common-conf
-    command:
-      sh -c './manage.py $${SERVICE_VARIANT}
-        celery worker --loglevel=info
-        --hostname=edx.$${SERVICE_VARIANT}.core.default
-        --maxtasksperchild 100'
-    container_name: {{ project.name }}_cms_worker
-    environment:
-      <<: *cms-env
-      C_FORCE_ROOT: "True"
-      SERVICE_VARIANT: cms
 
 networks:
   derex:
