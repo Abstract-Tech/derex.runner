@@ -61,7 +61,7 @@ def test_ddc_local(sys_argv, mocker, workdir):
     with workdir(MINIMAL_PROJ):
         result = runner.invoke(ddc_local, ["config"])
     assert_result_ok(result)
-    assert "cms_worker" in result.output
+    assert "worker" in result.output
 
 
 def test_ddc_local_reset_mysql(sys_argv, mocker, workdir):
