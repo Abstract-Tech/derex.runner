@@ -77,7 +77,7 @@ def test_ddc_local_reset_mysql(sys_argv, mocker, workdir):
 
     with workdir(MINIMAL_PROJ):
         result = runner.invoke(ddc, ["up", "-d"])
-        result = runner.invoke(ddc_local, ["--reset-mysql"])
+        result = runner.invoke(ddc_local, ["reset-mysql"])
     assert_result_ok(result)
     assert result.exit_code == 0
 
@@ -86,10 +86,8 @@ def test_ddc_local_build(workdir):
     from derex.runner.cli import ddc_local
 
     with workdir(COMPLETE_PROJ):
-        result = runner.invoke(ddc_local, ["--build=themes"])
+        result = runner.invoke(ddc_local, ["compile-theme"])
         assert_result_ok(result)
-        assert "Successfully built" in result.output
-        assert "Successfully tagged" in result.output
 
         result = runner.invoke(ddc_local, ["config"])
         assert_result_ok(result)

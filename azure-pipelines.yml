@@ -48,14 +48,14 @@ steps:
 - script: |
     set -ex
     cd tests/fixtures/complete
-    ddc-local --reset-mysql
+    ddc-local reset-mysql
     ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
   displayName: 'Test complete project fixtures'
 
 - script: cd tests/fixtures/complete; ddc-local up -d
   displayName: 'Start edX daemons'
 
-- script: cd tests/fixtures/complete; ddc-local --reset-mysql
+- script: cd tests/fixtures/complete; ddc-local reset-mysql
   displayName: 'Prime mysql database'
 
 - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
@@ -75,7 +75,7 @@ steps:
 - script: |
     set -ex
     cd tests/fixtures/complete
-    ddc-local --build final-refresh
+    ddc-local build-final-refresh
     docker images
     # This should not be needed, but for some reason Azure does not tag the image
     docker tag $(docker images -q|head -n1) complete/openedx-themes

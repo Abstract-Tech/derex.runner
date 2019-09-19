@@ -38,28 +38,25 @@ def setup_logging():
 @click.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("compose_args", nargs=-1)
 @click.option(
-    "--build",
-    help=(
-        "Build docker image for this project.\n"
-        "Argument can be one in:\n"
-        "* requirements\n(build the image that contains python requirements)\n"
-        "* themes\n(build the image that includes compiled themes)\n"
-        "* final\n(build the final image for this project)\n"
-        "* final-refresh\n(also pull base docker image before starting)\n"
-    ),
-    type=click.Choice(["requirements", "themes", "final", "final-refresh"]),
-    default=None,
-)
-@click.option(
-    "--reset-mysql", default=False, is_flag=True, help="Resets the MySQL database"
-)
-@click.option(
     "--dry-run",
     default=False,
     is_flag=True,
     help="Don't actually do anything, just print what would have been run",
 )
-def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: bool):
+def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
+    """Proxy for docker-compose: writes a docker-compose.yml file with the
+    configuration of this project, and then run `docker-compose` on it.
+
+    You probably want do run `ddc-local up -d` and `ddc-local logs -f`.
+
+    Besides this, also accept these commands:\n
+        * compile-theme (compile theme sass files)\n
+        * reset-mysql (reset mysql database for the project)\n
+        * build-requirements (build the image that contains python requirements)\n
+        * build-themes (build the image that includes compiled themes)\n
+        * build-final (build the final image for this project)\n
+        * build-final-refresh (also pull base docker image before starting)\n
+    """
     check_docker()
     setup_logging()
     try:
@@ -67,37 +64,65 @@ def ddc_local(compose_args: Tuple[str, ...], build: str, reset_mysql, dry_run: b
     except ValueError:
         click.echo("You need to run this command in a derex project")
         sys.exit(1)
-    if build == "final-refresh":
+    BUILD_COMMANDS = [
+        "build-requirements",
+        "build-themes",
+        "build-final",
+        "build-final-refresh",
+    ]
+    COMMANDS = BUILD_COMMANDS + ["reset-mysql", "compile-theme"]
+    command = ""
+    if len(compose_args) == 1 and compose_args[0] in COMMANDS:
+        command = compose_args[0]
+    else:
+        if not check_services(["mysql", "mongodb", "rabbitmq"]) and any(
+            param in compose_args for param in ["up", "start"]
+        ):
+            click.echo(
+                "Mysql/mongo/rabbitmq services not found.\nMaybe you forgot to run\nddc up -d"
+            )
+            return
+        run_compose(list(compose_args), project=project, dry_run=dry_run)
+
+    if command == "build-final-refresh":
         pull_images([project.base_image, project.final_base_image])
-    if build in ["requirements", "themes", "final", "final-refresh"]:
+    if command in BUILD_COMMANDS:
         click.echo(
             f'Building docker image {project.requirements_image_tag} with "{project.name}" project requirements'
         )
         build_requirements_image(project)
-    if build in ["themes", "final", "final-refresh"]:
+    if command in ["build-themes", "build-final", "build-final-refresh"]:
         click.echo(
             f'Building docker image {project.themes_image_tag} with "{project.name}" themes'
         )
         build_themes_image(project)
-    if build:
+    if command.startswith("build-"):
         click.echo(f"Built image {project.themes_image_tag}")
         return
 
-    if not check_services(["mysql", "mongodb", "rabbitmq"]) and any(
-        param in compose_args for param in ["up", "start"]
-    ):
-        click.echo(
-            "Mysql/mongo/rabbitmq services not found.\nMaybe you forgot to run\nddc up -d"
-        )
-        return
+    if command == "compile-theme":
+        uid = os.getuid()
+        args = [
+            "run",
+            "--rm",
+            "lms",
+            "sh",
+            "-c",
+            f"""set -ex
+        export PATH=/openedx/edx-platform/node_modules/.bin:$PATH
+        export NO_PREREQ_INSTALL=True
+        export NO_PYTHON_UNINSTALL=True
+        paver compile_sass --theme-dirs /openedx/themes
+        chown {uid}:{uid} /openedx/themes/* -R""",
+        ]
+        run_compose(list(args), project=project, dry_run=dry_run)
 
-    if reset_mysql:
+    if command == "reset-mysql":
         if not check_services(["mysql"]):
             click.echo("Mysql service not found.\nMaybe you forgot to run\nddc up -d")
             return
         resetdb(project)
         return
-    run_compose(list(compose_args), project=project, dry_run=dry_run)
 
 
 def docker_commands_to_install_requirements(project: Project):
