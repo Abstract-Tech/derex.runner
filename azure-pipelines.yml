@@ -92,7 +92,8 @@ steps:
   timeoutInMinutes: 40
 
 - script: |
-    cd tests/fixtures/complete; ddc-local up -d
+    cd tests/fixtures/complete; ddc-local up -d lms cms
+    sleep 5  # Give it time to start up
   displayName: 'Start final image lms/cms'
 
 - script: curl -f http://localhost:4710/
