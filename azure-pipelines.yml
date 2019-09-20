@@ -96,10 +96,10 @@ steps:
     sleep 5  # Give it time to start up
   displayName: 'Start final image lms/cms'
 
-- script: curl -f http://localhost:4710/
+- script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/
   displayName: 'Curl the final LMS'
 
-- script: curl -f http://studio.localhost:4810/
+- script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://studio.localhost:4810/
   displayName: 'Curl the final CMS'
 
 - script: |
