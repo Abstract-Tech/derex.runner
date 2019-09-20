@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """Tests for `derex.runner` package."""
 
 from click.testing import CliRunner

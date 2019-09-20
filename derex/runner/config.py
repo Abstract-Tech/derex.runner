@@ -76,6 +76,8 @@ def get_final_image(project: Project) -> Optional[str]:
     images = docker_client.images()
     images.sort(key=lambda el: el["Created"], reverse=True)
     for image in images:
+        if "RepoTags" not in image or not image["RepoTags"]:
+            continue
         for tag in image["RepoTags"]:
             if needle in tag:
                 return tag
