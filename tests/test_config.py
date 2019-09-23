@@ -6,7 +6,7 @@ MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 
 
 def test_get_final_image(mocker):
-    from derex.runner.config import get_final_image
+    from derex.runner.config import image_exists
 
     mocker.patch(
         "derex.runner.config.docker.APIClient",
@@ -15,7 +15,7 @@ def test_get_final_image(mocker):
         ),
     )
     project = Project(MINIMAL_PROJ)
-    get_final_image(project)
+    image_exists(project)
 
 
 DOCKER_DAEMON_IMAGES_RESPONSE = [
