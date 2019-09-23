@@ -101,6 +101,10 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
         return
 
     if command == "compile-theme":
+        if project.themes_dir is None:
+            click.echo("No theme directory present in this project")
+            return
+        themes = " ".join(el.name for el in project.themes_dir.iterdir())
         uid = os.getuid()
         args = [
             "run",
@@ -109,13 +113,11 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
             "sh",
             "-c",
             f"""set -ex
-        export PATH=/openedx/edx-platform/node_modules/.bin:$PATH
-        export NO_PREREQ_INSTALL=True
-        export NO_PYTHON_UNINSTALL=True
-        paver compile_sass --theme-dirs /openedx/themes
-        chown {uid}:{uid} /openedx/themes/* -R""",
+                paver compile_sass --theme-dirs /openedx/themes --themes {themes}
+                chown {uid}:{uid} /openedx/themes/* -R""",
         ]
         run_compose(list(args), project=project, dry_run=dry_run)
+        return
 
     if command == "reset-mysql":
         if not check_services(["mysql"]):
