@@ -56,21 +56,26 @@ def build_themes_image(project: Project):
     """Build the docker image the includes themes and requirements for the given project.
     The image will be lightweight, containing only things needed to run edX.
     """
-    # Currently broken
-    dockerfile_contents = [f"FROM {project.requirements_image_tag} as static"]
-
-    dockerfile_contents.append(f"COPY themes/ /openedx/themes/")
-
-    dockerfile_contents.extend(
-        [
-            f"FROM {project.final_base_image}",
-            "COPY --from=static /openedx/staticfiles /openedx/staticfiles",
-            # It would be nice to run the following here, but docker immediately commits a layer after COPY,
-            # so the files we'd like to remove are already final.
-            # rmlint -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null
-        ]
-    )
+    dockerfile_contents = [
+        f"FROM {project.requirements_image_tag} as static",
+        f"FROM {project.final_base_image}",
+        "COPY --from=static /openedx/staticfiles /openedx/staticfiles",
+        f"COPY themes/ /openedx/themes/",
+        # It would be nice to run the following here, but docker immediately commits a layer after COPY,
+        # so the files we'd like to remove are already final.
+        # rmlint -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null
+    ]
     dockerfile_contents.extend(docker_commands_to_install_requirements(project))
+    cmd = []
+    if project.themes_dir is not None:
+        for dir in project.themes_dir.iterdir():
+            for variant, destination in (("lms", ""), ("cms", "/studio")):
+                if (dir / variant).is_dir():
+                    cmd.append(
+                        f"ln -s /openedx/themes/{dir.name}/{variant}/static/* /openedx/staticfiles{destination}/{dir.name}"
+                    )
+    if cmd:
+        dockerfile_contents.append(f"RUN sh -c '{';'.join(cmd)}'")
 
     dockerfile_text = "\n".join(dockerfile_contents)
     paths_to_copy = [str(project.themes_dir), str(project.requirements_dir)]

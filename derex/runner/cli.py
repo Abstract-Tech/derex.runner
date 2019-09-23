@@ -5,7 +5,6 @@ from derex.runner.build import build_requirements_image
 from derex.runner.build import build_themes_image
 from derex.runner.compose_utils import reset_mysql
 from derex.runner.compose_utils import run_compose
-from derex.runner.docker import build_image
 from derex.runner.docker import check_services
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
