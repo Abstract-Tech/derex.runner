@@ -76,7 +76,10 @@ def build_themes_image(project: Project):
             for variant, destination in (("lms", ""), ("cms", "/studio")):
                 if (dir / variant).is_dir():
                     cmd.append(
-                        f"ln -s /openedx/themes/{dir.name}/{variant}/static/* /openedx/staticfiles{destination}/{dir.name}"
+                        f"mkdir -p /openedx/staticfiles{destination}/{dir.name}/"
+                    )
+                    cmd.append(
+                        f"ln -s /openedx/themes/{dir.name}/{variant}/static/* /openedx/staticfiles{destination}/{dir.name}/"
                     )
     if cmd:
         dockerfile_contents.append(f"RUN sh -c '{';'.join(cmd)}'")
