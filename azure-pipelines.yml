@@ -92,7 +92,7 @@ steps:
   timeoutInMinutes: 40
 
 - script: |
-    cd tests/fixtures/complete; ddc-local up -d lms cms
+    cd tests/fixtures/complete; ddc-local build-themes; ddc-local up -d lms_final cms_final
     sleep 5  # Give it time to start up
   displayName: 'Start final image lms/cms'
 

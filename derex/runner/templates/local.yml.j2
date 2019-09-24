@@ -3,7 +3,7 @@ version: "3.5"
 
 x-common:
   &common-conf
-  image: derex/openedx-ironwood
+  image: {{ project.requirements_image_tag }}
   tmpfs:
     - /tmp/
   networks:

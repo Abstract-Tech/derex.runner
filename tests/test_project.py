@@ -19,8 +19,8 @@ def test_complete_project(workdir):
     assert project.requirements_dir == COMPLETE_PROJ / "requirements"
     assert project.themes_dir == COMPLETE_PROJ / "themes"
     assert project.name == "complete"
-    assert project.requirements_image_tag == "complete/openedx-requirements:a3d523"
-    assert project.themes_image_tag == "complete/openedx-themes:1f732a"
+    assert project.requirements_image_tag == "complete/openedx-requirements:a2e46f"
+    # assert project.themes_image_tag == "complete/openedx-themes:1f732a"
 
 
 def test_minimal_project(workdir):
@@ -35,3 +35,4 @@ def test_minimal_project(workdir):
     assert project.name == "minimal"
     assert project.requirements_image_tag == project.image_tag
     assert project.themes_image_tag == project.image_tag
+    assert project.themes_image_tag == project.base_image

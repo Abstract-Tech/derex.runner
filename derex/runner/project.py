@@ -67,7 +67,10 @@ class Project:
         requirements_dir = self.root / "requirements"
         if requirements_dir.is_dir():
             self.requirements_dir = requirements_dir
-            img_hash = get_dir_hash(self.requirements_dir)
+            # We only hash text files inside the requirements image:
+            # this way changes to code can be made effective by
+            # mounting the requirements directory
+            img_hash = get_requirements_hash(self.requirements_dir)
             self.requirements_image_tag = (
                 f"{self.name}/openedx-requirements:{img_hash[:6]}"
             )
@@ -77,7 +80,9 @@ class Project:
         themes_dir = self.root / "themes"
         if themes_dir.is_dir():
             self.themes_dir = themes_dir
-            img_hash = get_dir_hash(self.themes_dir)
+            img_hash = get_dir_hash(
+                self.themes_dir
+            )  # XXX some files are generated. We should ignore them when we hash the directory
             self.themes_image_tag = f"{self.name}/openedx-themes:{img_hash[:6]}"
         else:
             self.themes_image_tag = self.requirements_image_tag
@@ -94,6 +99,16 @@ class Project:
 
         self.image_tag = self.themes_image_tag
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
+
+
+def get_requirements_hash(path: Path) -> str:
+    """Given a directory, return a hash of the contents of the text files it contains.
+    """
+    hasher = hashlib.sha256()
+    for file in path.iterdir():
+        if file.is_file():
+            hasher.update(file.read_bytes())
+    return hasher.hexdigest()
 
 
 def find_project_root(path: Path) -> Path:

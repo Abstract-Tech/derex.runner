@@ -1,4 +1,5 @@
 from derex.runner import hookimpl
+from derex.runner.build import build_requirements_image
 from derex.runner.project import Project
 from derex.runner.utils import asbool
 from derex.runner.utils import compose_path
@@ -60,25 +61,26 @@ def generate_local_docker_compose(project: Project) -> Path:
     template_path = Path(
         pkg_resources.resource_filename(__name__, "templates/local.yml.j2")
     )
-    final_image = get_final_image(project)
+    final_image = None
+    if image_exists(project.image_tag):
+        final_image = project.image_tag
+    if not image_exists(project.requirements_image_tag):
+        build_requirements_image(project)
     tmpl = Template(template_path.read_text())
     text = tmpl.render(project=project, final_image=final_image)
     local_compose_path.write_text(text)
     return local_compose_path
 
 
-def get_final_image(project: Project) -> Optional[str]:
-    """If the final image for the project is available, return it.
-    If not, return the most recent image available.
+def image_exists(needle: str) -> bool:
+    """If the given image tag exist in the local docker repository, return True.
     """
-    needle, _, _ = project.image_tag.rpartition(":")
     docker_client = docker.APIClient()
     images = docker_client.images()
     images.sort(key=lambda el: el["Created"], reverse=True)
     for image in images:
         if "RepoTags" not in image or not image["RepoTags"]:
             continue
-        for tag in image["RepoTags"]:
-            if needle in tag:
-                return tag
-    return None
+        if needle in image["RepoTags"]:
+            return True
+    return False
