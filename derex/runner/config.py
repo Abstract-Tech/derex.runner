@@ -62,6 +62,8 @@ def generate_local_docker_compose(project: Project) -> Path:
         pkg_resources.resource_filename(__name__, "templates/local.yml.j2")
     )
     final_image = None
+    if image_exists(project.image_tag):
+        final_image = project.image_tag
     if not image_exists(project.requirements_image_tag):
         build_requirements_image(project)
     tmpl = Template(template_path.read_text())
