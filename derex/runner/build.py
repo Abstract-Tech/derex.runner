@@ -27,6 +27,8 @@ def build_requirements_image(project: Project):
     The requirements are installed in a container based on the dev image, and assets
     are compiled there.
     """
+    if project.requirements_dir is None:
+        return
     dockerfile_contents = [f"FROM {project.base_image}"]
     dockerfile_contents.extend(docker_commands_to_install_requirements(project))
     compile_command = (
@@ -56,6 +58,8 @@ def build_themes_image(project: Project):
     """Build the docker image the includes themes and requirements for the given project.
     The image will be lightweight, containing only things needed to run edX.
     """
+    if project.themes_dir is None:
+        return
     dockerfile_contents = [
         f"FROM {project.requirements_image_tag} as static",
         f"FROM {project.final_base_image}",
