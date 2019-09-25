@@ -129,7 +129,7 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
         return
 
     if command == "reset-rabbitmq":
-        vhost = "{project.name}_edxqueue"
+        vhost = f"{project.name}_edxqueue"
         args = [
             "exec",
             "rabbitmq",
