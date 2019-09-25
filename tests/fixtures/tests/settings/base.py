@@ -7,3 +7,5 @@ exec("from {}.envs.derex.base import *".format(SERVICE_VARIANT), globals(), loca
 
 SITE_NAME = "{}.edx.localhost".format(SERVICE_VARIANT)
 HTTPS = "on"
+CMS_BASE = "cms.edx.localhost"
+LMS_BASE = "lms.edx.localhost"
