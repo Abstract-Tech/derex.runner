@@ -46,11 +46,10 @@ class LocalOpenEdX:
         """See derex.runner.plugin_spec.compose_options docstring
         """
         local_path = generate_local_docker_compose(project)
-        return {
-            "options": ["--project-name", project.name, "-f", str(local_path)],
-            "name": "base",
-            "priority": "_begin",
-        }
+        options = ["--project-name", project.name, "-f", str(local_path)]
+        if project.local_compose is not None:
+            options += ["-f", str(project.local_compose)]
+        return {"options": options, "name": "base", "priority": "_begin"}
 
 
 def generate_local_docker_compose(project: Project) -> Path:

@@ -27,16 +27,16 @@ class Project:
     final_base_image: str
 
     #: The directory containing requirements, if defined
-    requirements_dir: Optional[Path] = None
+    requirements_dir: Optional[Path]
 
     #: The directory containing themes, if defined
-    themes_dir: Optional[Path] = None
+    themes_dir: Optional[Path]
 
     # The directory containing project settings (that feed django.conf.settings)
-    settings_dir: Optional[Path] = None
+    settings_dir: Optional[Path]
 
     # The directory containing project database fixtures (used on --reset-mysql)
-    fixtures_dir: Optional[Path] = None
+    fixtures_dir: Optional[Path]
 
     # The image tag of the image that includes requirements
     requirements_image_tag: str
@@ -49,6 +49,9 @@ class Project:
 
     # Name of the database this project uses
     mysql_db_name: str
+
+    # Path to a local docker-compose.yml file, if present
+    local_compose: Optional[Path]
 
     def __init__(self, path: Union[Path, str] = None):
         if not path:
@@ -63,6 +66,9 @@ class Project:
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
         self.name = self.config["project_name"]
+        local_compose = self.root / "docker-compose.yml"
+        if local_compose.is_file():
+            self.local_compose = local_compose
 
         requirements_dir = self.root / "requirements"
         if requirements_dir.is_dir():
