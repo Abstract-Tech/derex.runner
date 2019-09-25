@@ -1,7 +1,4 @@
-from path import Path
-
 import os
-import sys
 
 
 SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
