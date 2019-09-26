@@ -50,6 +50,9 @@ class Project:
     # Name of the database this project uses
     mysql_db_name: str
 
+    # Path to a local docker-compose.yml file, if present
+    local_compose: Optional[Path] = None
+
     def __init__(self, path: Union[Path, str] = None):
         if not path:
             path = os.getcwd()
@@ -63,6 +66,9 @@ class Project:
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
         self.name = self.config["project_name"]
+        local_compose = self.root / "docker-compose.yml"
+        if local_compose.is_file():
+            self.local_compose = local_compose
 
         requirements_dir = self.root / "requirements"
         if requirements_dir.is_dir():

@@ -53,6 +53,7 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
     Besides this, also accept these commands:\n
         * compile-theme (compile theme sass files)\n
         * reset-mysql (reset mysql database for the project)\n
+        * reset-rabbitmq (create rabbitmq vhost)\n
         * build-requirements (build the image that contains python requirements)\n
         * build-themes (build the image that includes compiled themes)\n
         * build-final (build the final image for this project)\n
@@ -71,7 +72,7 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
         "build-final",
         "build-final-refresh",
     ]
-    COMMANDS = BUILD_COMMANDS + ["reset-mysql", "compile-theme"]
+    COMMANDS = BUILD_COMMANDS + ["reset-mysql", "reset-rabbitmq", "compile-theme"]
     command = ""
     if len(compose_args) == 1 and compose_args[0] in COMMANDS:
         command = compose_args[0]
@@ -117,14 +118,28 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
                 paver compile_sass --theme-dirs /openedx/themes --themes {themes}
                 chown {uid}:{uid} /openedx/themes/* -R""",
         ]
-        run_compose(list(args), project=project, dry_run=dry_run)
+        run_compose(args, project=project, dry_run=dry_run)
         return
 
     if command == "reset-mysql":
         if not check_services(["mysql"]):
             click.echo("Mysql service not found.\nMaybe you forgot to run\nddc up -d")
             return
-        resetdb(project)
+        resetdb(project, dry_run=dry_run)
+        return
+
+    if command == "reset-rabbitmq":
+        vhost = f"{project.name}_edxqueue"
+        args = [
+            "exec",
+            "rabbitmq",
+            "sh",
+            "-c",
+            f"""rabbitmqctl add_vhost {vhost}
+            rabbitmqctl set_permissions -p {vhost} guest ".*" ".*" ".*"
+            """,
+        ]
+        run_compose(args, dry_run=dry_run)
         return
 
 
@@ -160,12 +175,13 @@ def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool, dry_run: bool):
     return 0
 
 
-def resetdb(project: Project):
+def resetdb(project: Project, dry_run: bool):
     """Reset the mysql database of LMS/CMS
     """
     wait_for_mysql()
-    execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
-    reset_mysql(project)
+    if not dry_run:
+        execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
+    reset_mysql(project, dry_run=dry_run)
 
 
 def resetmailslurper():

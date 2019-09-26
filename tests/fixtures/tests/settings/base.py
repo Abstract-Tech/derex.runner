@@ -5,8 +5,7 @@ SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 assert SERVICE_VARIANT in ("lms", "cms")
 exec("from {}.envs.derex.base import *".format(SERVICE_VARIANT), globals(), locals())
 
-USE_I18N = True
-LANGUAGE_CODE = "de-de"
-
-# Id of the site fixture to use, instead of looking up the hostname
-SITE_ID = 1
+SITE_NAME = "{}.edx.localhost".format(SERVICE_VARIANT)
+HTTPS = "on"
+CMS_BASE = "cms.edx.localhost"
+LMS_BASE = "lms.edx.localhost"

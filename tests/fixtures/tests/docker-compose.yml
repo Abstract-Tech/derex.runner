@@ -1,0 +1,25 @@
+version: "3.5"
+
+services:
+  cms:
+    command: "true"
+  lms:
+    command: "true"
+  lms_final:
+    ports: []
+  cms_final:
+    ports: []
+  nginx:
+    image: steveltn/https-portal:1
+    ports:
+      - '80:80'
+      - '443:443'
+    links:
+      - lms_final
+      - cms_final
+    restart: always
+    environment:
+      DOMAINS: 'lms.edx.localhost -> http://lms_final:4710, cms.edx.localhost -> http://cms_final:4810, mail.edx.localhost -> http://smtp:4301'
+      STAGE: 'local'
+    networks:
+      - derex
