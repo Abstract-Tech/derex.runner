@@ -5,6 +5,7 @@ from derex.runner.build import build_requirements_image
 from derex.runner.build import build_themes_image
 from derex.runner.compose_utils import reset_mysql
 from derex.runner.compose_utils import run_compose
+from derex.runner.config import generate_local_edxbackup_config
 from derex.runner.docker import check_services
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
@@ -51,6 +52,7 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
     You probably want do run `ddc-local up -d` and `ddc-local logs -f`.
 
     Besides this, also accept these commands:\n
+        * backup-restore (restore an existing backup)\n
         * compile-theme (compile theme sass files)\n
         * reset-mysql (reset mysql database for the project)\n
         * reset-rabbitmq (create rabbitmq vhost)\n
@@ -66,6 +68,11 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
     except ValueError:
         click.echo("You need to run this command in a derex project")
         sys.exit(1)
+
+    if compose_args[0] == "backup-restore":
+        backup_restore(project)
+        return
+
     BUILD_COMMANDS = [
         "build-requirements",
         "build-themes",
@@ -174,6 +181,82 @@ def ddc(compose_args: Tuple[str, ...], reset_mailslurper: bool, dry_run: bool):
         return 0
     run_compose(list(compose_args), dry_run=dry_run)
     return 0
+
+
+def backup_restore(project: Project):
+    """List and restore project backups
+    """
+
+    if project.backups_dir is None:
+        click.echo(f"No backup dir found")
+        return
+    if not check_services(["mysql"]):
+        click.echo(
+            "Mysql/mongo/rabbitmq services not found.\nMaybe you forgot to run\nddc up -d"
+        )
+        return
+    if not is_docker_working():
+        click.echo("Unable to connect to docker daemon")
+        return
+
+    available_backups = sorted(os.listdir(project.backups_dir))
+    if not available_backups:
+        click.echo(f"Unable to find any backup in {project.backups_dir}")
+        return
+
+    click.echo("Available backups:")
+    for index, backup in enumerate(available_backups):
+        click.echo(f"{index}\t{backup}")
+    while True:
+        backup_choice = click.prompt(
+            "\nWhich backup do you want to load?\n"
+            "Enter an empty value to load the last one. Enter CTRL+C to exit.",
+            type=click.IntRange(min=0, max=len(available_backups) - 1),
+            default=len(available_backups)
+            - 1,  # Mypy complains about this argument being an int instead of a string
+        )
+        confirmation = click.prompt(
+            "\nAre you sure you want to load backup "
+            f"{backup_choice} ({available_backups[backup_choice]}) ?\n"
+            "Repeat for confirmation",
+            type=int,
+        )
+        if backup_choice == confirmation:
+            chosen_backup = available_backups[backup_choice]
+            break
+        click.echo("Error: the two entered values do not match")
+
+    client = docker.from_env()
+    backup_dir = project.backups_dir / chosen_backup
+    config_file = generate_local_edxbackup_config(project)
+    try:
+        click.echo(f'Restoring database backup "{chosen_backup}"')
+        output = client.containers.run(
+            "derex/edxbackup",
+            "edxbackup edx_restore",
+            mounts=[
+                docker.types.Mount(
+                    type="bind",
+                    source=str(backup_dir),
+                    target="/destination",
+                    read_only=True,
+                ),
+                docker.types.Mount(
+                    type="bind",
+                    source=str(config_file),
+                    target="/etc/edxbackup.json",
+                    read_only=True,
+                ),
+            ],
+            network="derex",
+            remove=True,
+        )
+        click.echo(output.decode("utf-8"))
+        click.echo(f'Successfully restored backup "{chosen_backup}"')
+    except docker.errors.ContainerError as exc:
+        click.echo(f'Unable to restore backup "{chosen_backup}"')
+        logger.exception(exc)
+    return
 
 
 def resetdb(project: Project, dry_run: bool):

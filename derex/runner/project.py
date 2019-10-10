@@ -33,6 +33,9 @@ class Project:
     # The directory containing project settings (that feed django.conf.settings)
     settings_dir: Optional[Path] = None
 
+    # The directory containing project backups
+    backups_dir: Optional[Path] = None
+
     # The directory containing project database fixtures (used on --reset-mysql)
     fixtures_dir: Optional[Path] = None
 
@@ -45,8 +48,11 @@ class Project:
     # The image tag of the final image containing everything needed for this project
     image_tag: str
 
-    # Name of the database this project uses
+    # Name of the mysql database this project uses
     mysql_db_name: str
+
+    # Name of the mongodb database this project uses
+    mongo_db_name: str
 
     # Path to a local docker-compose.yml file, if present
     local_compose: Optional[Path] = None
@@ -102,7 +108,13 @@ class Project:
             self.fixtures_dir = fixtures_dir
 
         self.image_tag = self.themes_image_tag
+
+        backups_dir = self.root / "backups"
+        if backups_dir.is_dir():
+            self.backups_dir = backups_dir
+
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
+        self.mongo_db_name = self.config.get("mongo_db_name", f"{self.name}_edxapp")
 
 
 def get_requirements_hash(path: Path) -> str:
