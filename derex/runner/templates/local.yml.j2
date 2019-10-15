@@ -26,6 +26,8 @@ x-common:
     {%- endif %}
   environment:
     &common-env
+    SERVICE_VARIANT: lms
+    DEREX_PROJECT: {{ project.name }}
     {% if project.settings_dir -%}
     DJANGO_SETTINGS_MODULE: lms.envs.{{ project.name }}.base
     SETTINGS: {{ project.name }}.base
@@ -39,6 +41,8 @@ x-common:
 x-common-cms:
   environment:
     &cms-env
+    SERVICE_VARIANT: cms
+    DEREX_PROJECT: {{ project.name }}
     {% if project.settings_dir -%}
     DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
     SETTINGS: {{ project.name }}.base
@@ -75,7 +79,6 @@ services:
       sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver --noreload 0:4800'
     environment:
       <<: *cms-env
-      SERVICE_VARIANT: cms
       DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
     ports:
       - 127.0.0.1:4800:4800
@@ -106,25 +109,28 @@ services:
         wsgi:application'
     environment:
       <<: *cms-env
-      SERVICE_VARIANT: cms
       DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
     ports:
       - 127.0.0.1:4810:4810
       - 127.0.0.1:4811:4811
     container_name: {{ project.name }}_cms_final
 {% endif %}
-  worker:
+  lms_worker:
     <<: *common-conf
     command:
-      sh -c 'celery worker
-        -A edx_celery.APP
-        --loglevel=info
-        --hostname=edx.$${SERVICE_VARIANT}
-        --concurrency=1
-        --maxtasksperchild 1000'
-    container_name: {{ project.name }}_worker
+      sh -c './manage.py lms celery worker --loglevel=INFO -n lms.edx -Q lms.default'
+    container_name: {{ project.name }}_lms_worker
     environment:
       <<: *common-env
+      C_FORCE_ROOT: "True"
+
+  cms_worker:
+    <<: *common-conf
+    command:
+      sh -c './manage.py lms celery worker --loglevel=INFO -n cms.edx -Q cms.default'
+    container_name: {{ project.name }}_cms_worker
+    environment:
+      <<: *cms-env
       C_FORCE_ROOT: "True"
 
 networks:
