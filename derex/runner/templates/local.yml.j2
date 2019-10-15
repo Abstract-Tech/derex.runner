@@ -54,10 +54,13 @@ x-common-cms:
 
 services:
   flower:
+    <<: *common-conf
     image: derex/openedx-ironwood
     command:
-      sh -c 'exec flower --port=5555
-        --broker=$$(python -c "from django.conf import settings; print(settings.BROKER_URL)")'
+      sh -c 'echo Obtaining broker configuration from edx. This is a bit slow;
+             export FLOWER_OPTIONS=$$(echo "from django.conf import settings; print(\"--broker=\" + settings.BROKER_URL + \" --broker_api=http://\" + settings.CELERY_BROKER_USER + \":\" + settings.CELERY_BROKER_PASSWORD + \"@\" + settings.CELERY_BROKER_HOSTNAME + \":15672/api/\") " | ./manage.py $$SERVICE_VARIANT shell);
+             echo Done. Flower options are \"$$FLOWER_OPTIONS\";
+             exec flower --port=5555 $$FLOWER_OPTIONS'
     ports:
       - 127.0.0.1:5555:5555
     container_name: {{ project.name }}_flower
