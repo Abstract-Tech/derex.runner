@@ -1,0 +1,13 @@
+https://lms.edx.localhost {
+    tls self_signed
+    proxy / lms_final:4710 {
+        transparent
+    }
+}
+
+https://cms.edx.localhost {
+    tls self_signed
+    proxy / cms_final:4810 {
+        transparent
+    }
+}
