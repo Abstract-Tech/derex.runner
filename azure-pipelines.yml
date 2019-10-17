@@ -1,114 +1,117 @@
-pool:
-  vmImage: 'ubuntu-latest'
-
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.7'
-  displayName: 'Use Python 3.7'
-
-- script: |
-    pip3 install -U pip setuptools
-    pip3 install -r requirements_dev.txt -r requirements.txt . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
-  displayName: 'Install derex.runner'
-
-- script: nohup ddc pull &
-  displayName: 'Pull edX image in background'
-
-- script: |
-    set -ex
-    set -o pipefail
-    cd tests
-    pytest --ignore-docstrings |grep -v codecoveragetool=Cobertura
-  displayName: 'Run python tests'
-
-- script: |
-    # We installed the package with pip, and coverage reports the full absolute path.
-    # We cut to derex/runner/etc/etc
-    DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
-    echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
-    grep "${DEREX_RUNNER_PATH}" tests/htmlcov/*.html
-    sed -i -e "s|${DEREX_RUNNER_PATH}||" tests/htmlcov/*.html
-    npm install juice
-    # Azure pipelines strips style sheets but leaves styles in place.
-    # juice can embed the styles in the HTML for us and present a much better
-    # view in the coverage results tab.
-    for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-    echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/test-cov.xml;reportdirectory=${PWD}/tests/htmlcov;]"
-  displayName: Fix coverage result and publish it
-  condition: succeededOrFailed()
-
-- script: |
-    set -ex
-    export DEREX_ADMIN_SERVICES=False
-    ddc up -d
-    ddc --reset-mailslurper
-  displayName: 'Start service daemons'
-
-- script: |
-    set -ex
-    cd tests/fixtures/complete
-    ddc-local reset-mysql
-    ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
-  displayName: 'Test complete project fixtures'
-
-- script: cd tests/fixtures/complete; ddc-local up -d
-  displayName: 'Start edX daemons'
-
-- script: cd tests/fixtures/complete; ddc-local reset-mysql
-  displayName: 'Prime mysql database'
-
-- script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
-  displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
-
-- script: |
-    echo 127.0.0.1 localhost studio.localhost | sudo tee -a /etc/hosts
-    sleep 3  # Give the services a little time to start up
-  displayName: Add studio.localhost to /etc/hosts
-
-- script: curl -f http://localhost:4700/
-  displayName: 'Curl the LMS'
-
-- script: curl -f http://studio.localhost:4800/
-  displayName: 'Curl the CMS'
-
-- script: |
-    set -ex
-    cd tests/fixtures/complete
-    ddc-local build-final-refresh
-    docker images
-    # This should not be needed, but for some reason Azure does not tag the image
-    docker tag $(docker images -q|head -n1) complete/openedx-themes
-    docker images
-
-    echo Installing dive
-    wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
-    DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.8.0_linux_amd64.deb
-    echo Analyzing image
-    dive --ci complete/openedx-themes
-  condition: always()
-  displayName: 'Build the complete image and test it with dive'
-  continueOnError: true  # Do not make the build fail because of this step, for now
+jobs:
+- job: FirstTest
   timeoutInMinutes: 40
+  pool:
+    vmImage: 'ubuntu-latest'
 
-- script: |
-    cd tests/fixtures/complete; ddc-local build-themes; ddc-local up -d lms_final cms_final
-    sleep 5  # Give it time to start up
-  displayName: 'Start final image lms/cms'
+  steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.7'
+      displayName: 'Use Python 3.7'
 
-- script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/
-  displayName: 'Curl the final LMS'
+    - script: |
+        pip3 install -U pip setuptools
+        pip3 install -r requirements_dev.txt -r requirements.txt . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
+      displayName: 'Install derex.runner'
 
-- script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://studio.localhost:4810/
-  displayName: 'Curl the final CMS'
+    - script: nohup ddc pull &
+      displayName: 'Pull edX image in background'
 
-- script: |
-    ddc logs
-    cd tests/fixtures/complete; ddc-local logs
-  condition: always()
-  displayName: 'Show logs'
+    - script: |
+        set -ex
+        set -o pipefail
+        cd tests
+        pytest --ignore-docstrings |grep -v codecoveragetool=Cobertura
+      displayName: 'Run python tests'
 
-- script: |
-    cd tests/fixtures/complete; ddc-local config
-  condition: always()
-  displayName: 'Show ddc-local config'
+    - script: |
+        # We installed the package with pip, and coverage reports the full absolute path.
+        # We cut to derex/runner/etc/etc
+        DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
+        echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
+        grep "${DEREX_RUNNER_PATH}" tests/htmlcov/*.html
+        sed -i -e "s|${DEREX_RUNNER_PATH}||" tests/htmlcov/*.html
+        npm install juice
+        # Azure pipelines strips style sheets but leaves styles in place.
+        # juice can embed the styles in the HTML for us and present a much better
+        # view in the coverage results tab.
+        for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+        echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/test-cov.xml;reportdirectory=${PWD}/tests/htmlcov;]"
+      displayName: Fix coverage result and publish it
+      condition: succeededOrFailed()
+
+    - script: |
+        set -ex
+        export DEREX_ADMIN_SERVICES=False
+        ddc up -d
+        ddc --reset-mailslurper
+      displayName: 'Start service daemons'
+
+    - script: |
+        set -ex
+        cd tests/fixtures/complete
+        ddc-local reset-mysql
+        ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+      displayName: 'Test complete project fixtures'
+
+    - script: cd tests/fixtures/complete; ddc-local up -d
+      displayName: 'Start edX daemons'
+
+    - script: cd tests/fixtures/complete; ddc-local reset-mysql
+      displayName: 'Prime mysql database'
+
+    - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
+      displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
+
+    - script: |
+        echo 127.0.0.1 localhost studio.localhost | sudo tee -a /etc/hosts
+        sleep 3  # Give the services a little time to start up
+      displayName: Add studio.localhost to /etc/hosts
+
+    - script: curl -f http://localhost:4700/
+      displayName: 'Curl the LMS'
+
+    - script: curl -f http://studio.localhost:4800/
+      displayName: 'Curl the CMS'
+
+    - script: |
+        set -ex
+        cd tests/fixtures/complete
+        ddc-local build-final-refresh
+        docker images
+        # This should not be needed, but for some reason Azure does not tag the image
+        docker tag $(docker images -q|head -n1) complete/openedx-themes
+        docker images
+
+        echo Installing dive
+        wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
+        DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.8.0_linux_amd64.deb
+        echo Analyzing image
+        dive --ci complete/openedx-themes
+      condition: always()
+      displayName: 'Build the complete image and test it with dive'
+      continueOnError: true  # Do not make the build fail because of this step, for now
+      timeoutInMinutes: 40
+
+    - script: |
+        cd tests/fixtures/complete; ddc-local build-themes; ddc-local up -d lms_final cms_final
+        sleep 5  # Give it time to start up
+      displayName: 'Start final image lms/cms'
+
+    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/
+      displayName: 'Curl the final LMS'
+
+    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://studio.localhost:4810/
+      displayName: 'Curl the final CMS'
+
+    - script: |
+        ddc logs
+        cd tests/fixtures/complete; ddc-local logs
+      condition: always()
+      displayName: 'Show logs'
+
+    - script: |
+        cd tests/fixtures/complete; ddc-local config
+      condition: always()
+      displayName: 'Show ddc-local config'
