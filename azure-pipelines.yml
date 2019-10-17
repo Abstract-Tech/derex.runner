@@ -1,22 +1,10 @@
 jobs:
-- job: FirstTest
+- job: RunPytests
   timeoutInMinutes: 40
   pool:
     vmImage: 'ubuntu-latest'
-
   steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '3.7'
-      displayName: 'Use Python 3.7'
-
-    - script: |
-        pip3 install -U pip setuptools
-        pip3 install -r requirements_dev.txt -r requirements.txt . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
-      displayName: 'Install derex.runner'
-
-    - script: nohup ddc pull &
-      displayName: 'Pull edX image in background'
+    - template: azure-pipelines/prepare.yml
 
     - script: |
         set -ex
@@ -40,6 +28,17 @@ jobs:
         echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/test-cov.xml;reportdirectory=${PWD}/tests/htmlcov;]"
       displayName: Fix coverage result and publish it
       condition: succeededOrFailed()
+
+
+- job: FirstTest
+  timeoutInMinutes: 40
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - template: azure-pipelines/prepare.yml
+
+    - script: nohup ddc pull &
+      displayName: 'Pull edX image in background'
 
     - script: |
         set -ex
