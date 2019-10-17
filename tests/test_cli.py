@@ -62,6 +62,7 @@ def test_ddc_local(sys_argv, mocker, workdir):
     assert "worker" in result.output
 
 
+@pytest.mark.slowtest
 def test_ddc_local_reset_mysql(sys_argv, mocker, workdir):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli import ddc
@@ -80,6 +81,7 @@ def test_ddc_local_reset_mysql(sys_argv, mocker, workdir):
     assert result.exit_code == 0
 
 
+@pytest.mark.slowtest
 def test_ddc_local_build(workdir):
     from derex.runner.cli import ddc_local
 
