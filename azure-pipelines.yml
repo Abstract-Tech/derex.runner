@@ -37,6 +37,16 @@ jobs:
   steps:
     - template: azure-pipelines/prepare.yml
 
+    - script: ddc pull
+      displayName: 'Pull edX services images'
+
+    - script: |
+        set -ex
+        export DEREX_ADMIN_SERVICES=False
+        ddc up -d
+        ddc --reset-mailslurper
+      displayName: 'Start service daemons'
+
     - script: |
         # Slow tests do not currently contribute to coverage
         set -ex
