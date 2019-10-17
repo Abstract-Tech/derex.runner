@@ -30,7 +30,7 @@ jobs:
       condition: succeededOrFailed()
 
 
-- job: FirstTest
+- job: TestComplete
   timeoutInMinutes: 40
   pool:
     vmImage: 'ubuntu-latest'
@@ -114,3 +114,28 @@ jobs:
         cd tests/fixtures/complete; ddc-local config
       condition: always()
       displayName: 'Show ddc-local config'
+
+
+- job: TestMinimal
+  timeoutInMinutes: 40
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - template: azure-pipelines/prepare.yml
+
+    - script: nohup ddc pull &
+      displayName: 'Pull edX image in background'
+
+    - script: |
+        set -ex
+        export DEREX_ADMIN_SERVICES=False
+        ddc up -d
+        ddc --reset-mailslurper
+      displayName: 'Start service daemons'
+
+    - script: |
+        set -ex
+        cd tests/fixtures/minimal
+        ddc-local reset-mysql
+        ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+      displayName: 'Test minimal project fixtures'
