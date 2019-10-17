@@ -11,3 +11,10 @@ https://cms.edx.localhost {
         transparent
     }
 }
+
+https://flower.edx.localhost {
+    tls self_signed
+    proxy / flower:5555 {
+        transparent
+    }
+}
