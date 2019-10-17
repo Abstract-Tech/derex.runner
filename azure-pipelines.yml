@@ -37,8 +37,8 @@ jobs:
   steps:
     - template: azure-pipelines/prepare.yml
 
-    - script: nohup ddc pull &
-      displayName: 'Pull edX image in background'
+    - script: ddc pull
+      displayName: 'Pull edX services images'
 
     - script: |
         set -ex
@@ -123,8 +123,8 @@ jobs:
   steps:
     - template: azure-pipelines/prepare.yml
 
-    - script: nohup ddc pull &
-      displayName: 'Pull edX image in background'
+    - script: ddc pull
+      displayName: 'Pull edX services images'
 
     - script: |
         set -ex
@@ -136,6 +136,11 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/minimal
+        ddc-local pull
+      displayName: 'Pull edx image'
+
+    - script: |
+        set -ex
+        cd tests/fixtures/minimal
         ddc-local reset-mysql
-        ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
-      displayName: 'Test minimal project fixtures'
+      displayName: 'Prime Mysql DB'
