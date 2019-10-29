@@ -47,7 +47,8 @@ def build_requirements_image(project: Project):
         "paver update_assets --settings derex.assets --themes open-edx;"
         'rmlint -g -c sh:symlink -o json:stderr /openedx/staticfiles 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null'
     )
-    dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
+    if project.config.get("compile_assets", False):
+        dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
     dockerfile_text = "\n".join(dockerfile_contents)
 
     paths_to_copy = [str(project.requirements_dir)]

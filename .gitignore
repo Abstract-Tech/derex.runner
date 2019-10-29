@@ -109,3 +109,6 @@ ENV/
 
 # Our temporary files
 .derex
+
+tests/fixtures/tests/ironwood.2.tar.gz
+tests/fixtures/tests/edx-demo-course-*
