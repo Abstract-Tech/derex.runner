@@ -11,6 +11,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+import click
 import docker
 import os
 import pkg_resources
@@ -64,6 +65,7 @@ def generate_local_docker_compose(project: Project) -> Path:
     if image_exists(project.image_tag):
         final_image = project.image_tag
     if not image_exists(project.requirements_image_tag):
+        click.echo("Building requirements image")
         build_requirements_image(project)
     tmpl = Template(template_path.read_text())
     text = tmpl.render(project=project, final_image=final_image)
