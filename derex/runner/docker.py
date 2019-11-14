@@ -12,6 +12,7 @@ import io
 import json
 import logging
 import pkg_resources
+import re
 import tarfile
 import time
 
@@ -116,18 +117,21 @@ def build_image(
     output = docker_client.build(
         fileobj=context, custom_context=True, encoding="gzip", tag=tag
     )
-    for line in output:
-        line_decoded = json.loads(line)
-        print(line_decoded.get("stream", ""), end="")
-        if "error" in line_decoded:
-            print(line_decoded.get("error", ""))
-        if "aux" in line_decoded:
-            print(f'Built image: {line_decoded["aux"]["ID"]}')
-    if tag_final:
-        final_tag = tag.rpartition(":")[0] + ":latest"
-        for image in docker_client.images():
-            if image.get("RepoTags") and tag in image["RepoTags"]:
-                docker_client.tag(image["Id"], final_tag)
+    for lines in output:
+        for line in re.split(br"\r\n|\n", lines):
+            if not line:  # Split empty lines
+                continue
+            line_decoded = json.loads(line)
+            print(line_decoded.get("stream", ""), end="")
+            if "error" in line_decoded:
+                print(line_decoded.get("error", ""))
+            if "aux" in line_decoded:
+                print(f'Built image: {line_decoded["aux"]["ID"]}')
+        if tag_final:
+            final_tag = tag.rpartition(":")[0] + ":latest"
+            for image in docker_client.images():
+                if image.get("RepoTags") and tag in image["RepoTags"]:
+                    docker_client.tag(image["Id"], final_tag)
 
 
 def pull_images(image_tags: List[str]):
