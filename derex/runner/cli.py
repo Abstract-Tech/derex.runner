@@ -115,6 +115,7 @@ def ddc_local(compose_args: Tuple[str, ...], dry_run: bool):
             "sh",
             "-c",
             f"""set -ex
+                export PATH=/openedx/edx-platform/node_modules/.bin:$PATH  # FIXME: this should not be necessary
                 paver compile_sass --theme-dirs /openedx/themes --themes {themes}
                 chown {uid}:{uid} /openedx/themes/* -R""",
         ]
