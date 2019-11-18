@@ -51,7 +51,7 @@ def run_compose(
     try:
         sys.argv = ["docker-compose"] + settings + args
         if not dry_run:
-            click.echo(f'Running {" ".join(sys.argv)}')
+            click.echo(f'Running {" ".join(sys.argv)}', err=True)
             main()
         else:
             click.echo("Would have run:")
