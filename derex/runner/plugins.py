@@ -43,20 +43,28 @@ class Registry(object):
     of all items. You may also check that the registry contains an item.
     When getting an item you may use either the index of the item or the
     string-based "name". For example:
+
+    .. code-block:: python
+
         registry = Registry()
         registry.register(SomeItem(), 'itemname', 20)
         # Get the item by index
         item = registry[0]
         # Get the item by name
         item = registry['itemname']
+
     When checking that the registry contains an item, you may use either the
     string-based "name", or a reference to the actual item. For example:
+
+    .. code-block:: python
+
         someitem = SomeItem()
         registry.register(someitem, 'itemname', 20)
         # Contains the name
         assert 'itemname' in registry
         # Contains the item instance
         assert someitem in registry
+
     The method `get_index_for_name` is also available to obtain the index of
     an item using that item's assigned "name".
     """

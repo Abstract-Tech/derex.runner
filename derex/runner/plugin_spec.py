@@ -18,12 +18,14 @@ def compose_options() -> Dict[str, Union[str, float, int, List[str]]]:
     suitable to be passed as options to docker-compose.
     Example:
 
-    {
-        "name": "addon",
-        "priority": ">base",
-        "variant": "ironwood",
-        "options": ["-f", "/path/to/docker-compose.yml"],
-    }
+    .. code-block:: python
+
+        {
+            "name": "addon",
+            "priority": ">base",
+            "variant": "ironwood",
+            "options": ["-f", "/path/to/docker-compose.yml"],
+        }
     """
 
 
@@ -37,9 +39,11 @@ def local_compose_options(
     suitable to be passed as options to docker-compose.
     Example:
 
-    {
-        "name": "addon",
-        "priority": ">base",
-        "options": ["-f", "/path/to/docker-compose.yml"],
-    }
+    .. code-block:: python
+
+        {
+            "name": "addon",
+            "priority": ">base",
+            "options": ["-f", "/path/to/docker-compose.yml"],
+        }
     """
