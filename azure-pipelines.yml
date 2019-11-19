@@ -77,7 +77,7 @@ jobs:
         set -ex
         cd tests/fixtures/complete
         ddc-local reset-mysql
-        ddc exec mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+        ddc exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
       displayName: 'Test complete project fixtures'
 
     - script: cd tests/fixtures/complete; ddc-local up -d
