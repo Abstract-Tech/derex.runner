@@ -76,6 +76,13 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
+        # Invoking ddc-local will trigger an image build
+        ddc-local config
+      displayName: 'Build image for project "complete"'
+
+    - script: |
+        set -ex
+        cd tests/fixtures/complete
         ddc-local reset-mysql
         ddc exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_edxapp -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
       displayName: 'Test complete project fixtures'
