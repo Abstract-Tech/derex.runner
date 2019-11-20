@@ -177,3 +177,13 @@ jobs:
         cd tests/fixtures/minimal
         ddc-local reset-mysql
       displayName: 'Prime Mysql DB'
+
+
+- job: CheckDocs
+  timeoutInMinutes: 40
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - template: azure-pipelines/prepare.yml
+    - script: make docs
+      displayName: 'Compile docs'
