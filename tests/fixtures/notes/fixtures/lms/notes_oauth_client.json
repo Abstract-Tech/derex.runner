@@ -1,0 +1,16 @@
+[
+    {
+        "model": "oauth2.client",
+        "pk": 1,
+        "fields": {
+            "user": null,
+            "name": "edx-notes",
+            "url": "http://notes:8120",
+            "redirect_uri": "http://notes:8120/complete/edx-oidc/",
+            "client_id": "edx_notes_api-key",
+            "client_secret": "edx_notes_api-secret",
+            "client_type": 0,
+            "logout_uri": null
+        }
+    }
+]

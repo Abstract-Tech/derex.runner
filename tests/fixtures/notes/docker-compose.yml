@@ -1,0 +1,14 @@
+version: "3.5"
+
+services:
+  notes:
+    image: derex/openedx-notes
+    volumes:
+      - ../notes_settings.py:/edx-notes-api/notes_settings.py
+    ports:
+      - 8120:8120
+    environment:
+      DJANGO_SETTINGS_MODULE: notes_settings
+      DB_NAME: derex_notes
+    networks:
+      derex:
