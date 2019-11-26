@@ -10,7 +10,7 @@ import re
 import yaml
 
 
-CONF_FILENAME = ".derex.config.yaml"
+CONF_FILENAME = "derex.config.yaml"
 
 
 def compose_path(name):
