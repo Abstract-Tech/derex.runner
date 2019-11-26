@@ -5,17 +5,14 @@ from derex.runner.utils import asbool
 from derex.runner.utils import compose_path
 from jinja2 import Template
 from pathlib import Path
-from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Union
 
 import click
 import docker
 import os
 import pkg_resources
-import pluggy
 
 
 class BaseServices:

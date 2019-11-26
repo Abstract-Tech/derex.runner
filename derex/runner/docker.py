@@ -1,7 +1,6 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
-from derex.runner.project import Project
 from pathlib import Path
 from requests.exceptions import RequestException
 from typing import Iterable

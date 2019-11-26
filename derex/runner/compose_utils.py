@@ -3,20 +3,13 @@ from derex.runner.docker import ensure_volumes_present
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.project import Project
-from pathlib import Path
 from typing import List
 from typing import Optional
-from typing import Union
 
 import click
-import derex
-import hashlib
+import derex  # noqa  # This is ugly, but makes mypy and flake8 happy and still performs type checks
 import logging
-import os
-import pkg_resources
-import re
 import sys
-import yaml
 
 
 logger = logging.getLogger(__name__)

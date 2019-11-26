@@ -1,10 +1,4 @@
 from derex.runner.docker import build_image
-from derex.runner.docker import check_services
-from derex.runner.docker import execute_mysql_query
-from derex.runner.docker import is_docker_working
-from derex.runner.docker import load_dump
-from derex.runner.docker import pull_images
-from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
 
 import os
