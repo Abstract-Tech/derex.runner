@@ -1,4 +1,4 @@
-from notesserver.settings.common import *
+from notesserver.settings.common import *  # noqa: F403
 from notesserver.settings.logger import get_logger_config
 
 import os
