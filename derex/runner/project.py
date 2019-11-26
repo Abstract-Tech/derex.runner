@@ -1,3 +1,4 @@
+from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
 from pathlib import Path
 from typing import Optional
@@ -8,12 +9,9 @@ import os
 import yaml
 
 
-CONF_FILENAME = ".derex.config.yaml"
-
-
 class Project:
     """Represents a derex.runner project, i.e. a directory with a
-    `.derex.config.yaml` file and optionally a "themes", "settings" and
+    `derex.config.yaml` file and optionally a "themes", "settings" and
     "requirements" directory.
     """
 
