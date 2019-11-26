@@ -12,6 +12,6 @@ USE_I18N = True
 SITE_ID = 1
 
 # Notes settings
-FEATURES["ENABLE_EDXNOTES"] = True
+FEATURES["ENABLE_EDXNOTES"] = True  # type: ignore  # noqa
 EDXNOTES_PUBLIC_API = "http://localhost:8120/api/v1"
 EDXNOTES_INTERNAL_API = "http://notes:8120/api/v1"

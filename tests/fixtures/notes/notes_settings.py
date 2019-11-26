@@ -15,7 +15,9 @@ CLIENT_ID = "edx_notes_api-key"
 CLIENT_SECRET = "edx_notes_api-secret"
 
 ES_INDEXES = {"default": "notes_index"}
-HAYSTACK_CONNECTIONS["default"]["URL"] = "http://elasticsearch:9200/"
+HAYSTACK_CONNECTIONS["default"][  # type: ignore  # noqa
+    "URL"
+] = "http://elasticsearch:9200/"
 
 DATABASES = {
     "default": {
@@ -29,4 +31,4 @@ DATABASES = {
     }
 }
 
-JWT_AUTH = {}
+JWT_AUTH = {}  # type: ignore
