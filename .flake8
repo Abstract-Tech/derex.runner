@@ -1,5 +1,6 @@
 [flake8]
-ignore = E203, E266, E501, W503, F403, F401, E731
-max-line-length = 79
-max-complexity = 18
+ignore = E266, E501
+# Ignored errors:
+# E266    Too many leading '#' for block comment
+# E501    Line too long
 select = B,C,E,F,W,T4,B9
