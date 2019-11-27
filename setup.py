@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""The setup script."""
-
-from setuptools import find_packages
+from setuptools import find_namespace_packages
 from setuptools import setup
 
 
@@ -54,7 +51,7 @@ setup(
     include_package_data=True,
     keywords="derex.runner",
     name="derex.runner",
-    packages=find_packages(include=["derex.runner"]),
+    packages=find_namespace_packages(include=["derex.runner"]),
     namespace_packages=["derex"],
     setup_requires=setup_requirements,
     test_suite="tests",
