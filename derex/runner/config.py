@@ -73,6 +73,23 @@ def generate_local_docker_compose(project: Project) -> Path:
     return local_compose_path
 
 
+# We are adding an additional "dump" argument needed
+# to circumvent derex.backup pending issue with the
+# config file schema
+def generate_local_edxbackup_config(project: Project, dump: bool = False) -> Path:
+    derex_dir = project.root / ".derex"
+    if not derex_dir.is_dir():
+        derex_dir.mkdir()
+    local_edxbackup_config_path = derex_dir / "edxbackup.config.json"
+    template_path = Path(
+        pkg_resources.resource_filename(__name__, "templates/edxbackup.config.json.j2")
+    )
+    tmpl = Template(template_path.read_text())
+    text = tmpl.render(project=project, dump=dump)
+    local_edxbackup_config_path.write_text(text)
+    return local_edxbackup_config_path
+
+
 def image_exists(needle: str) -> bool:
     """If the given image tag exist in the local docker repository, return True.
     """
