@@ -37,14 +37,14 @@ jobs:
   steps:
     - template: azure-pipelines/prepare.yml
 
-    - script: ddc pull
+    - script: ddc-services pull
       displayName: 'Pull edX services images'
 
     - script: |
         set -ex
         export DEREX_ADMIN_SERVICES=False
-        ddc up -d
-        ddc --reset-mailslurper
+        ddc-services up -d
+        ddc-services --reset-mailslurper
       displayName: 'Start service daemons'
 
     - script: |
@@ -63,34 +63,34 @@ jobs:
   steps:
     - template: azure-pipelines/prepare.yml
 
-    - script: ddc pull
+    - script: ddc-services pull
       displayName: 'Pull edX services images'
 
     - script: |
         set -ex
         export DEREX_ADMIN_SERVICES=False
-        ddc up -d
-        ddc --reset-mailslurper
+        ddc-services up -d
+        ddc-services --reset-mailslurper
       displayName: 'Start service daemons'
 
     - script: |
         set -ex
         cd tests/fixtures/complete
-        # Invoking ddc-local will trigger an image build
-        ddc-local config
+        # Invoking ddc-project will trigger an image build
+        ddc-project config
       displayName: 'Build image for project "complete"'
 
     - script: |
         set -ex
         cd tests/fixtures/complete
-        ddc-local reset-mysql
-        ddc exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+        ddc-project reset-mysql
+        ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
       displayName: 'Test complete project fixtures'
 
-    - script: cd tests/fixtures/complete; ddc-local up -d
+    - script: cd tests/fixtures/complete; ddc-project up -d
       displayName: 'Start edX daemons'
 
-    - script: cd tests/fixtures/complete; ddc-local reset-mysql
+    - script: cd tests/fixtures/complete; ddc-project reset-mysql
       displayName: 'Prime mysql database'
 
     - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
@@ -110,7 +110,7 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
-        ddc-local build-final-refresh
+        ddc-project build-final-refresh
         docker images
         # This should not be needed, but for some reason Azure does not tag the image
         docker tag $(docker images -q|head -n1) complete/openedx-themes
@@ -127,7 +127,7 @@ jobs:
       timeoutInMinutes: 40
 
     - script: |
-        cd tests/fixtures/complete; ddc-local build-themes; ddc-local up -d lms_final cms_final
+        cd tests/fixtures/complete; ddc-project build-themes; ddc-project up -d lms_final cms_final
         sleep 5  # Give it time to start up
       displayName: 'Start final image lms/cms'
 
@@ -138,15 +138,15 @@ jobs:
       displayName: 'Curl the final CMS'
 
     - script: |
-        ddc logs
-        cd tests/fixtures/complete; ddc-local logs
+        ddc-services logs
+        cd tests/fixtures/complete; ddc-project logs
       condition: always()
       displayName: 'Show logs'
 
     - script: |
-        cd tests/fixtures/complete; ddc-local config
+        cd tests/fixtures/complete; ddc-project config
       condition: always()
-      displayName: 'Show ddc-local config'
+      displayName: 'Show ddc-project config'
 
 
 - job: TestMinimal
@@ -156,26 +156,26 @@ jobs:
   steps:
     - template: azure-pipelines/prepare.yml
 
-    - script: ddc pull
+    - script: ddc-services pull
       displayName: 'Pull edX services images'
 
     - script: |
         set -ex
         export DEREX_ADMIN_SERVICES=False
-        ddc up -d
-        ddc --reset-mailslurper
+        ddc-services up -d
+        ddc-services --reset-mailslurper
       displayName: 'Start service daemons'
 
     - script: |
         set -ex
         cd tests/fixtures/minimal
-        ddc-local pull
+        ddc-project pull
       displayName: 'Pull edx image'
 
     - script: |
         set -ex
         cd tests/fixtures/minimal
-        ddc-local reset-mysql
+        ddc-project reset-mysql
       displayName: 'Prime Mysql DB'
 
 
