@@ -1,11 +1,11 @@
 {
-    "mysql": {
+    "mysql": {{ "[{" if dump else "{" }}
         "dbname": "{{ project.mysql_db_name }}",
         "host": "mysql",
         "user": "root",
         "password": "secret",
         "port": "3306"
-    },
+    {{ "}]," if dump else "}," }}
     "mongo": {
         "dbname": "{{ project.mongo_db_name }}",
         "host": "mongodb",
