@@ -7,7 +7,6 @@ Welcome to derex.runner’s documentation!
 
    installation
    usage
-   modules
    contributing
 
 Indices and tables
