@@ -11,6 +11,7 @@ from derex.runner.docker import load_dump
 from derex.runner.docker import pull_images
 from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
+from functools import wraps
 
 import click
 import logging
@@ -47,8 +48,24 @@ def reset_mailslurper(project):
     return 0
 
 
+def ensure_project(func):
+    """Decorator that checks if the current command was invoked from inside a project,
+    (i.e. if the click context has a project) and prints a nice message if it's not.
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if click.get_current_context().obj is None:
+            click.echo("This command needs to be run inside a derex project")
+            return 1
+        func(*args, **kwargs)
+
+    return wrapper
+
+
 @derex.command()
 @click.pass_obj
+@ensure_project
 def compile_theme(project):
     """Compile theme sass files"""
     if project.themes_dir is None:
@@ -73,6 +90,7 @@ def compile_theme(project):
 
 @derex.command(name="reset-mysql")
 @click.pass_obj
+@ensure_project
 def reset_mysql_cmd(project):
     """Reset mysql database for the project"""
     if not check_services(["mysql"]):
@@ -86,6 +104,7 @@ def reset_mysql_cmd(project):
 
 @derex.command()
 @click.pass_obj
+@ensure_project
 def reset_rabbitmq(project):
     """Create rabbitmq vhost"""
     vhost = f"{project.name}_edxqueue"
@@ -99,11 +118,13 @@ def reset_rabbitmq(project):
         """,
     ]
     run_compose(args)
+    click.echo(f"Rabbitmq vhost {vhost} created")
     return 0
 
 
 @derex.command()
 @click.pass_obj
+@ensure_project
 def build_requirements(project):
     """Build the image that contains python requirements"""
     click.echo(
@@ -115,6 +136,7 @@ def build_requirements(project):
 @derex.command()
 @click.pass_obj
 @click.pass_context
+@ensure_project
 def build_themes(ctx, project):
     """Build the image that includes compiled themes"""
     ctx.forward(build_requirements)
@@ -128,6 +150,7 @@ def build_themes(ctx, project):
 @derex.command()
 @click.pass_obj
 @click.pass_context
+@ensure_project
 def build_final(ctx, project):
     """Build the final image for this project.
     For now this is the same as the final image"""
@@ -137,6 +160,7 @@ def build_final(ctx, project):
 @derex.command()
 @click.pass_obj
 @click.pass_context
+@ensure_project
 def build_final_refresh(ctx, project):
     """Also pull base docker image before starting building"""
     pull_images([project.base_image, project.final_base_image])
