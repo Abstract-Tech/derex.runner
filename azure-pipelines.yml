@@ -83,14 +83,14 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
-        ddc-project reset-mysql
+        derex reset-mysql
         ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
       displayName: 'Test complete project fixtures'
 
     - script: cd tests/fixtures/complete; ddc-project up -d
       displayName: 'Start edX daemons'
 
-    - script: cd tests/fixtures/complete; ddc-project reset-mysql
+    - script: cd tests/fixtures/complete; derex reset-mysql
       displayName: 'Prime mysql database'
 
     - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
@@ -110,7 +110,7 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
-        ddc-project build-final-refresh
+        derex build-final-refresh
         docker images
         # This should not be needed, but for some reason Azure does not tag the image
         docker tag $(docker images -q|head -n1) complete/openedx-themes
@@ -127,7 +127,7 @@ jobs:
       timeoutInMinutes: 40
 
     - script: |
-        cd tests/fixtures/complete; ddc-project build-themes; ddc-project up -d lms_final cms_final
+        cd tests/fixtures/complete; derex build-themes; ddc-project up -d lms_final cms_final
         sleep 5  # Give it time to start up
       displayName: 'Start final image lms/cms'
 
@@ -175,7 +175,7 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/minimal
-        ddc-project reset-mysql
+        derex reset-mysql
       displayName: 'Prime Mysql DB'
 
 
