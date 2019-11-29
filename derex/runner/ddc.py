@@ -10,7 +10,6 @@ from derex.runner.compose_utils import run_compose
 from derex.runner.docker import check_services
 from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
-from derex.runner.docker import load_dump
 from derex.runner.docker import pull_images
 from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
@@ -166,12 +165,6 @@ def resetdb(project: Project, dry_run: bool):
     if not dry_run:
         execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
     reset_mysql(project, dry_run=dry_run)
-
-
-def resetmailslurper():
-    wait_for_mysql()
-    execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
-    load_dump("fixtures/mailslurper.sql")
 
 
 def check_docker():

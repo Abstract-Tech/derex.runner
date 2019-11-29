@@ -44,7 +44,7 @@ jobs:
         set -ex
         export DEREX_ADMIN_SERVICES=False
         ddc-services up -d
-        ddc-services --reset-mailslurper
+        derex reset-mailslurper
       displayName: 'Start service daemons'
 
     - script: |
@@ -70,7 +70,7 @@ jobs:
         set -ex
         export DEREX_ADMIN_SERVICES=False
         ddc-services up -d
-        ddc-services --reset-mailslurper
+        derex reset-mailslurper
       displayName: 'Start service daemons'
 
     - script: |
@@ -163,7 +163,7 @@ jobs:
         set -ex
         export DEREX_ADMIN_SERVICES=False
         ddc-services up -d
-        ddc-services --reset-mailslurper
+        derex reset-mailslurper
       displayName: 'Start service daemons'
 
     - script: |
