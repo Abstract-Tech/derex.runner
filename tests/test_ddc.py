@@ -67,8 +67,8 @@ def test_ddc_project(sys_argv, mocker, workdir, capsys):
 @pytest.mark.slowtest
 def test_ddc_project_reset_mysql(sys_argv, mocker, workdir):
     """Test the open edx ironwood docker compose shortcut."""
+    from derex.runner.cli import derex
     from derex.runner.ddc import ddc_services
-    from derex.runner.ddc import ddc_project
 
     mocker.patch("derex.runner.ddc.check_services", return_value=True)
     client = mocker.patch("derex.runner.docker.client")
@@ -79,8 +79,9 @@ def test_ddc_project_reset_mysql(sys_argv, mocker, workdir):
     with sys_argv(["ddc-services", "up", "-d"]):
         ddc_services()
     with workdir(MINIMAL_PROJ):
-        with sys_argv(["reset-mysql"]):
-            ddc_project()
+        result = runner.invoke(derex, ["reset-mysql"])
+    assert_result_ok(result)
+    assert result.exit_code == 0
 
 
 @pytest.mark.slowtest
