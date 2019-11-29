@@ -53,7 +53,7 @@ def run_compose(
         sys.argv = old_argv
 
 
-def reset_mysql(project: Project, dry_run: bool):
+def reset_mysql(project: Project, dry_run: bool = False):
     """Run script from derex/openedx image to reset the mysql db.
     """
     logger.warning("Resetting mysql database")
