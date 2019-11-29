@@ -22,7 +22,7 @@ Run the following commands: ::
     pip install -r requirements.txt -e .
     cd tests/fixtures/minimal/
     ddc up -d  # Start mysql, mongodb, rabbitmq and admin tools
-    ddc --reset-mailslurper  # Prime the mailslurper mysql database
+    derex reset-mailslurper  # Prime the mailslurper mysql database
     ddc-local reset-mysql  # Prime the mysql database
     ddc-local up -d  # Start LMS/CMS daemons and workers
     ddc-local compile-theme  # Compile theme sass files

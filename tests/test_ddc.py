@@ -7,8 +7,10 @@ from itertools import repeat
 from pathlib import Path
 from types import SimpleNamespace
 
+import logging
 import os
 import pytest
+import sys
 import traceback
 
 
@@ -17,20 +19,22 @@ COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 runner = CliRunner()
 
 
-def test_ddc_services(sys_argv):
+def test_ddc_services(sys_argv, capsys):
     """Test the derex docker compose shortcut."""
     from derex.runner.ddc import ddc_services
 
     os.environ["DEREX_ADMIN_SERVICES"] = "False"
-    result = runner.invoke(ddc_services, ["config"])
-    assert_result_ok(result)
-    assert "mongodb" in result.output
-    assert "adminer" not in result.output
+    with sys_argv(["ddc-services", "config"]):
+        ddc_services()
+    output = capsys.readouterr().out
+    assert "mongodb" in output
+    assert "adminer" not in output
 
     os.environ["DEREX_ADMIN_SERVICES"] = "True"
-    result = runner.invoke(ddc_services, ["config"])
-    assert_result_ok(result)
-    assert "adminer" in result.output
+    with sys_argv(["ddc-services", "config"]):
+        ddc_services()
+    output = capsys.readouterr().out
+    assert "adminer" in output
 
 
 def test_ddc_project(sys_argv, mocker, workdir):
@@ -72,8 +76,9 @@ def test_ddc_project_reset_mysql(sys_argv, mocker, workdir):
         SimpleNamespace(exit_code=-1)
     ] + list(repeat(SimpleNamespace(exit_code=0), 10))
 
+    with sys_argv(["ddc-services", "up", "-d"]):
+        ddc_services()
     with workdir(MINIMAL_PROJ):
-        result = runner.invoke(ddc_services, ["up", "-d"])
         result = runner.invoke(ddc_project, ["reset-mysql"])
     assert_result_ok(result)
     assert result.exit_code == 0
@@ -100,3 +105,16 @@ def assert_result_ok(result):
     if not isinstance(result.exc_info[1], SystemExit):
         tb_info = "\n".join(traceback.format_tb(result.exc_info[2]))
         assert result.exit_code == 0, tb_info
+
+
+@pytest.fixture(autouse=True)
+def reset_root_logger():
+    """The logging setup of docker-compose does not expect main() to be invoked
+    more than once in the same interpreter lifetime.
+    Also pytest replaces sys.stdout/sys.stderr before every test.
+    To prevent this from causing errors (attempts to act on a closed file) we
+    reset docker compose's `console_handler` before each test.
+    """
+    from compose.cli import main
+
+    main.console_handler = logging.StreamHandler(sys.stderr)
