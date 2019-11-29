@@ -42,6 +42,7 @@ setup(
         "console_scripts": [
             "ddc-services=derex.runner.ddc:ddc_services",
             "ddc-project=derex.runner.ddc:ddc_project",
+            "derex=derex.runner.cli:derex",
         ]
     },
     description="Run Open edX docker images",
