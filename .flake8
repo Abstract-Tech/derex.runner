@@ -1,6 +1,7 @@
 [flake8]
-ignore = E266, E501
+ignore = E266, E501, W391
 # Ignored errors:
 # E266    Too many leading '#' for block comment
 # E501    Line too long
+# W391    Only allow one blank line at end of file
 select = B,C,E,F,W,T4,B9
