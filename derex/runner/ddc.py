@@ -3,12 +3,9 @@
 These wrappers invoke `docker-compose` functions to get their job done.
 They put a `docker.compose.yml` file in place based on user configuration.
 """
-from derex.runner.compose_utils import reset_mysql
 from derex.runner.compose_utils import run_compose
 from derex.runner.docker import check_services
-from derex.runner.docker import execute_mysql_query
 from derex.runner.docker import is_docker_working
-from derex.runner.docker import wait_for_mysql
 from derex.runner.project import Project
 from typing import List
 from typing import Tuple
@@ -79,15 +76,6 @@ def setup_logging():
     for logger in ("urllib3.connectionpool", "compose", "docker"):
         logging.getLogger(logger).setLevel(logging.WARN)
     logging.getLogger("").setLevel(logging.INFO)
-
-
-def resetdb(project: Project, dry_run: bool):
-    """Reset the mysql database of LMS/CMS
-    """
-    wait_for_mysql()
-    if not dry_run:
-        execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
-    reset_mysql(project, dry_run=dry_run)
 
 
 def check_docker():
