@@ -22,35 +22,25 @@ import os
 import sys
 
 
-@click.command(context_settings=dict(ignore_unknown_options=True))
-@click.argument("compose_args", nargs=-1)
-@click.option(
-    "--reset-mailslurper",
-    default=False,
-    is_flag=True,
-    help="Resets mailslurper database",
-)
-@click.option(
-    "--dry-run",
-    default=False,
-    is_flag=True,
-    help="Don't actually do anything, just print what would have been run",
-)
-def ddc_services(compose_args: Tuple[str, ...], reset_mailslurper: bool, dry_run: bool):
+def ddc_services():
     """Derex docker-compose: run docker-compose with additional parameters.
     Adds docker compose file paths for services and administrative tools.
     If the environment variable DEREX_ADMIN_SERVICES is set to a falsey value,
-    only the core ones will be started (mysql, mongodb etc).
+    only the core ones will be started (mysql, mongodb etc) and the nice-to-have
+    will not (portainer and adminer).
+
+    Besides the regular docker-compose options it also accepts the --dry-run
+    option; in case it's specified docker-compose will not be invoked, but
+    a line will be printed showing what would have been invoked.
     """
     check_docker()
     setup_logging()
-    if reset_mailslurper:
-        if not check_services(["mysql"]):
-            click.echo("Mysql not found.\nMaybe you forgot to run\nddc up -d")
-            return 1
-        resetmailslurper()
-        return 0
-    run_compose(list(compose_args), dry_run=dry_run)
+    args = sys.argv[1:]
+    dry_run = False
+    if "--dry-run" in args:
+        dry_run = True
+        args = [el for el in args if el != "--dry-run"]
+    run_compose(args, dry_run=dry_run)
     return 0
 
 
