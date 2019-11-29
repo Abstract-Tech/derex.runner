@@ -37,7 +37,7 @@ def test_ddc_services(sys_argv, capsys):
     assert "adminer" in output
 
 
-def test_ddc_project(sys_argv, mocker, workdir):
+def test_ddc_project(sys_argv, mocker, workdir, capsys):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.ddc import ddc_project
 
@@ -47,21 +47,21 @@ def test_ddc_project(sys_argv, mocker, workdir):
     check_services.return_value = False
     for param in ["up", "start"]:
         with workdir(MINIMAL_PROJ):
-            result = runner.invoke(ddc_project, [param, "--dry-run"])
-        assert_result_ok(result)
-        assert "ddc up -d" in result.output
+            with sys_argv(["ddc-project", param, "--dry-run"]):
+                ddc_project()
+        assert "ddc-services up -d" in capsys.readouterr().out
 
     check_services.return_value = True
     for param in ["up", "start"]:
         with workdir(MINIMAL_PROJ):
-            result = runner.invoke(ddc_project, [param, "--dry-run"])
-        assert_result_ok(result)
-        assert "Would have run" in result.output
+            with sys_argv(["ddc-project", param, "--dry-run"]):
+                ddc_project()
+        assert "Would have run" in capsys.readouterr().out
 
     with workdir(MINIMAL_PROJ):
-        result = runner.invoke(ddc_project, ["config"])
-    assert_result_ok(result)
-    assert "worker" in result.output
+        with sys_argv(["ddc-project", "config"]):
+            ddc_project()
+    assert "worker" in capsys.readouterr().out
 
 
 @pytest.mark.slowtest
@@ -79,9 +79,8 @@ def test_ddc_project_reset_mysql(sys_argv, mocker, workdir):
     with sys_argv(["ddc-services", "up", "-d"]):
         ddc_services()
     with workdir(MINIMAL_PROJ):
-        result = runner.invoke(ddc_project, ["reset-mysql"])
-    assert_result_ok(result)
-    assert result.exit_code == 0
+        with sys_argv(["reset-mysql"]):
+            ddc_project()
 
 
 @pytest.mark.slowtest
