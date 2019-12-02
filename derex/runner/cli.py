@@ -94,7 +94,7 @@ def compile_theme(project):
 def reset_mysql_cmd(project):
     """Reset mysql database for the project"""
     if not check_services(["mysql"]):
-        click.echo("Mysql service not found.\nMaybe you forgot to run\nddc up -d")
+        click.echo("Mysql service not found.\nMaybe you forgot to run\nddc-services up -d")
         return
     wait_for_mysql()
     execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")

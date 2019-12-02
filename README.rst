@@ -21,11 +21,11 @@ Run the following commands: ::
     direnv allow
     pip install -r requirements.txt -e .
     cd tests/fixtures/minimal/
-    ddc up -d  # Start mysql, mongodb, rabbitmq and admin tools
+    ddc-services up -d  # Start mysql, mongodb, rabbitmq and admin tools
     derex reset-mailslurper  # Prime the mailslurper mysql database
-    ddc-local reset-mysql  # Prime the mysql database
-    ddc-local up -d  # Start LMS/CMS daemons and workers
-    ddc-local compile-theme  # Compile theme sass files
+    derex reset-mysql  # Prime the mysql database
+    ddc-project up -d  # Start LMS/CMS daemons and workers
+    derex compile-theme  # Compile theme sass files
 
 Then head to one of the started services:
 
