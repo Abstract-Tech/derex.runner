@@ -23,7 +23,7 @@ def compose_options() -> Dict[str, Union[str, float, int, List[str]]]:
         {
             "name": "addon",
             "priority": ">base",
-            "variant": "ironwood",
+            "variant": "openedx",
             "options": ["-f", "/path/to/docker-compose.yml"],
         }
     """
@@ -31,7 +31,7 @@ def compose_options() -> Dict[str, Union[str, float, int, List[str]]]:
 
 @hookspec
 def local_compose_options(
-    project: Project
+    project: Project,
 ) -> Dict[str, Union[str, float, int, List[str]]]:
     """Return a dict describing how to add this plugin to a local project.
     The dict `name` and `priority` keys will be used to determine ordering.

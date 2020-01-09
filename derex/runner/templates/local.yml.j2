@@ -55,7 +55,7 @@ x-common-cms:
 services:
   flower:
     <<: *common-conf
-    image: derex/openedx-ironwood
+    image: {{ project.base_image }}
     command:
       sh -c 'echo Obtaining broker configuration from edx. This is a bit slow;
              export FLOWER_OPTIONS=$$(echo "from django.conf import settings; print(\"--broker=\" + settings.BROKER_URL + \" --broker_api=http://\" + settings.CELERY_BROKER_USER + \":\" + settings.CELERY_BROKER_PASSWORD + \"@\" + settings.CELERY_BROKER_HOSTNAME + \":15672/api/\") " | ./manage.py $$SERVICE_VARIANT shell);
