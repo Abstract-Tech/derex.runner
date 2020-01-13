@@ -9,6 +9,7 @@ from typing import Optional
 import click
 import derex  # noqa  # This is ugly, but makes mypy and flake8 happy and still performs type checks
 import logging
+import pkg_resources
 import sys
 
 
@@ -57,6 +58,16 @@ def reset_mysql(project: Project, dry_run: bool = False):
     """Run script from derex/openedx image to reset the mysql db.
     """
     logger.warning("Resetting mysql database")
+    restore_dump = pkg_resources.resource_filename("derex.runner", "restore_dump.py")
     run_compose(
-        ["run", "--rm", "lms", "restore_dump.py"], project=project, dry_run=dry_run
+        [
+            "run",
+            "-v",
+            f"{restore_dump}:/restore_dump.py",
+            "--rm",
+            "lms",
+            "/restore_dump.py",
+        ],
+        project=project,
+        dry_run=dry_run,
     )
