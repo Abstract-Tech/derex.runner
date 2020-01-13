@@ -84,14 +84,12 @@ jobs:
         set -ex
         cd tests/fixtures/complete
         derex reset-mysql
+        derex reset-rabbitmq
         ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
       displayName: 'Test complete project fixtures'
 
     - script: cd tests/fixtures/complete; ddc-project up -d
       displayName: 'Start edX daemons'
-
-    - script: cd tests/fixtures/complete; derex reset-mysql
-      displayName: 'Prime mysql database'
 
     - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
       displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
@@ -176,6 +174,7 @@ jobs:
         set -ex
         cd tests/fixtures/minimal
         derex reset-mysql
+        derex reset-rabbitmq
       displayName: 'Prime Mysql DB'
 
 
