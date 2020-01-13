@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """Console script for derex.runner."""
-from derex.runner.build import build_requirements_image
-from derex.runner.build import build_themes_image
-from derex.runner.compose_utils import reset_mysql
-from derex.runner.compose_utils import run_compose
-from derex.runner.docker import check_services
-from derex.runner.docker import execute_mysql_query
-from derex.runner.docker import load_dump
-from derex.runner.docker import pull_images
-from derex.runner.docker import wait_for_mysql
-from derex.runner.project import Project
 from functools import wraps
 
 import click
@@ -26,6 +16,9 @@ logger = logging.getLogger(__name__)
 def derex(ctx):
     """Derex directs edX: commands to manage an Open edX installation
     """
+    # Optimize --help and bash completion by importing
+    from derex.runner.project import Project
+
     try:
         ctx.obj = Project()
     except ValueError:
@@ -37,6 +30,11 @@ def derex(ctx):
 def reset_mailslurper(project):
     """Reset the mailslurper database.
     """
+    from derex.runner.docker import check_services
+    from derex.runner.docker import execute_mysql_query
+    from derex.runner.docker import load_dump
+    from derex.runner.docker import wait_for_mysql
+
     if not check_services(["mysql"]):
         click.echo("Mysql not found.\nMaybe you forgot to run\nddc-services up -d")
         return 1
@@ -68,6 +66,8 @@ def ensure_project(func):
 @ensure_project
 def compile_theme(project):
     """Compile theme sass files"""
+    from derex.runner.compose_utils import run_compose
+
     if project.themes_dir is None:
         click.echo("No theme directory present in this project")
         return
@@ -93,6 +93,11 @@ def compile_theme(project):
 @ensure_project
 def reset_mysql_cmd(project):
     """Reset mysql database for the project"""
+    from derex.runner.compose_utils import reset_mysql
+    from derex.runner.docker import check_services
+    from derex.runner.docker import execute_mysql_query
+    from derex.runner.docker import wait_for_mysql
+
     if not check_services(["mysql"]):
         click.echo("Mysql service not found.\nMaybe you forgot to run\nddc-services up -d")
         return
@@ -107,9 +112,12 @@ def reset_mysql_cmd(project):
 @ensure_project
 def reset_rabbitmq(project):
     """Create rabbitmq vhost"""
+    from derex.runner.compose_utils import run_compose
+
     vhost = f"{project.name}_edxqueue"
     args = [
         "exec",
+        "-T",
         "rabbitmq",
         "sh",
         "-c",
@@ -127,6 +135,8 @@ def reset_rabbitmq(project):
 @ensure_project
 def build_requirements(project):
     """Build the image that contains python requirements"""
+    from derex.runner.build import build_requirements_image
+
     click.echo(
         f'Building docker image {project.requirements_image_tag} ("{project.name}" requirements)'
     )
@@ -139,6 +149,8 @@ def build_requirements(project):
 @ensure_project
 def build_themes(ctx, project):
     """Build the image that includes compiled themes"""
+    from derex.runner.build import build_themes_image
+
     ctx.forward(build_requirements)
     click.echo(
         f'Building docker image {project.themes_image_tag} with "{project.name}" themes'
@@ -163,5 +175,7 @@ def build_final(ctx, project):
 @ensure_project
 def build_final_refresh(ctx, project):
     """Also pull base docker image before starting building"""
+    from derex.runner.docker import pull_images
+
     pull_images([project.base_image, project.final_base_image])
     ctx.forward(build_final)
