@@ -117,6 +117,7 @@ def reset_rabbitmq(project):
     vhost = f"{project.name}_edxqueue"
     args = [
         "exec",
+        "-T",
         "rabbitmq",
         "sh",
         "-c",
