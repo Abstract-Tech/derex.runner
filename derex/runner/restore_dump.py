@@ -4,7 +4,7 @@ from path import Path as path
 
 import bz2
 import MySQLdb
-import os
+import subprocess
 
 
 DUMP_FILE_PATH = "/openedx/empty_dump.sql.bz2"
@@ -48,11 +48,17 @@ def run_fixtures():
         variant_dir = fixtures_dir / variant
         if not variant_dir.exists():
             continue
-        # We sort lexicographically by file name
-        # to make predictable ordering possible
-        for file in sorted(variant_dir.listdir()):
-            path("/openedx/edx-platform").chdir()
-            os.system("./manage.py {} loaddata {}".format(variant, file))
+        subprocess.check_call(
+            [
+                "./manage.py",
+                variant,
+                "loaddata",
+                # We sort lexicographically by file name
+                # to make predictable ordering possible
+                " ".join(sorted(variant_dir.listdir())),
+            ],
+            cwd="/openedx/edx-platform",
+        )
 
 
 def main():
