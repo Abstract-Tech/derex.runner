@@ -99,10 +99,10 @@ jobs:
         sleep 3  # Give the services a little time to start up
       displayName: Add studio.localhost to /etc/hosts
 
-    - script: curl -f http://localhost:4700/
+    - script: curl -f http://localhost:4700/ || (sleep 10; curl -f http://localhost:4700/ )
       displayName: 'Curl the LMS'
 
-    - script: curl -f http://studio.localhost:4800/
+    - script: curl -f http://studio.localhost:4800/ || (sleep 10; curl -f http://studio.localhost:4800/ )
       displayName: 'Curl the CMS'
 
     - script: |
@@ -129,10 +129,10 @@ jobs:
         sleep 5  # Give it time to start up
       displayName: 'Start final image lms/cms'
 
-    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/
+    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/ || (sleep 10; curl -f http://localhost:4710/ )
       displayName: 'Curl the final LMS'
 
-    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://studio.localhost:4810/
+    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://studio.localhost:4810/ || (sleep 10; curl -f http://studio.localhost:4810/ )
       displayName: 'Curl the final CMS'
 
     - script: |
