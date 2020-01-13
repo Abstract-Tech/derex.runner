@@ -38,8 +38,11 @@ def restore_dump():
         )
     )
     sql = get_dump_file_contents()
-    cursor = get_connection().cursor()
+    connection = get_connection()
+    cursor = connection.cursor()
     cursor.execute(sql)
+    cursor.close()
+    connection.commit()
 
 
 def run_fixtures():
