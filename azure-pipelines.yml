@@ -1,3 +1,11 @@
+schedules:
+- cron: "30 16 * * *"
+  displayName: Daily build
+  branches:
+    include:
+      - master
+  always: true
+
 jobs:
 - job: RunPytests
   timeoutInMinutes: 40
