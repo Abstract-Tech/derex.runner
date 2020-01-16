@@ -84,17 +84,16 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
-        # Invoking ddc-project will trigger an image build
-        ddc-project config
-      displayName: 'Build image for project "complete"'
-
-    - script: |
-        set -ex
-        cd tests/fixtures/complete
         derex reset-mysql
         derex reset-rabbitmq
         ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
       displayName: 'Test complete project fixtures'
+
+    - script: |
+        set -ex
+        cd tests/fixtures/complete
+        derex build-final-refresh
+      displayName: 'Build image for project "complete"'
 
     - script: cd tests/fixtures/complete; ddc-project up -d
       displayName: 'Start edX daemons'
@@ -116,7 +115,6 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
-        derex build-final-refresh
         docker images
         # This should not be needed, but for some reason Azure does not tag the image
         docker tag $(docker images -q|head -n1) complete/openedx-themes
@@ -128,7 +126,7 @@ jobs:
         echo Analyzing image
         dive --ci complete/openedx-themes
       condition: always()
-      displayName: 'Build the complete image and test it with dive'
+      displayName: 'Test the complete image with dive'
       continueOnError: true  # Do not make the build fail because of this step, for now
       timeoutInMinutes: 40
 
