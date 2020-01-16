@@ -59,7 +59,8 @@ def build_themes_image(project: Project):
         f"FROM {project.requirements_image_tag} as static",
         f"FROM {project.final_base_image}",
         "COPY --from=static /openedx/staticfiles /openedx/staticfiles",
-        f"COPY themes/ /openedx/themes/",
+        "COPY themes/ /openedx/themes/",
+        "COPY --from=static /openedx/edx-platform/common/static /openedx/edx-platform/common/static",
         # It would be nice to run the following here, but docker immediately commits a layer after COPY,
         # so the files we'd like to remove are already final.
         # rmlint -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null
