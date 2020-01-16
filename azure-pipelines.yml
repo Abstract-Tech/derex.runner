@@ -84,17 +84,16 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
-        # Invoking ddc-project will trigger an image build
-        ddc-project config
-      displayName: 'Build image for project "complete"'
-
-    - script: |
-        set -ex
-        cd tests/fixtures/complete
         derex reset-mysql
         derex reset-rabbitmq
         ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
       displayName: 'Test complete project fixtures'
+
+    - script: |
+        set -ex
+        cd tests/fixtures/complete
+        derex build-final-refresh
+      displayName: 'Build image for project "complete"'
 
     - script: cd tests/fixtures/complete; ddc-project up -d
       displayName: 'Start edX daemons'
@@ -107,16 +106,24 @@ jobs:
         sleep 3  # Give the services a little time to start up
       displayName: Add studio.localhost to /etc/hosts
 
-    - script: curl -f http://localhost:4700/ || (sleep 10; curl -f http://localhost:4700/ )
+    - script: |
+        cd tests/fixtures/complete; ddc-project logs cms lms
+      condition: always()
+      displayName: 'Show CMS/LMS logs'
+
+    - script: |
+        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/"
+        $CMD || (sleep 10; $CMD )
       displayName: 'Curl the LMS'
 
-    - script: curl -f http://studio.localhost:4800/ || (sleep 10; curl -f http://studio.localhost:4800/ )
+    - script: |
+        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4800/"
+        $CMD || (sleep 10; $CMD )
       displayName: 'Curl the CMS'
 
     - script: |
         set -ex
         cd tests/fixtures/complete
-        derex build-final-refresh
         docker images
         # This should not be needed, but for some reason Azure does not tag the image
         docker tag $(docker images -q|head -n1) complete/openedx-themes
@@ -128,7 +135,7 @@ jobs:
         echo Analyzing image
         dive --ci complete/openedx-themes
       condition: always()
-      displayName: 'Build the complete image and test it with dive'
+      displayName: 'Test the complete image with dive'
       continueOnError: true  # Do not make the build fail because of this step, for now
       timeoutInMinutes: 40
 
@@ -137,12 +144,21 @@ jobs:
         sleep 5  # Give it time to start up
       displayName: 'Start final image lms/cms'
 
-    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/ || (sleep 10; curl -f http://localhost:4710/ )
+    - script: |
+        cd tests/fixtures/complete; ddc-project logs cms_final lms_final
+      condition: always()
+      displayName: 'Show CMS/LMS final logs'
+
+    - script: |
+        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/"
+        $CMD || (sleep 10; $CMD )
       continueOnError: true  # Temporarily disable this test: it's failing with this line in the logs:
       # pymongo.errors.OperationFailure: command SON([('saslStart', 1), ('mechanism', 'SCRAM-SHA-1'), ('autoAuthorize', 1), ('payload', Binary(b'n,,n=edxapp,r=MDg3MjIwMjQyMDc4MTg3MjQ=', 0))]) on namespace complete_mongoedx.$cmd failed: Authentication failed.
       displayName: 'Curl the final LMS'
 
-    - script: curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://studio.localhost:4810/ || (sleep 10; curl -f http://studio.localhost:4810/ )
+    - script: |
+        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4810/"
+        $CMD || (sleep 10; $CMD )
       continueOnError: true  # Temporarily disable this test: it's failing with the line mentioned above
       displayName: 'Curl the final CMS'
 
