@@ -59,12 +59,16 @@ def build_themes_image(project: Project):
         f"FROM {project.requirements_image_tag} as static",
         f"FROM {project.final_base_image}",
         "COPY --from=static /openedx/staticfiles /openedx/staticfiles",
-        f"COPY themes/ /openedx/themes/",
+        "COPY themes/ /openedx/themes/",
+        "COPY --from=static /openedx/edx-platform/common/static /openedx/edx-platform/common/static",
         # It would be nice to run the following here, but docker immediately commits a layer after COPY,
         # so the files we'd like to remove are already final.
         # rmlint -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null
     ]
-    dockerfile_contents.extend(docker_commands_to_install_requirements(project))
+    paths_to_copy = [str(project.themes_dir)]
+    if project.requirements_dir is not None:
+        dockerfile_contents.extend(docker_commands_to_install_requirements(project))
+        paths_to_copy.append(str(project.requirements_dir))
     cmd = []
     if project.themes_dir is not None:
         for dir in project.themes_dir.iterdir():
@@ -80,7 +84,6 @@ def build_themes_image(project: Project):
         dockerfile_contents.append(f"RUN sh -c '{';'.join(cmd)}'")
 
     dockerfile_text = "\n".join(dockerfile_contents)
-    paths_to_copy = [str(project.themes_dir), str(project.requirements_dir)]
     build_image(
         dockerfile_text, paths_to_copy, tag=project.themes_image_tag, tag_final=True
     )
