@@ -121,16 +121,18 @@ def build_image(
             if not line:  # Split empty lines
                 continue
             line_decoded = json.loads(line)
+            if "error" in line_decoded:
+                raise BuildError(line_decoded["error"])
             print(line_decoded.get("stream", ""), end="")
             if "error" in line_decoded:
                 print(line_decoded.get("error", ""))
             if "aux" in line_decoded:
                 print(f'Built image: {line_decoded["aux"]["ID"]}')
-        if tag_final:
-            final_tag = tag.rpartition(":")[0] + ":latest"
-            for image in docker_client.images():
-                if image.get("RepoTags") and tag in image["RepoTags"]:
-                    docker_client.tag(image["Id"], final_tag)
+    if tag_final:
+        final_tag = tag.rpartition(":")[0] + ":latest"
+        for image in docker_client.images():
+            if image.get("RepoTags") and tag in image["RepoTags"]:
+                docker_client.tag(image["Id"], final_tag)
 
 
 def pull_images(image_tags: List[str]):
@@ -145,3 +147,7 @@ def pull_images(image_tags: List[str]):
                 print(f'{out["id"]}: {out["progress"]}', end="\r")
             else:
                 print(out["status"])
+
+
+class BuildError(RuntimeError):
+    pass
