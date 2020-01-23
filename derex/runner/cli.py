@@ -117,16 +117,16 @@ def provision_forum_cmd(project):
     from derex.runner.docker import check_services
     from derex.runner.compose_utils import run_compose
 
-    if not check_services(["elasticsearch"]):
-        click.echo(
-            "Elasticsearch service not found.\nMaybe you forgot to run\nddc-services up -d"
-        )
-        return
-
     if "derex.forum" not in project.config.get("plugins", {}):
         click.echo(
             "Forum is not enabled for this project.\n"
             "Enable it by installing the derex.forum plugin."
+        )
+        return
+
+    if not check_services(["elasticsearch"]):
+        click.echo(
+            "Elasticsearch service not found.\nMaybe you forgot to run\nddc-services up -d"
         )
         return
 
