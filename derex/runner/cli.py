@@ -99,11 +99,48 @@ def reset_mysql_cmd(project):
     from derex.runner.docker import wait_for_mysql
 
     if not check_services(["mysql"]):
-        click.echo("Mysql service not found.\nMaybe you forgot to run\nddc-services up -d")
+        click.echo(
+            "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
+        )
         return
     wait_for_mysql()
     execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
     reset_mysql(project)
+    return 0
+
+
+@derex.command(name="provision-forum")
+@click.pass_obj
+@ensure_project
+def provision_forum_cmd(project):
+    """Prime the elasticsearch index for the forum service"""
+    from derex.runner.docker import check_services
+    from derex.runner.compose_utils import run_compose
+
+    if not check_services(["elasticsearch"]):
+        click.echo(
+            "Elasticsearch service not found.\nMaybe you forgot to run\nddc-services up -d"
+        )
+        return
+
+    if "derex.forum" not in project.config.get("plugins", {}):
+        click.echo(
+            "Forum is not enabled for this project.\n"
+            "Enable it by installing the derex.forum plugin."
+        )
+        return
+
+    args = [
+        "exec",
+        "-T",
+        "forum",
+        "sh",
+        "-c",
+        """bundle exec rake search:initialize &&
+        bundle exec rake search:rebuild_index
+        """,
+    ]
+    run_compose(args, project=project)
     return 0
 
 
