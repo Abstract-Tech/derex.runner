@@ -131,7 +131,8 @@ def provision_forum_cmd(project):
         return
 
     args = [
-        "exec",
+        "run",
+        "--rm",
         "-T",
         "forum",
         "sh",
