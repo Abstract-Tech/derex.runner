@@ -51,6 +51,10 @@ class LocalOpenEdX:
 
 
 def generate_local_docker_compose(project: Project) -> Path:
+    """This function is called every time ddc-project is run.
+    It assembles a docker-compose file from the given configuration.
+    It should execute as fast as possible.
+    """
     derex_dir = project.root / ".derex"
     if not derex_dir.is_dir():
         derex_dir.mkdir()

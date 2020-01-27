@@ -1,5 +1,6 @@
 from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
+from enum import Enum
 from pathlib import Path
 from typing import Optional
 from typing import Union
@@ -7,6 +8,11 @@ from typing import Union
 import hashlib
 import os
 import yaml
+
+
+class ProjectRunMode(Enum):
+    debug = "debug"
+    production = "production"
 
 
 class Project:
@@ -50,6 +56,9 @@ class Project:
 
     # Path to a local docker-compose.yml file, if present
     local_compose: Optional[Path] = None
+
+    # Server http of choice and debug
+    runmode: ProjectRunMode = ProjectRunMode.debug
 
     def __init__(self, path: Union[Path, str] = None):
         if not path:

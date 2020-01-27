@@ -36,3 +36,8 @@ def test_minimal_project(workdir):
     assert project.requirements_image_tag == project.image_tag
     assert project.themes_image_tag == project.image_tag
     assert project.themes_image_tag == project.base_image
+
+
+def test_runmode(testproj):
+    with testproj:
+        pass

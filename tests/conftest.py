@@ -1,4 +1,5 @@
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import contextlib
 import os
@@ -36,3 +37,11 @@ def sys_argv(mocker):
                     raise
 
     return my_cm
+
+
+@pytest.fixture
+def testproj(workdir):
+    directory = TemporaryDirectory()
+    with open("a") as fh:
+        fh.write(f"project_name: testminimal")
+    return workdir(directory.name)
