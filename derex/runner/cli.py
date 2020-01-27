@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """Console script for derex.runner."""
+from click_plugins import with_plugins
 from functools import wraps
 
 import click
+import importlib_metadata
 import logging
 import os
 
@@ -11,6 +13,22 @@ import os
 logger = logging.getLogger(__name__)
 
 
+def ensure_project(func):
+    """Decorator that checks if the current command was invoked from inside a project,
+    (i.e. if the click context has a project) and prints a nice message if it's not.
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if click.get_current_context().obj is None:
+            click.echo("This command needs to be run inside a derex project")
+            return 1
+        func(*args, **kwargs)
+
+    return wrapper
+
+
+@with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
 @click.group()
 @click.pass_context
 def derex(ctx):
@@ -44,21 +62,6 @@ def reset_mailslurper(project):
     click.echo("Priming mailslurper database")
     load_dump("fixtures/mailslurper.sql")
     return 0
-
-
-def ensure_project(func):
-    """Decorator that checks if the current command was invoked from inside a project,
-    (i.e. if the click context has a project) and prints a nice message if it's not.
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if click.get_current_context().obj is None:
-            click.echo("This command needs to be run inside a derex project")
-            return 1
-        func(*args, **kwargs)
-
-    return wrapper
 
 
 @derex.command()
@@ -106,42 +109,6 @@ def reset_mysql_cmd(project):
     wait_for_mysql()
     execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
     reset_mysql(project)
-    return 0
-
-
-@derex.command(name="provision-forum")
-@click.pass_obj
-@ensure_project
-def provision_forum_cmd(project):
-    """Prime the elasticsearch index for the forum service"""
-    from derex.runner.docker import check_services
-    from derex.runner.compose_utils import run_compose
-
-    if "derex.forum" not in project.config.get("plugins", {}):
-        click.echo(
-            "Forum is not enabled for this project.\n"
-            "Enable it by installing the derex.forum plugin."
-        )
-        return
-
-    if not check_services(["elasticsearch"]):
-        click.echo(
-            "Elasticsearch service not found.\nMaybe you forgot to run\nddc-services up -d"
-        )
-        return
-
-    args = [
-        "run",
-        "--rm",
-        "-T",
-        "forum",
-        "sh",
-        "-c",
-        """bundle exec rake search:initialize &&
-        bundle exec rake search:rebuild_index
-        """,
-    ]
-    run_compose(args, project=project)
     return 0
 
 

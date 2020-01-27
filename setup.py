@@ -12,7 +12,9 @@ with open("HISTORY.rst") as history_file:
 
 requirements = [
     "Click>=6.0",
+    "click_plugins",
     "docker-compose",
+    "importlib_metadata",
     "pyyaml>=4.2b4,<4.3",
     "pluggy",
     "jinja2",
