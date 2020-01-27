@@ -45,10 +45,7 @@ setup(
             "ddc-services=derex.runner.ddc:ddc_services",
             "ddc-project=derex.runner.ddc:ddc_project",
             "derex=derex.runner.cli:derex",
-        ],
-        "derex.runner.cli_plugins": [  # TODO: move into forum
-            "provision-forum=derex.runner.cli:provision_forum_cmd"
-        ],
+        ]
     },
     description="Run Open edX docker images",
     install_requires=requirements,
