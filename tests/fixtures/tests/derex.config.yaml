@@ -1,2 +1,3 @@
 ---
 project_name: tests
+default_runmode: production
