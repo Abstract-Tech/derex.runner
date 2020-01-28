@@ -74,7 +74,7 @@ def compile_theme(project):
     if project.themes_dir is None:
         click.echo("No theme directory present in this project")
         return
-    themes = " ".join(el.name for el in project.themes_dir.iterdir())
+    themes = ",".join(el.name for el in project.themes_dir.iterdir())
     uid = os.getuid()
     args = [
         "run",
