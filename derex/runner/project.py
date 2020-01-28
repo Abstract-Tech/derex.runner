@@ -1,6 +1,7 @@
 from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
 from enum import Enum
+from logging import getLogger
 from pathlib import Path
 from typing import Optional
 from typing import Union
@@ -10,8 +11,11 @@ import os
 import yaml
 
 
+logger = getLogger(__name__)
+
+
 class ProjectRunMode(Enum):
-    debug = "debug"
+    debug = "debug"  # The first is the default
     production = "production"
 
 
@@ -57,8 +61,56 @@ class Project:
     # Path to a local docker-compose.yml file, if present
     local_compose: Optional[Path] = None
 
-    # Server http of choice and debug
-    runmode: ProjectRunMode = ProjectRunMode.debug
+    @property
+    def runmode(self) -> ProjectRunMode:
+        """The run mode of this project, either debug or production.
+        In debug mode django's runserver is used. Templates are reloaded
+        on every request and assets do not need to be collected.
+        In production mode gunicorn is run, and assets need to be compiled and collected.
+        """
+        name = "runmode"
+        mode_str = self._get_status(name)
+        if mode_str is not None:
+            if mode_str in ProjectRunMode.__members__:
+                return ProjectRunMode[mode_str]
+            # We found a string but we don't recognize it: warn the user
+            logger.warn(
+                f"Value `{mode_str}` found in `{self._status_filepath(name)}` "
+                "is not valid for runmode "
+                "(valid values are `debug` and `production`)"
+            )
+        default = self.config.get(f"default_{name}")
+        if default not in ProjectRunMode.__members__:
+            logger.warn(
+                f"Value `{default}` found in config `{self.root / CONF_FILENAME}` "
+                "is not a valid default for runmode "
+                "(valid values are `debug` and `production`)"
+            )
+        else:
+            return ProjectRunMode[default]
+        return next(iter(ProjectRunMode))  # Return the first by default
+
+    @runmode.setter
+    def runmode(self, value: ProjectRunMode):
+        self._set_status("runmode", value.name)
+
+    def _get_status(self, name: str) -> Optional[str]:
+        """Read value for the desired status from the project directory.
+        """
+        filepath = self._status_filepath(name)
+        if filepath.exists():
+            return filepath.read_text()
+        return None
+
+    def _set_status(self, name: str, value: str):
+        """Persist a status in the project directory
+        """
+        self._status_filepath(name).write_text(value)
+
+    def _status_filepath(self, name: str) -> Path:
+        """Return the full file path where a status for the project should be stored
+        """
+        return self.root / name
 
     def __init__(self, path: Union[Path, str] = None):
         if not path:
