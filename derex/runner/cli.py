@@ -40,7 +40,9 @@ def derex(ctx):
     from derex.runner.project import Project
 
     # Set up a StreamHandler
-    logging.getLogger().addHandler(logging.StreamHandler())
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.WARN)
+    logging.getLogger("derex").addHandler(handler)
 
     try:
         ctx.obj = Project()
