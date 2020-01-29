@@ -5,6 +5,7 @@ from click_plugins import with_plugins
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from functools import wraps
+from typing import Optional
 
 import click
 import importlib_metadata
@@ -202,7 +203,7 @@ def build_final_refresh(ctx, project: Project):
 )
 @click.pass_obj
 @ensure_project
-def runmode(project: Project, runmode: ProjectRunMode):
+def runmode(project: Project, runmode: Optional[ProjectRunMode]):
     """Get/set project runmode (debug/production)"""
     if runmode is None:
         click.echo(project.runmode.name)
