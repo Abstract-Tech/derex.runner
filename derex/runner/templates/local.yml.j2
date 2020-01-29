@@ -3,7 +3,11 @@ version: "3.5"
 
 x-common:
   &common-conf
+  {% if project.runmode.name == "production" -%}
+  image: {{ project.image_tag }}
+  {% else -%}
   image: {{ project.requirements_image_tag }}
+  {% endif -%}
   tmpfs:
     - /tmp/
   networks:
