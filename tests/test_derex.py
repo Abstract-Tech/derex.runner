@@ -52,6 +52,25 @@ def test_derex_reset_mysql(sys_argv, mocker, workdir):
     assert result.exit_code == 0
 
 
+def test_derex_runmode(testproj):
+    from derex.runner.cli import derex
+
+    with testproj:
+        result = runner.invoke(derex, ["runmode"])
+        assert result.exit_code == 0, result.output
+        assert result.output == "debug\n"
+
+        result = runner.invoke(derex, ["runmode", "aaa"])
+        assert result.exit_code == 2, result.output
+
+        result = runner.invoke(derex, ["runmode", "production"])
+        assert result.exit_code == 0, result.output
+
+        result = runner.invoke(derex, ["runmode"])
+        assert result.exit_code == 0, result.output
+        assert result.output == "production\n"
+
+
 def assert_result_ok(result):
     """Makes sure the click script exited on purpose, and not by accident
     because of an exception.

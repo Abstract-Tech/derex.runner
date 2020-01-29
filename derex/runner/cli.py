@@ -2,6 +2,8 @@
 
 """Console script for derex.runner."""
 from click_plugins import with_plugins
+from derex.runner.project import Project
+from derex.runner.project import ProjectRunMode
 from functools import wraps
 
 import click
@@ -152,7 +154,7 @@ def build_requirements(project):
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def build_themes(ctx, project):
+def build_themes(ctx, project: Project):
     """Build the image that includes compiled themes"""
     from derex.runner.build import build_themes_image
 
@@ -168,7 +170,7 @@ def build_themes(ctx, project):
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def build_final(ctx, project):
+def build_final(ctx, project: Project):
     """Build the final image for this project.
     For now this is the same as the final image"""
     ctx.forward(build_themes)
@@ -178,9 +180,26 @@ def build_final(ctx, project):
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def build_final_refresh(ctx, project):
+def build_final_refresh(ctx, project: Project):
     """Also pull base docker image before starting building"""
     from derex.runner.docker import pull_images
 
     pull_images([project.base_image, project.final_base_image])
     ctx.forward(build_final)
+
+
+@derex.command()
+@click.argument(
+    "runmode",
+    type=click.Choice(ProjectRunMode.__members__),
+    required=False,
+    callback=lambda _, __, value: value and ProjectRunMode[value],
+)
+@click.pass_obj
+@ensure_project
+def runmode(project: Project, runmode: ProjectRunMode):
+    """Get/set project runmode (debug/production)"""
+    if runmode is None:
+        click.echo(project.runmode.name)
+    else:
+        project.runmode = runmode
