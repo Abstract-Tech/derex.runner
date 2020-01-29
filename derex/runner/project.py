@@ -12,6 +12,7 @@ import yaml
 
 
 logger = getLogger(__name__)
+DEREX_RUNNER_PROJECT_DIR = ".derex"
 
 
 class ProjectRunMode(Enum):
@@ -111,7 +112,7 @@ class Project:
     def _status_filepath(self, name: str) -> Path:
         """Return the full file path where a status for the project should be stored
         """
-        return self.root / name
+        return self.root / DEREX_RUNNER_PROJECT_DIR / name
 
     def __init__(self, path: Union[Path, str] = None):
         if not path:
