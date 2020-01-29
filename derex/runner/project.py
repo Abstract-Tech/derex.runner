@@ -80,14 +80,15 @@ class Project:
                 "(valid values are `debug` and `production`)"
             )
         default = self.config.get(f"default_{name}")
-        if default not in ProjectRunMode.__members__:
-            logger.warn(
-                f"Value `{default}` found in config `{self.root / CONF_FILENAME}` "
-                "is not a valid default for runmode "
-                "(valid values are `debug` and `production`)"
-            )
-        else:
-            return ProjectRunMode[default]
+        if default:
+            if default not in ProjectRunMode.__members__:
+                logger.warn(
+                    f"Value `{default}` found in config `{self.root / CONF_FILENAME}` "
+                    "is not a valid default for runmode "
+                    "(valid values are `debug` and `production`)"
+                )
+            else:
+                return ProjectRunMode[default]
         return next(iter(ProjectRunMode))  # Return the first by default
 
     @runmode.setter

@@ -14,7 +14,7 @@ import traceback
 
 MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
-runner = CliRunner()
+runner = CliRunner(mix_stderr=False)
 
 
 @pytest.mark.slowtest
@@ -59,16 +59,35 @@ def test_derex_runmode(testproj):
         result = runner.invoke(derex, ["runmode"])
         assert result.exit_code == 0, result.output
         assert result.output == "debug\n"
+        # Until this PR is merged we can't peek into `.stderr`
+        # https://github.com/pallets/click/pull/1194
+        assert result.stderr_bytes == b""
 
         result = runner.invoke(derex, ["runmode", "aaa"])
         assert result.exit_code == 2, result.output
+        assert "Usage:" in result.stderr
 
         result = runner.invoke(derex, ["runmode", "production"])
         assert result.exit_code == 0, result.output
+        assert result.stderr_bytes == b""
 
         result = runner.invoke(derex, ["runmode"])
         assert result.exit_code == 0, result.output
         assert result.output == "production\n"
+        assert result.stderr_bytes == b""
+
+
+def test_derex_runmode_wrong(testproj):
+    from derex.runner.cli import derex
+
+    with testproj:
+        project = Project()
+        # Use low level API to inject invalid value
+        project._set_status("runmode", "garbage")
+
+        result = runner.invoke(derex, ["runmode"])
+        # Ensure presence of error message
+        assert "not valid" in result.stderr
 
 
 def assert_result_ok(result):

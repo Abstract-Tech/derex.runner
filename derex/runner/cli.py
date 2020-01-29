@@ -39,6 +39,9 @@ def derex(ctx):
     # Optimize --help and bash completion by importing
     from derex.runner.project import Project
 
+    # Set up a StreamHandler
+    logging.getLogger().addHandler(logging.StreamHandler())
+
     try:
         ctx.obj = Project()
     except ValueError:
