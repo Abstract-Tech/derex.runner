@@ -105,8 +105,11 @@ class Project:
         return None
 
     def _set_status(self, name: str, value: str):
-        """Persist a status in the project directory
+        """Persist a status in the project directory.
+        Each status will be written to a different file.
         """
+        if not self._status_filepath(name).parent.exists():
+            self._status_filepath(name).parent.mkdir()
         self._status_filepath(name).write_text(value)
 
     def _status_filepath(self, name: str) -> Path:
