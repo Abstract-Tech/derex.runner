@@ -1,7 +1,12 @@
 from derex.runner.docker import build_image
+from derex.runner.docker import docker_has_experimental
 from derex.runner.project import Project
 
+import logging
 import os
+
+
+logger = logging.getLogger(__name__)
 
 
 def docker_commands_to_install_requirements(project: Project):
@@ -44,7 +49,6 @@ def build_requirements_image(project: Project):
     if project.config.get("compile_assets", False):
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
     dockerfile_text = "\n".join(dockerfile_contents)
-
     paths_to_copy = [str(project.requirements_dir)]
     build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_tag)
 
@@ -62,10 +66,13 @@ def build_themes_image(project: Project):
         "COPY themes/ /openedx/themes/",
         "COPY --from=static /openedx/edx-platform/common/static /openedx/edx-platform/common/static",
         "COPY --from=static /openedx/empty_dump.sql.bz2 /openedx/",
-        # It would be nice to run the following here, but docker immediately commits a layer after COPY,
-        # so the files we'd like to remove are already final.
-        # rmlint -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null
     ]
+    if docker_has_experimental():
+        # When experimental is enabled we have the `squash` option: we can remove duplicates
+        # so they won't end up in our layer.
+        dockerfile_contents.append(
+            'RUN rmlint -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null'
+        )
     paths_to_copy = [str(project.themes_dir)]
     if project.requirements_dir is not None:
         dockerfile_contents.extend(docker_commands_to_install_requirements(project))
@@ -85,6 +92,18 @@ def build_themes_image(project: Project):
         dockerfile_contents.append(f"RUN sh -c '{';'.join(cmd)}'")
 
     dockerfile_text = "\n".join(dockerfile_contents)
-    build_image(
-        dockerfile_text, paths_to_copy, tag=project.themes_image_tag, tag_final=True
-    )
+    if docker_has_experimental():
+        build_image(
+            dockerfile_text,
+            paths_to_copy,
+            tag=project.themes_image_tag,
+            tag_final=True,
+            extra_opts=dict(squash=True),
+        )
+    else:
+        build_image(
+            dockerfile_text, paths_to_copy, tag=project.themes_image_tag, tag_final=True
+        )
+        logger.warn(
+            "To build a smaller image enable the --experimental flag in the docker server"
+        )
