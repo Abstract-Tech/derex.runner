@@ -7,6 +7,7 @@ Welcome to derex.runner’s documentation!
 
    installation
    usage
+   autocomplete
    contributing
 
 Indices and tables
