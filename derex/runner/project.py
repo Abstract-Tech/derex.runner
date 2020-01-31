@@ -76,7 +76,7 @@ class Project:
                 return ProjectRunMode[mode_str]
             # We found a string but we don't recognize it: warn the user
             logger.warn(
-                f"Value `{mode_str}` found in `{self._status_filepath(name)}` "
+                f"Value `{mode_str}` found in `{self.private_filepath(name)}` "
                 "is not valid for runmode "
                 "(valid values are `debug` and `production`)"
             )
@@ -99,7 +99,7 @@ class Project:
     def _get_status(self, name: str) -> Optional[str]:
         """Read value for the desired status from the project directory.
         """
-        filepath = self._status_filepath(name)
+        filepath = self.private_filepath(name)
         if filepath.exists():
             return filepath.read_text()
         return None
@@ -108,16 +108,29 @@ class Project:
         """Persist a status in the project directory.
         Each status will be written to a different file.
         """
-        if not self._status_filepath(name).parent.exists():
-            self._status_filepath(name).parent.mkdir()
-        self._status_filepath(name).write_text(value)
+        if not self.private_filepath(name).parent.exists():
+            self.private_filepath(name).parent.mkdir()
+        self.private_filepath(name).write_text(value)
 
-    def _status_filepath(self, name: str) -> Path:
-        """Return the full file path where a status for the project should be stored
+    def private_filepath(self, name: str) -> Path:
+        """Return the full file path to `name` rooted from the
+        project private dir ".derex".
+
+            >>> Project().private_filepath("filename.txt")
+            "/path/to/project/.derex/filename.txt"
         """
         return self.root / DEREX_RUNNER_PROJECT_DIR / name
 
     def __init__(self, path: Union[Path, str] = None):
+        # Load first, and only afterwards manipulate the folder
+        # so that if an error occurs during loading we bail wout
+        # before making any change
+        self._load(path)
+        self._prepare_dir()
+
+    def _load(self, path: Union[Path, str] = None):
+        """Load project configuraton from the given directory.
+        """
         if not path:
             path = os.getcwd()
         self.root = find_project_root(Path(path))
@@ -169,6 +182,25 @@ class Project:
 
         self.image_tag = self.themes_image_tag
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
+
+    def _prepare_dir(self):
+        """Make sure the project directory is in the desired state.
+        Create a settings directory and populate it if it does not exist.
+        Replace files that need to be updated with the newer version.
+        """
+        if self.settings_dir is not None:
+            self._populate_settings()
+
+        if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
+            (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
+
+    def _populate_settings(self):
+        """If the project includes user defined settings, add ours to that directory
+        to let the project's settings use the line
+
+            from .derex import *
+        """
+        # TODO
 
 
 def get_requirements_hash(path: Path) -> str:
