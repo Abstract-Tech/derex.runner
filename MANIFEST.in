@@ -8,6 +8,7 @@ recursive-include derex/runner/compose_files *
 recursive-include derex/runner/templates *
 recursive-include derex/runner/fixtures *
 recursive-include tests *
+recursive-include settings *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
