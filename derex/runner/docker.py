@@ -8,10 +8,10 @@ from typing import Iterable
 from typing import List
 
 import docker
+import importlib_metadata
 import io
 import json
 import logging
-import pkg_resources
 import re
 import tarfile
 import time
@@ -92,7 +92,10 @@ def wait_for_mysql(max_seconds: int = 20):
 def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
-    dump_path = Path(pkg_resources.resource_filename(__name__, relpath))
+
+    dump_path = [
+        el for el in importlib_metadata.files("derex.runner") if relpath in str(el)
+    ][0].locate()
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")
     try:

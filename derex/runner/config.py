@@ -11,8 +11,8 @@ from typing import Union
 
 import click
 import docker
+import importlib_metadata
 import os
-import pkg_resources
 
 
 class BaseServices:
@@ -56,9 +56,11 @@ def generate_local_docker_compose(project: Project) -> Path:
     It should execute as fast as possible.
     """
     local_compose_path = project.private_filepath("docker-compose.yml")
-    template_path = Path(
-        pkg_resources.resource_filename(__name__, "templates/local.yml.j2")
-    )
+    template_path = [
+        el
+        for el in importlib_metadata.files("derex.runner")
+        if el.name == "local.yml.j2" and el.parent.name == "templates"
+    ][0].locate()
     final_image = None
     if image_exists(project.image_tag):
         final_image = project.image_tag

@@ -3,16 +3,22 @@ from typing import List
 from typing import Union
 
 import hashlib
+import importlib_metadata
 import os
-import pkg_resources
 import re
 
 
 CONF_FILENAME = "derex.config.yaml"
 
 
-def compose_path(name):
-    return pkg_resources.resource_filename(__name__, f"compose_files/{name}")
+def compose_path(name: str) -> str:
+    return str(
+        [
+            el
+            for el in importlib_metadata.files("derex.runner")
+            if el.parent.name == "compose_files" and el.name == name
+        ][0].locate()
+    )
 
 
 def get_dir_hash(
