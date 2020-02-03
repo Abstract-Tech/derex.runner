@@ -1,6 +1,7 @@
 from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
 from enum import Enum
+from enum import IntEnum
 from logging import getLogger
 from pathlib import Path
 from typing import Optional
@@ -24,6 +25,8 @@ class Project:
     """Represents a derex.runner project, i.e. a directory with a
     `derex.config.yaml` file and optionally a "themes", "settings" and
     "requirements" directory.
+    The directory is inspected on object instantiation: changes will not
+    be automatically picked up unless a new object is created.
     """
 
     #: The root path to this project
@@ -62,6 +65,9 @@ class Project:
     # Path to a local docker-compose.yml file, if present
     local_compose: Optional[Path] = None
 
+    # Enum containing possible settings modules
+    _available_settings = None
+
     @property
     def runmode(self) -> ProjectRunMode:
         """The run mode of this project, either debug or production.
@@ -95,6 +101,16 @@ class Project:
     @runmode.setter
     def runmode(self, value: ProjectRunMode):
         self._set_status("runmode", value.name)
+
+    @property
+    def settings(self):
+        """Name of the module to use as DJANGO_SETTINGS_MODULE
+        """
+        return self.get_available_settings()["base"]
+
+    @settings.setter
+    def settings(self, value: IntEnum):
+        self._set_status("settings", value.name)
 
     def _get_status(self, name: str) -> Optional[str]:
         """Read value for the desired status from the project directory.
@@ -201,6 +217,28 @@ class Project:
             from .derex import *
         """
         # TODO
+
+    def get_available_settings(self):
+        """Return an Enum object that includes possible settings for this project.
+        This enum must be dynamic, since it depends on the contents of the project
+        settings directory.
+        For this reason we use the functional API for python Enum, which means we're
+        limited to IntEnums. For this reason we'll be using `settings.name` instead
+        of `settings.value` throughout the code.
+        """
+        if self._available_settings is not None:
+            return self._available_settings
+        # TODO examine project settings directory and populate this enum accordingly
+        if self.settings_dir is None:
+            available_settings = IntEnum("settings", "base")
+        else:
+            settings_names = ["base"]
+            for file in self.settings_dir.iterdir():
+                if file.suffix == ".py" and file.stem != "__init__":
+                    settings_names.append(file.stem)
+            available_settings = IntEnum("settings", " ".join(settings_names))
+        self._available_settings = available_settings
+        return available_settings
 
 
 def get_requirements_hash(path: Path) -> str:

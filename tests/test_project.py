@@ -1,3 +1,5 @@
+from derex.runner.project import Project
+from derex.runner.project import ProjectRunMode
 from pathlib import Path
 
 
@@ -6,8 +8,6 @@ COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 
 
 def test_complete_project(workdir):
-    from derex.runner.project import Project
-
     with workdir(COMPLETE_PROJ / "themes"):
         project = Project()
 
@@ -24,8 +24,6 @@ def test_complete_project(workdir):
 
 
 def test_minimal_project(workdir):
-    from derex.runner.project import Project
-
     with workdir(MINIMAL_PROJ):
         project = Project()
 
@@ -39,8 +37,6 @@ def test_minimal_project(workdir):
 
 
 def test_runmode(testproj):
-    from derex.runner.project import Project
-    from derex.runner.project import ProjectRunMode
     from derex.runner.utils import CONF_FILENAME
 
     with testproj:
@@ -56,3 +52,22 @@ def test_runmode(testproj):
         # Runmode changes should be persisted in the project directory
         # and picked up by a second Project instance
         assert Project().runmode == ProjectRunMode.production
+
+
+def test_settings_enum(testproj):
+    with testproj:
+        assert Project().settings == Project().get_available_settings().base
+
+        create_settings_file(Project(), "production")
+        Project().settings = Project().get_available_settings().production
+        assert Project().settings == Project().get_available_settings().production
+
+
+def create_settings_file(project: Project, filename: str):
+    """Create a settings file inside the given project
+    """
+    if project.settings_dir is None:
+        (project.root / "settings").mkdir()
+        (project.root / "settings" / "__init__.py").write_text("")
+        project = Project()
+    (project.settings_dir / f"{filename}.py").write_text("# Empty file")
