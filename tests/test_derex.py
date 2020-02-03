@@ -69,7 +69,11 @@ def test_derex_runmode(testproj):
 
         result = runner.invoke(derex, ["runmode", "production"])
         assert result.exit_code == 0, result.output
-        assert result.stderr_bytes == b""
+        assert "debug → production" in result.stderr_bytes.decode("utf8")
+
+        result = runner.invoke(derex, ["runmode", "production"])
+        assert result.exit_code == 0, result.output
+        assert "already production" in result.stderr_bytes.decode("utf8")
 
         result = runner.invoke(derex, ["runmode"])
         assert result.exit_code == 0, result.output

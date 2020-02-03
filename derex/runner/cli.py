@@ -208,4 +208,13 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode]):
     if runmode is None:
         click.echo(project.runmode.name)
     else:
-        project.runmode = runmode
+        if project.runmode == runmode:
+            click.echo(
+                f"The current project runmode is already {runmode.name}", err=True
+            )
+        else:
+            previous_runmode = project.runmode
+            project.runmode = runmode
+            click.echo(
+                f"Switched runmode: {previous_runmode.name} → {runmode.name}", err=True
+            )
