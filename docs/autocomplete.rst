@@ -1,7 +1,7 @@
 Autocompletion
 ==============
 
-To enable bash automcompletion run::
+To enable bash autocompletion run::
 
    _DEREX_COMPLETE=source derex| sudo tee /etc/bash_completion.d/derex
     curl -L \
