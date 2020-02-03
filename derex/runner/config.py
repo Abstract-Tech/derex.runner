@@ -1,5 +1,6 @@
 from derex.runner import hookimpl
 from derex.runner.build import build_requirements_image
+from derex.runner.project import DEREX_RUNNER_PROJECT_DIR
 from derex.runner.project import Project
 from derex.runner.utils import asbool
 from derex.runner.utils import compose_path
@@ -51,7 +52,11 @@ class LocalOpenEdX:
 
 
 def generate_local_docker_compose(project: Project) -> Path:
-    derex_dir = project.root / ".derex"
+    """This function is called every time ddc-project is run.
+    It assembles a docker-compose file from the given configuration.
+    It should execute as fast as possible.
+    """
+    derex_dir = project.root / DEREX_RUNNER_PROJECT_DIR
     if not derex_dir.is_dir():
         derex_dir.mkdir()
     local_compose_path = derex_dir / "docker-compose.yml"

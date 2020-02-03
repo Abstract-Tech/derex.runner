@@ -140,14 +140,15 @@ jobs:
       timeoutInMinutes: 40
 
     - script: |
-        cd tests/fixtures/complete; derex build-themes; ddc-project up -d lms_final cms_final
+        derex runmode production
+        cd tests/fixtures/complete; derex build-themes; ddc-project up -d lms cms
         sleep 5  # Give it time to start up
-      displayName: 'Start final image lms/cms'
+      displayName: 'Start production image lms/cms'
 
     - script: |
         cd tests/fixtures/complete
         ddc-project config
-        ddc-project logs cms_final lms_final
+        ddc-project logs cms lms
       condition: always()
       displayName: 'Show CMS/LMS final logs'
 

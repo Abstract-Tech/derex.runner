@@ -36,3 +36,23 @@ def test_minimal_project(workdir):
     assert project.requirements_image_tag == project.image_tag
     assert project.themes_image_tag == project.image_tag
     assert project.themes_image_tag == project.base_image
+
+
+def test_runmode(testproj):
+    from derex.runner.project import Project
+    from derex.runner.project import ProjectRunMode
+    from derex.runner.utils import CONF_FILENAME
+
+    with testproj:
+        # If no default is specified, the value should be debug
+        assert Project().runmode == ProjectRunMode.debug
+
+        # If a default value is specified, it should be picked up
+        with (Path(testproj._tmpdir.name) / CONF_FILENAME).open("a") as fh:
+            fh.write("default_runmode: production\n")
+        assert Project().runmode == ProjectRunMode.production
+
+        Project().runmode = ProjectRunMode.production
+        # Runmode changes should be persisted in the project directory
+        # and picked up by a second Project instance
+        assert Project().runmode == ProjectRunMode.production

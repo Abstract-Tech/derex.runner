@@ -1,4 +1,5 @@
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import contextlib
 import os
@@ -36,3 +37,18 @@ def sys_argv(mocker):
                     raise
 
     return my_cm
+
+
+@pytest.fixture
+def testproj(workdir):
+    from derex.runner.utils import CONF_FILENAME
+
+    directory = TemporaryDirectory("-derex-project")
+    with open(f"{directory.name}/{CONF_FILENAME}", "w") as fh:
+        fh.write(f"project_name: testminimal\n")
+    result = workdir(directory.name)
+    # TemporaryDirectory will do its cleanup when it's garbage collected.
+    # We attach it to the workdir context manager so that it will be garbage collected
+    # together with it.
+    result._tmpdir = directory
+    return result

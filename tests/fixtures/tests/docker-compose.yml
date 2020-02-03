@@ -1,14 +1,6 @@
 version: "3.5"
 
 services:
-  cms:
-    command: "true"
-  lms:
-    command: "true"
-  lms_final:
-    ports: []
-  cms_final:
-    ports: []
   webserver:
     image: abiosoft/caddy
     entrypoint: caddy --conf /etc/Caddyfile --log stdout
@@ -21,7 +13,7 @@ services:
     volumes:
       - ../Caddyfile:/etc/Caddyfile:ro
     links:
-      - lms_final
-      - cms_final
+      - lms
+      - cms
     networks:
       - derex
