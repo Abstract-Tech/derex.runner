@@ -5,6 +5,7 @@ from click_plugins import with_plugins
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from functools import wraps
+from typing import Any
 from typing import Optional
 
 import click
@@ -218,3 +219,36 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode]):
             click.echo(
                 f"Switched runmode: {previous_runmode.name} → {runmode.name}", err=True
             )
+
+
+def get_available_settings():
+    """
+    """
+    try:
+        project = Project()
+    except ValueError:
+        return None
+    return project.get_available_settings().__members__
+
+
+def materialise_settings(ctx, _, value):
+    if value:
+        return ctx.obj.get_available_settings()[value]
+    return None
+
+
+@derex.command()
+@ensure_project
+@click.argument(
+    "settings",
+    type=click.Choice(get_available_settings()),
+    required=False,
+    callback=materialise_settings,
+)
+@click.pass_obj
+def settings(project: Project, settings: Optional[Any]):
+    """Get/set project settings module to use (base.py/production.py)"""
+    if settings is None:
+        click.echo(project.settings.name)
+    else:
+        project.settings = settings

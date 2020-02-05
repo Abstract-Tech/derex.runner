@@ -228,14 +228,14 @@ class Project:
         """
         if self._available_settings is not None:
             return self._available_settings
-        # TODO examine project settings directory and populate this enum accordingly
         if self.settings_dir is None:
             available_settings = IntEnum("settings", "base")
         else:
-            settings_names = ["base"]
+            settings_names = []
             for file in self.settings_dir.iterdir():
                 if file.suffix == ".py" and file.stem != "__init__":
                     settings_names.append(file.stem)
+
             available_settings = IntEnum("settings", " ".join(settings_names))
         self._available_settings = available_settings
         return available_settings
