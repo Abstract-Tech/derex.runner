@@ -3,6 +3,7 @@
 """
 from pathlib import Path
 from requests.exceptions import RequestException
+from typing import Dict
 from typing import Iterable
 from typing import List
 
@@ -35,6 +36,13 @@ def is_docker_working() -> bool:
         return True
     except RequestException:
         return False
+
+
+def docker_has_experimental() -> bool:
+    """Return True if the docker daemon has experimental mode enabled.
+    We use this to produce squashed images.
+    """
+    return bool(client.api.info().get("ExperimentalBuild"))
 
 
 def ensure_volumes_present():
@@ -100,7 +108,11 @@ def load_dump(relpath):
 
 
 def build_image(
-    dockerfile_text: str, paths: List[str], tag: str, tag_final: bool = False
+    dockerfile_text: str,
+    paths: List[str],
+    tag: str,
+    tag_final: bool = False,
+    extra_opts: Dict = {},
 ):
     dockerfile = io.BytesIO(dockerfile_text.encode())
     context = io.BytesIO()
@@ -112,9 +124,8 @@ def build_image(
         context_tar.add(path, arcname=Path(path).name)
     context_tar.close()
     context.seek(0)
-    docker_client = docker.APIClient()
-    output = docker_client.build(
-        fileobj=context, custom_context=True, encoding="gzip", tag=tag
+    output = client.api.build(
+        fileobj=context, custom_context=True, encoding="gzip", tag=tag, **extra_opts
     )
     for lines in output:
         for line in re.split(br"\r\n|\n", lines):
@@ -130,19 +141,18 @@ def build_image(
                 print(f'Built image: {line_decoded["aux"]["ID"]}')
     if tag_final:
         final_tag = tag.rpartition(":")[0] + ":latest"
-        for image in docker_client.images():
+        for image in client.api.images():
             if image.get("RepoTags") and tag in image["RepoTags"]:
-                docker_client.tag(image["Id"], final_tag)
+                client.api.tag(image["Id"], final_tag)
 
 
 def pull_images(image_tags: List[str]):
     """Pull the given image to the local docker daemon.
     """
-    docker_client = docker.APIClient()
-    # digest = docker_client.inspect_distribution(image_tag)["Descriptor"]["digest"]
+    # digest = client.api.inspect_distribution(image_tag)["Descriptor"]["digest"]
     for image_tag in image_tags:
         print(f"Pulling image {image_tag}")
-        for out in docker_client.pull(image_tag, stream=True, decode=True):
+        for out in client.api.pull(image_tag, stream=True, decode=True):
             if "progress" in out:
                 print(f'{out["id"]}: {out["progress"]}', end="\r")
             else:
