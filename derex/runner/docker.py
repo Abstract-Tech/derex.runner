@@ -1,6 +1,7 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+from derex.runner.utils import abspath_from_egg
 from pathlib import Path
 from requests.exceptions import RequestException
 from typing import Dict
@@ -8,7 +9,6 @@ from typing import Iterable
 from typing import List
 
 import docker
-import importlib_metadata
 import io
 import json
 import logging
@@ -93,9 +93,7 @@ def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
 
-    dump_path = [
-        el for el in importlib_metadata.files("derex.runner") if relpath in str(el)
-    ][0].locate()
+    dump_path = abspath_from_egg(relpath)
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")
     try:

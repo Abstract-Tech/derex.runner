@@ -1,6 +1,7 @@
 from derex.runner import hookimpl
 from derex.runner.build import build_requirements_image
 from derex.runner.project import Project
+from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
 from derex.runner.utils import compose_path
 from jinja2 import Template
@@ -11,7 +12,6 @@ from typing import Union
 
 import click
 import docker
-import importlib_metadata
 import os
 
 
@@ -56,11 +56,7 @@ def generate_local_docker_compose(project: Project) -> Path:
     It should execute as fast as possible.
     """
     local_compose_path = project.private_filepath("docker-compose.yml")
-    template_path = [
-        el
-        for el in importlib_metadata.files("derex.runner")
-        if el.name == "local.yml.j2" and el.parent.name == "templates"
-    ][0].locate()
+    template_path = abspath_from_egg("derex/runner/templates/local.yml.j2")
     final_image = None
     if image_exists(project.image_tag):
         final_image = project.image_tag
