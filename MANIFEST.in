@@ -4,8 +4,8 @@ include HISTORY.rst
 include LICENSE
 include README.rst
 
-recursive-include derex/runner/compose_files *
 recursive-include derex/runner/templates *
+recursive-include compose_files *
 recursive-include fixtures *
 recursive-include tests *
 recursive-include settings *
