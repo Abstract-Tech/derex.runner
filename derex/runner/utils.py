@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List
+from typing import Optional
 from typing import Union
 
 import hashlib
@@ -85,3 +86,16 @@ def asbool(s):
         return s
     s = str(s).strip()
     return s.lower() in truthy
+
+
+def abspath_from_egg(path: str) -> Optional[Path]:
+    """Given a path relative to the egg root, find the absolute
+    filesystem path for that resource.
+    For instance this file's absolute path can be found passing
+    derex/runner/utils.py
+    to this function.
+    """
+    for file in importlib_metadata.files("derex.runner"):
+        if str(file) == path:
+            return file.locate()
+    return None
