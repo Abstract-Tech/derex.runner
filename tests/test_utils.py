@@ -15,7 +15,6 @@ def test_asbool():
 def test_abspath_from_egg():
     import derex.runner.utils
 
-    result = derex.runner.utils.abspath_from_egg("derex/runner/utils.py")
-    assert str(result) == derex.runner.utils.__file__
+    assert derex.runner.utils.abspath_from_egg("derex/runner/utils.py")
 
     assert derex.runner.utils.abspath_from_egg("derex/runner/templates/local.yml.j2")
