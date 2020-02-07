@@ -112,19 +112,20 @@ class Project:
     def settings(self):
         """Name of the module to use as DJANGO_SETTINGS_MODULE
         """
-        return self.get_available_settings()["base"]
+        current_status = self._get_status("settings", "base")
+        return self.get_available_settings()[current_status]
 
     @settings.setter
     def settings(self, value: IntEnum):
         self._set_status("settings", value.name)
 
-    def _get_status(self, name: str) -> Optional[str]:
+    def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Read value for the desired status from the project directory.
         """
         filepath = self.private_filepath(name)
         if filepath.exists():
             return filepath.read_text()
-        return None
+        return default
 
     def _set_status(self, name: str, value: str):
         """Persist a status in the project directory.
