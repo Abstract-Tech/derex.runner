@@ -150,7 +150,7 @@ class Project:
         # before making any change
         self._load(path)
         if not read_only:
-            self._prepare_dir()
+            self._populate_settings()
         if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
             (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
 
@@ -208,14 +208,6 @@ class Project:
 
         self.image_tag = self.themes_image_tag
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
-
-    def _prepare_dir(self):
-        """Make sure the project directory is in the desired state.
-        Create a settings directory and populate it if it does not exist.
-        Replace files that need to be updated with the newer version.
-        """
-        if self.settings_dir is not None:
-            self._populate_settings()
 
     def _populate_settings(self):
         """If the project includes user defined settings, add ours to that directory
