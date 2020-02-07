@@ -1,28 +1,22 @@
+# type: ignore
+# flake8: noqa
+
+####################### Celery fix ##########################
+# XXX for some reason celery is not registering the bookmarks app
 from kombu.utils.functional import maybe_list
 from openedx.core.djangoapps.plugins import constants as plugin_constants
 from openedx.core.djangoapps.plugins import plugin_settings
 from openedx.core.lib.derived import derive_settings
-from path import Path as path
+from path import Path
 from xmodule.modulestore.modulestore_settings import update_module_store_settings
 
 import os
-import sys
 
 
 SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 assert SERVICE_VARIANT in ("lms", "cms")
 
 exec("from {}.envs.common import *".format(SERVICE_VARIANT), globals(), locals())
-
-########## We silence flake8/mypy errors with this #############
-MODULESTORE = locals()["MODULESTORE"]
-INSTALLED_APPS = locals()["INSTALLED_APPS"]
-SITE_NAME = locals()["SITE_NAME"]
-COMPREHENSIVE_THEME_DIRS = locals()["COMPREHENSIVE_THEME_DIRS"]
-WEBPACK_LOADER = locals()["WEBPACK_LOADER"]
-
-################################################################
-
 
 PLATFORM_NAME = "TestEdX"
 MYSQL_HOST = os.environ.get("MYSQL_HOST", "mysql")
@@ -114,7 +108,7 @@ CELERY_MONGODB_BACKEND_SETTINGS = {
 
 CELERY_RESULT_DB_TABLENAMES = {"task": "celery_edx_task", "group": "celery_edx_group"}
 
-CELERY_QUEUES = {"lms.default": {}, "cms.default": {}}  # type: ignore
+CELERY_QUEUES = {"lms.default": {}, "cms.default": {}}
 CELERY_ROUTES = "{}.celery.Router".format(SERVICE_VARIANT)
 CELERY_DEFAULT_QUEUE = "{}.default".format(SERVICE_VARIANT)
 
@@ -143,7 +137,7 @@ STATIC_ROOT_BASE = os.environ.get("STATIC_ROOT_LMS", "/openedx/staticfiles")
 STATIC_ROOT = {  # type: ignore
     "lms": path(STATIC_ROOT_BASE),
     "cms": path(STATIC_ROOT_BASE) / "studio",
-}[SERVICE_VARIANT]
+}[os.environ.get("SERVICE_VARIANT")]
 WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = (  # type: ignore
     STATIC_ROOT / "webpack-stats.json"
 )
@@ -153,7 +147,7 @@ MEDIA_ROOT = "/openedx/media"
 VIDEO_TRANSCRIPTS_SETTINGS["location"] = MEDIA_ROOT  # type: ignore  # noqa
 VIDEO_IMAGE_SETTINGS["STORAGE_KWARGS"]["location"] = MEDIA_ROOT  # type: ignore  # noqa
 PROFILE_IMAGE_BACKEND["options"]["location"] = MEDIA_ROOT  # type: ignore  # noqa
-COMPREHENSIVE_THEME_DIRS.append(path("/openedx/themes"))  # type: ignore  # noqa
+COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))  # type: ignore  # noqa
 # STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 PROJECT_TYPE = getattr(plugin_constants.ProjectType, SERVICE_VARIANT.upper())
 
@@ -161,8 +155,8 @@ PROJECT_TYPE = getattr(plugin_constants.ProjectType, SERVICE_VARIANT.upper())
 ####################### Plugin Settings ##########################
 
 # Adding plugins for AWS chokes if these are not defined
-ENV_TOKENS = {}  # type: ignore
-AUTH_TOKENS = {}  # type: ignore
+ENV_TOKENS = {}
+AUTH_TOKENS = {}
 
 # This is at the bottom because it is going to load more settings after base settings are loaded
 
@@ -177,8 +171,6 @@ plugin_settings.add_plugins(
 )
 
 
-####################### Celery fix ##########################
-# XXX for some reason celery is not registering the bookmarks app
 CELERY_IMPORTS = locals().get("CELERY_IMPORTS", [])
 CELERY_IMPORTS = list(maybe_list(CELERY_IMPORTS)) + [
     "openedx.core.djangoapps.bookmarks.tasks"
