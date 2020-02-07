@@ -69,7 +69,7 @@ def reset_mailslurper(project):
     click.echo("Dropping mailslurper database")
     execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
     click.echo("Priming mailslurper database")
-    load_dump("fixtures/mailslurper.sql")
+    load_dump("derex/runner/fixtures/mailslurper.sql")
     return 0
 
 
