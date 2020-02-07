@@ -13,13 +13,7 @@ CONF_FILENAME = "derex.config.yaml"
 
 
 def compose_path(name: str) -> str:
-    return str(
-        [
-            el
-            for el in importlib_metadata.files("derex.runner")
-            if el.parent.name == "compose_files" and el.name == name
-        ][0].locate()
-    )
+    return str(abspath_from_egg(f"derex/runner/compose_files/{name}"))
 
 
 def get_dir_hash(
