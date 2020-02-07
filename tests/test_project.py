@@ -70,9 +70,12 @@ def test_populate_settings(testproj):
         create_settings_file(Path(projdir), "production")
         project = Project(read_only=True)
         project._populate_settings()
-        assert (project.settings_dir / "__init__.py").is_file()
-        assert (project.settings_dir / "base.py").is_file()
-        assert (project.settings_dir / "derex").is_dir()
+        assert (project.settings_dir / "base.py").is_file(), str(
+            sorted((project.settings_dir).iterdir())
+        )
+        assert (project.settings_dir / "derex").is_dir(), str(
+            sorted((project.settings_dir).iterdir())
+        )
         assert (project.settings_dir / "derex" / "base.py").is_file()
         assert (project.settings_dir / "derex" / "__init__.py").is_file()
 
