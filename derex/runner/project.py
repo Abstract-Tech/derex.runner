@@ -228,7 +228,7 @@ class Project:
         if not init.is_file():
             init.write_text('"""Settings for edX"""')
 
-        our_settings_dir = abspath_from_egg("settings/README.rst").parent
+        our_settings_dir = abspath_from_egg("derex/runner/settings/README.rst").parent
 
         for source in our_settings_dir.glob("**/*.py"):
             destination = self.settings_dir / source.relative_to(our_settings_dir)
