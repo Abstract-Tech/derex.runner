@@ -16,8 +16,8 @@ x-common:
     - derex_{{ project.name }}_media:/openedx/media
     - derex_{{ project.name }}_data:/openedx/data/
     {% if project.settings_dir -%}
-    - {{ project.settings_dir }}:/openedx/edx-platform/lms/envs/{{ project.name }}
-    - {{ project.settings_dir }}:/openedx/edx-platform/cms/envs/{{ project.name }}
+    - {{ project.settings_dir }}:/openedx/edx-platform/lms/envs/derex_project
+    - {{ project.settings_dir }}:/openedx/edx-platform/cms/envs/derex_project
     {%- endif -%}
     {%- if project.requirements_dir %}
     - {{ project.requirements_dir }}:/openedx/derex.requirements
@@ -33,8 +33,8 @@ x-common:
     SERVICE_VARIANT: lms
     DEREX_PROJECT: {{ project.name }}
     {% if project.settings_dir -%}
-    DJANGO_SETTINGS_MODULE: lms.envs.{{ project.name }}.base
-    SETTINGS: {{ project.name }}.base
+    DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings }}
+    SETTINGS: derex_project.{{ project.settings }}
     {%- else -%}
     DJANGO_SETTINGS_MODULE: lms.envs.derex.base
     SETTINGS: derex.base
@@ -48,8 +48,8 @@ x-common-cms:
     SERVICE_VARIANT: cms
     DEREX_PROJECT: {{ project.name }}
     {% if project.settings_dir -%}
-    DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
-    SETTINGS: {{ project.name }}.base
+    DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings }}
+    SETTINGS: derex_project.{{ project.settings }}
     {%- else -%}
     DJANGO_SETTINGS_MODULE: cms.envs.derex.base
     SETTINGS: derex.base
@@ -102,7 +102,7 @@ services:
     {% endif -%}
     environment:
       <<: *cms-env
-      DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
+      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings }}
     ports:
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801
