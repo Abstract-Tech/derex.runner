@@ -1,3 +1,4 @@
+from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
 from enum import Enum
@@ -27,6 +28,11 @@ class Project:
     "requirements" directory.
     The directory is inspected on object instantiation: changes will not
     be automatically picked up unless a new object is created.
+
+    The project root directory can be passed in the `path` parameter, and
+    defaults to the current directory.
+    If files needed by derex outside of its privete `.derex.` dir are missing
+    they will be created, unless the `read_only`paramter is set to True.
     """
 
     #: The root path to this project
@@ -137,12 +143,15 @@ class Project:
         """
         return self.root / DEREX_RUNNER_PROJECT_DIR / name
 
-    def __init__(self, path: Union[Path, str] = None):
+    def __init__(self, path: Union[Path, str] = None, read_only: bool = False):
         # Load first, and only afterwards manipulate the folder
         # so that if an error occurs during loading we bail wout
         # before making any change
         self._load(path)
-        self._prepare_dir()
+        if not read_only:
+            self._prepare_dir()
+        if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
+            (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
 
     def _load(self, path: Union[Path, str] = None):
         """Load project configuraton from the given directory.
@@ -207,16 +216,37 @@ class Project:
         if self.settings_dir is not None:
             self._populate_settings()
 
-        if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
-            (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
-
     def _populate_settings(self):
         """If the project includes user defined settings, add ours to that directory
         to let the project's settings use the line
 
             from .derex import *
+
+        Also add a base.py file with the above content if it does not exist.
         """
-        # TODO
+        if self.settings_dir is None:
+            return
+
+        base = self.settings_dir / "base.py"
+        if not base.is_file():
+            base.write_text("from .derex import *\n")
+
+        init = self.settings_dir / "__init__.py"
+        if not init.is_file():
+            init.write_text('"""Settings for edX"""')
+
+        our_settings_dir = abspath_from_egg("settings/__init__.py").parent
+
+        for source in our_settings_dir.glob("**/*.py"):
+            destination = self.settings_dir / source.relative_to(our_settings_dir)
+            if destination.is_file():
+                if destination.read_text() != source.read_text():
+                    raise SettingsModified
+            else:
+                if not destination.parent.is_dir():
+                    destination.parent.mkdir(parents=True)
+                destination.write_text(source.read_text())
+                destination.chmod(0o444)
 
     def get_available_settings(self):
         """Return an Enum object that includes possible settings for this project.
@@ -239,6 +269,10 @@ class Project:
             available_settings = IntEnum("settings", " ".join(settings_names))
         self._available_settings = available_settings
         return available_settings
+
+
+class SettingsModified(RuntimeError):
+    """A read only settings file was modified"""
 
 
 def get_requirements_hash(path: Path) -> str:

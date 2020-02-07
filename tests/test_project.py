@@ -2,6 +2,8 @@ from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from pathlib import Path
 
+import os
+
 
 MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
@@ -58,16 +60,32 @@ def test_settings_enum(testproj):
     with testproj:
         assert Project().settings == Project().get_available_settings().base
 
-        create_settings_file(Project(), "production")
+        create_settings_file(Project().root, "production")
         Project().settings = Project().get_available_settings().production
         assert Project().settings == Project().get_available_settings().production
 
 
-def create_settings_file(project: Project, filename: str):
+def test_populate_settings(testproj):
+    with testproj as projdir:
+        create_settings_file(Path(projdir), "production")
+        project = Project(read_only=True)
+        project._populate_settings()
+        assert (project.settings_dir / "__init__.py").is_file()
+        assert (project.settings_dir / "base.py").is_file()
+        assert (project.settings_dir / "derex").is_dir()
+        assert (project.settings_dir / "derex" / "base.py").is_file()
+        assert (project.settings_dir / "derex" / "__init__.py").is_file()
+
+        assert not os.access(str(project.settings_dir / "derex" / "base.py"), os.W_OK)
+
+
+def create_settings_file(project_root: Path, filename: str):
     """Create a settings file inside the given project
+    Does not take into account
     """
-    if project.settings_dir is None:
-        (project.root / "settings").mkdir()
-        (project.root / "settings" / "__init__.py").write_text("")
-        project = Project()
+    settings_dir = project_root / "settings"
+    if not settings_dir.is_dir():
+        settings_dir.mkdir()
+        (settings_dir / "__init__.py").write_text("")
+        project = Project(read_only=True)
     (project.settings_dir / f"{filename}.py").write_text("# Empty file")
