@@ -119,6 +119,17 @@ class Project:
     def settings(self, value: IntEnum):
         self._set_status("settings", value.name)
 
+    def settings_directory_path(self) -> Path:
+        """Return an absolute path that will be mounted under
+        lms/envs/derex_project and cms/envs/derex_project inside the
+        container.
+        If the project has local settings, we use that directory.
+        Otherwise we use the directory bundled with `derex.runner`
+        """
+        if self.settings_dir is not None:
+            return self.settings_dir
+        return abspath_from_egg("derex/runner/settings/derex/base.py").parent
+
     def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Read value for the desired status from the project directory.
         """

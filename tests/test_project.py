@@ -67,8 +67,15 @@ def test_settings_enum(testproj):
 
 def test_populate_settings(testproj):
     with testproj as projdir:
+
+        default_settings_dir = Project().settings_directory_path()
+        assert default_settings_dir.is_dir()
+
         create_settings_file(Path(projdir), "production")
         project = Project(read_only=True)
+
+        assert default_settings_dir != project.settings_directory_path()
+
         project._populate_settings()
         assert (project.settings_dir / "base.py").is_file(), str(
             sorted((project.settings_dir).iterdir())
