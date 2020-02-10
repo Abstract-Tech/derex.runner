@@ -3,6 +3,8 @@ from derex.runner.docker import ensure_volumes_present
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.project import Project
+from derex.runner.project import ProjectRunMode
+from derex.runner.utils import abspath_from_egg
 from typing import List
 from typing import Optional
 
@@ -56,7 +58,26 @@ def run_compose(
 def reset_mysql(project: Project, dry_run: bool = False):
     """Run script from derex/openedx image to reset the mysql db.
     """
+    if project.runmode is not ProjectRunMode.debug:
+        click.get_current_context().fail(
+            "The command reset-mysql can only be run in `debug` runmode"
+        )
     logger.warning("Resetting mysql database")
+
+    restore_dump_path = abspath_from_egg("derex/runner/restore_dump.py")
+    assert (
+        restore_dump_path
+    ), "Could not find restore_dump.py in derex.runner distribution"
     run_compose(
-        ["run", "--rm", "lms", "restore_dump.py"], project=project, dry_run=dry_run
+        [
+            "run",
+            "--rm",
+            "-v",
+            f"{restore_dump_path}:/restore_dump.py",
+            "lms",
+            "python",
+            "/restore_dump.py",
+        ],
+        project=project,
+        dry_run=dry_run,
     )
