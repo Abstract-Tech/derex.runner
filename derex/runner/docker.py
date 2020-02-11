@@ -93,7 +93,7 @@ def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
 
-    dump_path = abspath_from_egg(relpath)
+    dump_path = abspath_from_egg("derex.runner", relpath)
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")
     try:

@@ -90,9 +90,7 @@ def test_populate_settings(testproj):
 
 
 def create_settings_file(project_root: Path, filename: str):
-    """Create a settings file inside the given project
-    Does not take into account
-    """
+    """Create an empty settings file inside the given project"""
     settings_dir = project_root / "settings"
     if not settings_dir.is_dir():
         settings_dir.mkdir()

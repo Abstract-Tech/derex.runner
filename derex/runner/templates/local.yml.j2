@@ -30,7 +30,8 @@ x-common:
     &common-env
     SERVICE_VARIANT: lms
     DEREX_PROJECT: {{ project.name }}
-    DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
+    # This will be used to compose the DJANGO_SETTINGS_MODULE
+    # environment variable in the docker entrypoint
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB: {{ project.mysql_db_name }}
 
@@ -40,7 +41,8 @@ x-common-cms:
     &cms-env
     SERVICE_VARIANT: cms
     DEREX_PROJECT: {{ project.name }}
-    DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
+    # This will be used to compose the DJANGO_SETTINGS_MODULE
+    # environment variable in the docker entrypoint
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB: {{ project.mysql_db_name }}
 
@@ -90,7 +92,6 @@ services:
     {% endif -%}
     environment:
       <<: *cms-env
-      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
     ports:
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801

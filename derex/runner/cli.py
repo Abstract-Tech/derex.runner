@@ -227,8 +227,7 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode]):
 
 
 def get_available_settings():
-    """
-    """
+    """Return settings available on the current project"""
     try:
         project = Project()
     except (ValueError, SettingsModified):

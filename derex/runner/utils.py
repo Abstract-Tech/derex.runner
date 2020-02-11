@@ -12,10 +12,6 @@ import re
 CONF_FILENAME = "derex.config.yaml"
 
 
-def compose_path(name: str) -> str:
-    return str(abspath_from_egg(f"derex/runner/compose_files/{name}"))
-
-
 def get_dir_hash(
     dirname: Union[Path, str],
     excluded_files: List = [],
@@ -82,14 +78,14 @@ def asbool(s):
     return s.lower() in truthy
 
 
-def abspath_from_egg(path: str) -> Optional[Path]:
+def abspath_from_egg(egg: str, path: str) -> Optional[Path]:
     """Given a path relative to the egg root, find the absolute
     filesystem path for that resource.
     For instance this file's absolute path can be found passing
     derex/runner/utils.py
     to this function.
     """
-    for file in importlib_metadata.files("derex.runner"):
+    for file in importlib_metadata.files(egg):
         if str(file) == path:
             return file.locate()
     return None

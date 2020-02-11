@@ -3,7 +3,6 @@ from derex.runner.build import build_requirements_image
 from derex.runner.project import Project
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
-from derex.runner.utils import compose_path
 from jinja2 import Template
 from pathlib import Path
 from typing import Dict
@@ -25,10 +24,21 @@ class BaseServices:
             "--project-name",
             "derex_services",
             "-f",
-            compose_path("services.yml"),
+            str(
+                abspath_from_egg(
+                    "derex.runner", "derex/runner/compose_files/services.yml"
+                )
+            ),
         ]
         if asbool(os.environ.get("DEREX_ADMIN_SERVICES", True)):
-            options += ["-f", compose_path("admin.yml")]
+            options += [
+                "-f",
+                str(
+                    abspath_from_egg(
+                        "derex.runner", "derex/runner/compose_files/admin.yml"
+                    )
+                ),
+            ]
         return {
             "options": options,
             "name": "base",
@@ -56,7 +66,9 @@ def generate_local_docker_compose(project: Project) -> Path:
     It should execute as fast as possible.
     """
     local_compose_path = project.private_filepath("docker-compose.yml")
-    template_path = abspath_from_egg("derex/runner/templates/local.yml.j2")
+    template_path = abspath_from_egg(
+        "derex.runner", "derex/runner/templates/local.yml.j2"
+    )
     final_image = None
     if image_exists(project.image_tag):
         final_image = project.image_tag

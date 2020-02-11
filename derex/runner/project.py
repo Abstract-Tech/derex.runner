@@ -31,8 +31,8 @@ class Project:
 
     The project root directory can be passed in the `path` parameter, and
     defaults to the current directory.
-    If files needed by derex outside of its privete `.derex.` dir are missing
-    they will be created, unless the `read_only`paramter is set to True.
+    If files needed by derex outside of its private `.derex.` dir are missing
+    they will be created, unless the `read_only` parameter is set to True.
     """
 
     #: The root path to this project
@@ -128,7 +128,9 @@ class Project:
         """
         if self.settings_dir is not None:
             return self.settings_dir
-        return abspath_from_egg("derex/runner/settings/derex/base.py").parent
+        return abspath_from_egg(
+            "derex.runner", "derex/runner/settings/derex/base.py"
+        ).parent
 
     def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Read value for the desired status from the project directory.
@@ -231,15 +233,17 @@ class Project:
         if self.settings_dir is None:
             return
 
-        base = self.settings_dir / "base.py"
-        if not base.is_file():
-            base.write_text("from .derex import *\n")
+        base_settings = self.settings_dir / "base.py"
+        if not base_settings.is_file():
+            base_settings.write_text("from .derex import *\n")
 
         init = self.settings_dir / "__init__.py"
         if not init.is_file():
             init.write_text('"""Settings for edX"""')
 
-        our_settings_dir = abspath_from_egg("derex/runner/settings/README.rst").parent
+        our_settings_dir = abspath_from_egg(
+            "derex.runner", "derex/runner/settings/README.rst"
+        ).parent
 
         for source in our_settings_dir.glob("**/*.py"):
             destination = self.settings_dir / source.relative_to(our_settings_dir)
