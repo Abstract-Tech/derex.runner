@@ -4,6 +4,7 @@
 from click_plugins import with_plugins
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
+from derex.runner.project import SettingsModified
 from functools import wraps
 from typing import Any
 from typing import Optional
@@ -48,6 +49,10 @@ def derex(ctx):
 
     try:
         ctx.obj = Project()
+    except SettingsModified as error:
+        print(
+            f"Derex settings file modified:\n{error.filename}\nDelete or rename the file, and we'll put back the stock version"
+        )
     except ValueError:
         pass
 
@@ -226,7 +231,7 @@ def get_available_settings():
     """
     try:
         project = Project()
-    except ValueError:
+    except (ValueError, SettingsModified):
         return None
     return project.get_available_settings().__members__
 

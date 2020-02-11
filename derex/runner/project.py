@@ -245,7 +245,7 @@ class Project:
             destination = self.settings_dir / source.relative_to(our_settings_dir)
             if destination.is_file():
                 if destination.read_text() != source.read_text():
-                    raise SettingsModified
+                    raise SettingsModified(filename=destination)
             else:
                 if not destination.parent.is_dir():
                     destination.parent.mkdir(parents=True)
@@ -277,6 +277,11 @@ class Project:
 
 class SettingsModified(RuntimeError):
     """A read only settings file was modified"""
+
+    filename: str = ""
+
+    def __init__(self, filename):
+        self.filename = filename
 
 
 def get_requirements_hash(path: Path) -> str:
