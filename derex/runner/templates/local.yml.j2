@@ -34,7 +34,9 @@ x-common:
     # environment variable in the docker entrypoint
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB: {{ project.mysql_db_name }}
-
+    {%- for key, value in project.get_container_env().items() %}
+    {{ key }}: {{ value }}
+    {%- endfor %}
 
 x-common-cms:
   environment:

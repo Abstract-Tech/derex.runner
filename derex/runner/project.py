@@ -278,6 +278,18 @@ class Project:
         self._available_settings = available_settings
         return available_settings
 
+    def get_container_env(self):
+        """Return a dictionary to be used as environment variables for all containers
+        in this project. Variables are looked up inside the config according to
+        the current settings for the project.
+        """
+        settings = self.settings.name
+        result = {}
+        variables = self.config.get("variables", {})
+        for variable in variables:
+            result[f"DEREX_{variable.upper()}"] = variables[variable][settings]
+        return result
+
 
 class SettingsModified(RuntimeError):
     """A read only settings file was modified"""

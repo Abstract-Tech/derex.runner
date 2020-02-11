@@ -3,6 +3,7 @@ from derex.runner.project import ProjectRunMode
 from pathlib import Path
 
 import os
+import yaml
 
 
 MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
@@ -87,6 +88,30 @@ def test_populate_settings(testproj):
         assert (project.settings_dir / "derex" / "__init__.py").is_file()
 
         assert not os.access(str(project.settings_dir / "derex" / "base.py"), os.W_OK)
+
+
+def test_container_variables(testproj):
+    with testproj as projdir:
+        conf_file = Path(projdir) / "derex.config.yaml"
+        config = {
+            "project_name": "minimal",
+            "variables": {
+                "lms_site_name": {
+                    "base": "dev.onlinecourses.example",
+                    "production": "onlinecourses.example",
+                }
+            },
+        }
+        conf_file.write_text(yaml.dump(config))
+        create_settings_file(Path(projdir), "production")
+        project = Project()
+        env = project.get_container_env()
+        assert "DEREX_LMS_SITE_NAME" in env
+        assert env["DEREX_LMS_SITE_NAME"] == "dev.onlinecourses.example"
+
+        project.settings = project.get_available_settings().production
+        env = project.get_container_env()
+        assert env["DEREX_LMS_SITE_NAME"] == "onlinecourses.example"
 
 
 def create_settings_file(project_root: Path, filename: str):
