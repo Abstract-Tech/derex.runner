@@ -127,7 +127,9 @@ INSTALLED_APPS.append("integrated_channels.cornerstone")
 # enterprise.views tries to access settings.ECOMMERCE_PUBLIC_URL_ROOT,
 ECOMMERCE_PUBLIC_URL_ROOT = None
 
-SITE_NAME = os.environ.get("SITE_NAME", SITE_NAME)
+# Provide a default for SITE_NAME
+# It will be overridden later, if an `lms_site_name` variable has been specified in the config
+SITE_NAME = {"lms": "localhost:4700", "cms": "localhost:4700"}[SERVICE_VARIANT]
 
 STATIC_ROOT_BASE = "/openedx/staticfiles"
 COMPREHENSIVE_THEME_DIRS.append("/openedx/themes")  # type: ignore
@@ -187,4 +189,7 @@ FEATURES = locals().get("FEATURES", {})
 FEATURES.update(
     {"ENABLE_COMBINED_LOGIN_REGISTRATION": True, "ENABLE_DISCUSSION_SERVICE": False}
 )
+
+from .container_env import *  # isort:skip
+
 derive_settings(__name__)
