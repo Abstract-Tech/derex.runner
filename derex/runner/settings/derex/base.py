@@ -1,8 +1,6 @@
 # type: ignore
 # flake8: noqa
 
-####################### Celery fix ##########################
-# XXX for some reason celery is not registering the bookmarks app
 from kombu.utils.functional import maybe_list
 from openedx.core.djangoapps.plugins import constants as plugin_constants
 from openedx.core.djangoapps.plugins import plugin_settings
@@ -172,6 +170,8 @@ plugin_settings.add_plugins(
 
 
 CELERY_IMPORTS = locals().get("CELERY_IMPORTS", [])
+####################### Celery fix ##########################
+# XXX for some reason celery is not registering the bookmarks app
 CELERY_IMPORTS = list(maybe_list(CELERY_IMPORTS)) + [
     "openedx.core.djangoapps.bookmarks.tasks"
 ]
