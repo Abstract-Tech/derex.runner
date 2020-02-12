@@ -101,6 +101,12 @@ def compile_theme(project):
             paver compile_sass --theme-dirs /openedx/themes --themes {themes}
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
+
+    # Patch the project runmode so that it is always debug.
+    # This is needed since the production image doesn't have
+    # tools and packages needed by the `paver compile_sass` workflow.
+    project.runmode = ProjectRunMode.debug
+
     run_compose(args, project=project)
     return
 
