@@ -1,6 +1,7 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+from derex.runner.utils import abspath_from_egg
 from pathlib import Path
 from requests.exceptions import RequestException
 from typing import Dict
@@ -11,7 +12,6 @@ import docker
 import io
 import json
 import logging
-import pkg_resources
 import re
 import tarfile
 import time
@@ -92,7 +92,8 @@ def wait_for_mysql(max_seconds: int = 20):
 def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
-    dump_path = Path(pkg_resources.resource_filename(__name__, relpath))
+
+    dump_path = abspath_from_egg("derex.runner", relpath)
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")
     try:

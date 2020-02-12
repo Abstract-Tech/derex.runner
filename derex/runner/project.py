@@ -1,6 +1,8 @@
+from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
 from enum import Enum
+from enum import IntEnum
 from logging import getLogger
 from pathlib import Path
 from typing import Optional
@@ -24,6 +26,13 @@ class Project:
     """Represents a derex.runner project, i.e. a directory with a
     `derex.config.yaml` file and optionally a "themes", "settings" and
     "requirements" directory.
+    The directory is inspected on object instantiation: changes will not
+    be automatically picked up unless a new object is created.
+
+    The project root directory can be passed in the `path` parameter, and
+    defaults to the current directory.
+    If files needed by derex outside of its private `.derex.` dir are missing
+    they will be created, unless the `read_only` parameter is set to True.
     """
 
     #: The root path to this project
@@ -62,6 +71,9 @@ class Project:
     # Path to a local docker-compose.yml file, if present
     local_compose: Optional[Path] = None
 
+    # Enum containing possible settings modules
+    _available_settings = None
+
     @property
     def runmode(self) -> ProjectRunMode:
         """The run mode of this project, either debug or production.
@@ -76,7 +88,7 @@ class Project:
                 return ProjectRunMode[mode_str]
             # We found a string but we don't recognize it: warn the user
             logger.warn(
-                f"Value `{mode_str}` found in `{self._status_filepath(name)}` "
+                f"Value `{mode_str}` found in `{self.private_filepath(name)}` "
                 "is not valid for runmode "
                 "(valid values are `debug` and `production`)"
             )
@@ -96,28 +108,68 @@ class Project:
     def runmode(self, value: ProjectRunMode):
         self._set_status("runmode", value.name)
 
-    def _get_status(self, name: str) -> Optional[str]:
+    @property
+    def settings(self):
+        """Name of the module to use as DJANGO_SETTINGS_MODULE
+        """
+        current_status = self._get_status("settings", "base")
+        return self.get_available_settings()[current_status]
+
+    @settings.setter
+    def settings(self, value: IntEnum):
+        self._set_status("settings", value.name)
+
+    def settings_directory_path(self) -> Path:
+        """Return an absolute path that will be mounted under
+        lms/envs/derex_project and cms/envs/derex_project inside the
+        container.
+        If the project has local settings, we use that directory.
+        Otherwise we use the directory bundled with `derex.runner`
+        """
+        if self.settings_dir is not None:
+            return self.settings_dir
+        return abspath_from_egg(
+            "derex.runner", "derex/runner/settings/derex/base.py"
+        ).parent
+
+    def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Read value for the desired status from the project directory.
         """
-        filepath = self._status_filepath(name)
+        filepath = self.private_filepath(name)
         if filepath.exists():
             return filepath.read_text()
-        return None
+        return default
 
     def _set_status(self, name: str, value: str):
         """Persist a status in the project directory.
         Each status will be written to a different file.
         """
-        if not self._status_filepath(name).parent.exists():
-            self._status_filepath(name).parent.mkdir()
-        self._status_filepath(name).write_text(value)
+        if not self.private_filepath(name).parent.exists():
+            self.private_filepath(name).parent.mkdir()
+        self.private_filepath(name).write_text(value)
 
-    def _status_filepath(self, name: str) -> Path:
-        """Return the full file path where a status for the project should be stored
+    def private_filepath(self, name: str) -> Path:
+        """Return the full file path to `name` rooted from the
+        project private dir ".derex".
+
+            >>> Project().private_filepath("filename.txt")
+            "/path/to/project/.derex/filename.txt"
         """
         return self.root / DEREX_RUNNER_PROJECT_DIR / name
 
-    def __init__(self, path: Union[Path, str] = None):
+    def __init__(self, path: Union[Path, str] = None, read_only: bool = False):
+        # Load first, and only afterwards manipulate the folder
+        # so that if an error occurs during loading we bail wout
+        # before making any change
+        self._load(path)
+        if not read_only:
+            self._populate_settings()
+        if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
+            (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
+
+    def _load(self, path: Union[Path, str] = None):
+        """Load project configuraton from the given directory.
+        """
         if not path:
             path = os.getcwd()
         self.root = find_project_root(Path(path))
@@ -169,6 +221,71 @@ class Project:
 
         self.image_tag = self.themes_image_tag
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
+
+    def _populate_settings(self):
+        """If the project includes user defined settings, add ours to that directory
+        to let the project's settings use the line
+
+            from .derex import *
+
+        Also add a base.py file with the above content if it does not exist.
+        """
+        if self.settings_dir is None:
+            return
+
+        base_settings = self.settings_dir / "base.py"
+        if not base_settings.is_file():
+            base_settings.write_text("from .derex import *\n")
+
+        init = self.settings_dir / "__init__.py"
+        if not init.is_file():
+            init.write_text('"""Settings for edX"""')
+
+        our_settings_dir = abspath_from_egg(
+            "derex.runner", "derex/runner/settings/README.rst"
+        ).parent
+
+        for source in our_settings_dir.glob("**/*.py"):
+            destination = self.settings_dir / source.relative_to(our_settings_dir)
+            if destination.is_file():
+                if destination.read_text() != source.read_text():
+                    raise SettingsModified(filename=destination)
+            else:
+                if not destination.parent.is_dir():
+                    destination.parent.mkdir(parents=True)
+                destination.write_text(source.read_text())
+                destination.chmod(0o444)
+
+    def get_available_settings(self):
+        """Return an Enum object that includes possible settings for this project.
+        This enum must be dynamic, since it depends on the contents of the project
+        settings directory.
+        For this reason we use the functional API for python Enum, which means we're
+        limited to IntEnums. For this reason we'll be using `settings.name` instead
+        of `settings.value` throughout the code.
+        """
+        if self._available_settings is not None:
+            return self._available_settings
+        if self.settings_dir is None:
+            available_settings = IntEnum("settings", "base")
+        else:
+            settings_names = []
+            for file in self.settings_dir.iterdir():
+                if file.suffix == ".py" and file.stem != "__init__":
+                    settings_names.append(file.stem)
+
+            available_settings = IntEnum("settings", " ".join(settings_names))
+        self._available_settings = available_settings
+        return available_settings
+
+
+class SettingsModified(RuntimeError):
+    """A read only settings file was modified"""
+
+    filename: str = ""
+
+    def __init__(self, filename):
+        self.filename = filename
 
 
 def get_requirements_hash(path: Path) -> str:

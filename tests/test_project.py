@@ -1,4 +1,8 @@
+from derex.runner.project import Project
+from derex.runner.project import ProjectRunMode
 from pathlib import Path
+
+import os
 
 
 MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
@@ -6,8 +10,6 @@ COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 
 
 def test_complete_project(workdir):
-    from derex.runner.project import Project
-
     with workdir(COMPLETE_PROJ / "themes"):
         project = Project()
 
@@ -24,8 +26,6 @@ def test_complete_project(workdir):
 
 
 def test_minimal_project(workdir):
-    from derex.runner.project import Project
-
     with workdir(MINIMAL_PROJ):
         project = Project()
 
@@ -39,8 +39,6 @@ def test_minimal_project(workdir):
 
 
 def test_runmode(testproj):
-    from derex.runner.project import Project
-    from derex.runner.project import ProjectRunMode
     from derex.runner.utils import CONF_FILENAME
 
     with testproj:
@@ -56,3 +54,46 @@ def test_runmode(testproj):
         # Runmode changes should be persisted in the project directory
         # and picked up by a second Project instance
         assert Project().runmode == ProjectRunMode.production
+
+
+def test_settings_enum(testproj):
+    with testproj:
+        assert Project().settings == Project().get_available_settings().base
+
+        create_settings_file(Project().root, "production")
+        Project().settings = Project().get_available_settings().production
+        assert Project().settings == Project().get_available_settings().production
+
+
+def test_populate_settings(testproj):
+    with testproj as projdir:
+
+        default_settings_dir = Project().settings_directory_path()
+        assert default_settings_dir.is_dir()
+
+        create_settings_file(Path(projdir), "production")
+        project = Project(read_only=True)
+
+        assert default_settings_dir != project.settings_directory_path()
+
+        project._populate_settings()
+        assert (project.settings_dir / "base.py").is_file(), str(
+            sorted((project.settings_dir).iterdir())
+        )
+        assert (project.settings_dir / "derex").is_dir(), str(
+            sorted((project.settings_dir).iterdir())
+        )
+        assert (project.settings_dir / "derex" / "base.py").is_file()
+        assert (project.settings_dir / "derex" / "__init__.py").is_file()
+
+        assert not os.access(str(project.settings_dir / "derex" / "base.py"), os.W_OK)
+
+
+def create_settings_file(project_root: Path, filename: str):
+    """Create an empty settings file inside the given project"""
+    settings_dir = project_root / "settings"
+    if not settings_dir.is_dir():
+        settings_dir.mkdir()
+        (settings_dir / "__init__.py").write_text("")
+        project = Project(read_only=True)
+    (project.settings_dir / f"{filename}.py").write_text("# Empty file")

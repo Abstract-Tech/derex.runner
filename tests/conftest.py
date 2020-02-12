@@ -18,7 +18,7 @@ def workdir():
         prev_cwd = Path.cwd()
         os.chdir(path)
         try:
-            yield
+            yield path
         finally:
             os.chdir(prev_cwd)
 

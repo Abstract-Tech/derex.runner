@@ -15,10 +15,8 @@ x-common:
   volumes:
     - derex_{{ project.name }}_media:/openedx/media
     - derex_{{ project.name }}_data:/openedx/data/
-    {% if project.settings_dir -%}
-    - {{ project.settings_dir }}:/openedx/edx-platform/lms/envs/{{ project.name }}
-    - {{ project.settings_dir }}:/openedx/edx-platform/cms/envs/{{ project.name }}
-    {%- endif -%}
+    - {{ project.settings_directory_path() }}:/openedx/edx-platform/lms/envs/derex_project
+    - {{ project.settings_directory_path() }}:/openedx/edx-platform/cms/envs/derex_project
     {%- if project.requirements_dir %}
     - {{ project.requirements_dir }}:/openedx/derex.requirements
     {%- endif -%}
@@ -32,13 +30,9 @@ x-common:
     &common-env
     SERVICE_VARIANT: lms
     DEREX_PROJECT: {{ project.name }}
-    {% if project.settings_dir -%}
-    DJANGO_SETTINGS_MODULE: lms.envs.{{ project.name }}.base
-    SETTINGS: {{ project.name }}.base
-    {%- else -%}
-    DJANGO_SETTINGS_MODULE: lms.envs.derex.base
-    SETTINGS: derex.base
-    {%- endif %}
+    # This will be used to compose the DJANGO_SETTINGS_MODULE
+    # environment variable in the docker entrypoint
+    SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB: {{ project.mysql_db_name }}
 
 
@@ -47,13 +41,9 @@ x-common-cms:
     &cms-env
     SERVICE_VARIANT: cms
     DEREX_PROJECT: {{ project.name }}
-    {% if project.settings_dir -%}
-    DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
-    SETTINGS: {{ project.name }}.base
-    {%- else -%}
-    DJANGO_SETTINGS_MODULE: cms.envs.derex.base
-    SETTINGS: derex.base
-    {%- endif %}
+    # This will be used to compose the DJANGO_SETTINGS_MODULE
+    # environment variable in the docker entrypoint
+    SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB: {{ project.mysql_db_name }}
 
 services:
@@ -102,7 +92,6 @@ services:
     {% endif -%}
     environment:
       <<: *cms-env
-      DJANGO_SETTINGS_MODULE: cms.envs.{{ project.name }}.base
     ports:
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801

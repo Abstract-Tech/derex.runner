@@ -126,5 +126,3 @@ Then run::
     $ bumpversion patch # possible: major / minor / patch
     $ git push
     $ git push --tags
-
-

@@ -4,7 +4,9 @@
 from click_plugins import with_plugins
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
+from derex.runner.project import SettingsModified
 from functools import wraps
+from typing import Any
 from typing import Optional
 
 import click
@@ -47,6 +49,10 @@ def derex(ctx):
 
     try:
         ctx.obj = Project()
+    except SettingsModified as error:
+        print(
+            f"Derex settings file modified:\n{error.filename}\nDelete or rename the file, and we'll put back the stock version"
+        )
     except ValueError:
         pass
 
@@ -68,7 +74,7 @@ def reset_mailslurper(project):
     click.echo("Dropping mailslurper database")
     execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
     click.echo("Priming mailslurper database")
-    load_dump("fixtures/mailslurper.sql")
+    load_dump("derex/runner/fixtures/mailslurper.sql")
     return 0
 
 
@@ -218,3 +224,35 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode]):
             click.echo(
                 f"Switched runmode: {previous_runmode.name} → {runmode.name}", err=True
             )
+
+
+def get_available_settings():
+    """Return settings available on the current project"""
+    try:
+        project = Project()
+    except (ValueError, SettingsModified):
+        return None
+    return project.get_available_settings().__members__
+
+
+def materialise_settings(ctx, _, value):
+    if value:
+        return ctx.obj.get_available_settings()[value]
+    return None
+
+
+@derex.command()
+@ensure_project
+@click.argument(
+    "settings",
+    type=click.Choice(get_available_settings()),
+    required=False,
+    callback=materialise_settings,
+)
+@click.pass_obj
+def settings(project: Project, settings: Optional[Any]):
+    """Get/set project settings module to use (base.py/production.py)"""
+    if settings is None:
+        click.echo(project.settings.name)
+    else:
+        project.settings = settings

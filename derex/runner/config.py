@@ -1,9 +1,8 @@
 from derex.runner import hookimpl
 from derex.runner.build import build_requirements_image
-from derex.runner.project import DEREX_RUNNER_PROJECT_DIR
 from derex.runner.project import Project
+from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
-from derex.runner.utils import compose_path
 from jinja2 import Template
 from pathlib import Path
 from typing import Dict
@@ -13,7 +12,6 @@ from typing import Union
 import click
 import docker
 import os
-import pkg_resources
 
 
 class BaseServices:
@@ -26,10 +24,21 @@ class BaseServices:
             "--project-name",
             "derex_services",
             "-f",
-            compose_path("services.yml"),
+            str(
+                abspath_from_egg(
+                    "derex.runner", "derex/runner/compose_files/services.yml"
+                )
+            ),
         ]
         if asbool(os.environ.get("DEREX_ADMIN_SERVICES", True)):
-            options += ["-f", compose_path("admin.yml")]
+            options += [
+                "-f",
+                str(
+                    abspath_from_egg(
+                        "derex.runner", "derex/runner/compose_files/admin.yml"
+                    )
+                ),
+            ]
         return {
             "options": options,
             "name": "base",
@@ -56,12 +65,9 @@ def generate_local_docker_compose(project: Project) -> Path:
     It assembles a docker-compose file from the given configuration.
     It should execute as fast as possible.
     """
-    derex_dir = project.root / DEREX_RUNNER_PROJECT_DIR
-    if not derex_dir.is_dir():
-        derex_dir.mkdir()
-    local_compose_path = derex_dir / "docker-compose.yml"
-    template_path = Path(
-        pkg_resources.resource_filename(__name__, "templates/local.yml.j2")
+    local_compose_path = project.private_filepath("docker-compose.yml")
+    template_path = abspath_from_egg(
+        "derex.runner", "derex/runner/templates/local.yml.j2"
     )
     final_image = None
     if image_exists(project.image_tag):
