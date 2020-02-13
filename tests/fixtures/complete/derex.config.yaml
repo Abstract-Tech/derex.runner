@@ -1,3 +1,6 @@
----
 project_name: complete
 compile_assets: true
+variables:
+  lms_site_name:
+    base: courses.localhost
+    production: localhost:4700

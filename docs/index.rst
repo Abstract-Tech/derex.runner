@@ -7,6 +7,7 @@ Welcome to derex.runner’s documentation!
 
    installation
    usage
+   project_configuration
    autocomplete
    contributing
 
