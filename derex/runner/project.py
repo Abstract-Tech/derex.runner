@@ -56,6 +56,10 @@ class Project:
     # The directory containing project database fixtures (used on --reset-mysql)
     fixtures_dir: Optional[Path] = None
 
+    # The directory where plugins can store their custom requirements, settings,
+    # fixtures and themes.
+    plugins_dir: Optional[Path] = None
+
     # The image tag of the image that includes requirements
     requirements_image_tag: str
 
@@ -218,6 +222,10 @@ class Project:
         fixtures_dir = self.root / "fixtures"
         if fixtures_dir.is_dir():
             self.fixtures_dir = fixtures_dir
+
+        plugins_dir = self.root / "plugins"
+        if plugins_dir.is_dir():
+            self.plugins_dir = plugins_dir
 
         self.image_tag = self.themes_image_tag
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
