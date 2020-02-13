@@ -16,7 +16,8 @@ def docker_commands_to_install_requirements(project: Project):
         for requirments_file in os.listdir(project.requirements_dir):
             if requirments_file.endswith(".txt"):
                 dockerfile_contents.append(
-                    f"RUN pip install -r /openedx/derex.requirements/{requirments_file} --no-cache"
+                    f"RUN pip install pip==20.0.2\n"
+                    f"RUN pip install -r /openedx/derex.requirements/{requirments_file}"
                 )
     return dockerfile_contents
 
