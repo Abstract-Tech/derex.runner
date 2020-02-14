@@ -5,6 +5,7 @@ from enum import Enum
 from enum import IntEnum
 from logging import getLogger
 from pathlib import Path
+from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -55,6 +56,10 @@ class Project:
 
     # The directory containing project database fixtures (used on --reset-mysql)
     fixtures_dir: Optional[Path] = None
+
+    # The directory where plugins can store their custom requirements, settings,
+    # fixtures and themes.
+    plugins_dir: Optional[Path] = None
 
     # The image tag of the image that includes requirements
     requirements_image_tag: str
@@ -219,6 +224,10 @@ class Project:
         if fixtures_dir.is_dir():
             self.fixtures_dir = fixtures_dir
 
+        plugins_dir = self.root / "plugins"
+        if plugins_dir.is_dir():
+            self.plugins_dir = plugins_dir
+
         self.image_tag = self.themes_image_tag
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
 
@@ -255,6 +264,21 @@ class Project:
                     destination.parent.mkdir(parents=True)
                 destination.write_text(source.read_text())
                 destination.chmod(0o444)
+
+    def get_plugin_directories(self, plugin: str) -> Dict[str, Path]:
+        """
+        Return a dictionary filled with paths to existing directories
+        for custom requirements, settings, fixtures and themes for
+        a plugin.
+        """
+        plugin_directories = {}
+        if self.plugins_dir:
+            plugin_dir = self.plugins_dir / plugin
+            if plugin_dir.exists():
+                for directory in ["settings", "requirements", "fixtures", "themes"]:
+                    if (plugin_dir / directory).exists():
+                        plugin_directories[directory] = plugin_dir / directory
+        return plugin_directories
 
     def get_available_settings(self):
         """Return an Enum object that includes possible settings for this project.
