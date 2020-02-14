@@ -265,7 +265,7 @@ class Project:
                 destination.write_text(source.read_text())
                 destination.chmod(0o444)
 
-    def get_plugin_directories(self, plugin: str) -> Dict:
+    def get_plugin_directories(self, plugin: str) -> Dict[str, Path]:
         """
         Return a dictionary filled with paths to existing directories
         for custom requirements, settings, fixtures and themes for
