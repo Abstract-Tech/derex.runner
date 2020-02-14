@@ -5,6 +5,7 @@ from enum import Enum
 from enum import IntEnum
 from logging import getLogger
 from pathlib import Path
+from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -263,6 +264,21 @@ class Project:
                     destination.parent.mkdir(parents=True)
                 destination.write_text(source.read_text())
                 destination.chmod(0o444)
+
+    def get_plugin_directories(self, plugin: str) -> Dict:
+        """
+        Return a dictionary filled with paths to existing directories
+        for custom requirements, settings, fixtures and themes for
+        a plugin.
+        """
+        plugin_directories = {}
+        if self.plugins_dir:
+            plugin_dir = self.plugins_dir / plugin
+            if plugin_dir.exists():
+                for directory in ["settings", "requirements", "fixtures", "themes"]:
+                    if (plugin_dir / directory).exists():
+                        plugin_directories[directory] = plugin_dir / directory
+        return plugin_directories
 
     def get_available_settings(self):
         """Return an Enum object that includes possible settings for this project.
