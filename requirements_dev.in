@@ -17,6 +17,7 @@ pytest-runner
 pyyaml
 requests
 Sphinx
+sphinx-press-theme
 tox
 twine
 watchdog
