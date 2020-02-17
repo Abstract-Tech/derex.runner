@@ -21,21 +21,8 @@ jobs:
         pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
       displayName: 'Run python tests'
 
-    - script: |
-        # We installed the package with pip, and coverage reports the full absolute path.
-        # We cut to derex/runner/etc/etc
-        DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
-        echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
-        grep "${DEREX_RUNNER_PATH}" tests/htmlcov/*.html
-        sed -i -e "s|${DEREX_RUNNER_PATH}||" tests/htmlcov/*.html
-        npm install juice
-        # Azure pipelines strips style sheets but leaves styles in place.
-        # juice can embed the styles in the HTML for us and present a much better
-        # view in the coverage results tab.
-        for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-        echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/test-cov.xml;reportdirectory=${PWD}/tests/htmlcov;]"
-      displayName: Fix coverage result and publish it
-      condition: succeededOrFailed()
+    - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
+      artifact: fasttests_coverage
 
 
 - job: RunSlowPytests
@@ -62,6 +49,49 @@ jobs:
         cd tests
         pytest -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
       displayName: 'Run python tests'
+
+    - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
+      artifact: slowtests_coverage
+
+- job: CombineCoverage
+  dependsOn:
+    - RunPytests
+    - RunSlowPytests
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - template: azure-pipelines/prepare.yml
+
+    - download: current
+
+    - task: Cache@2
+      inputs:
+        key: npmcache2
+        path: $(Pipeline.Workspace)/.cache/npm
+      displayName: Cache npm packages
+
+    - script: |
+        set -ex
+        cp $(Pipeline.Workspace)/slowtests_coverage/.coverage tests/.coverage.slow
+        cp $(Pipeline.Workspace)/fasttests_coverage/.coverage tests/.coverage.fast
+        cd tests
+        coverage combine
+        coverage html
+        coverage xml
+        cd ..
+        # We installed the package with pip, and coverage reports the full absolute path.
+        # We cut to derex/runner/etc/etc
+        DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
+        echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
+        sudo npm config set cache $(Pipeline.Workspace)/.cache/npm --global
+        npm install juice
+        # Azure pipelines strips style sheets but leaves styles in place.
+        # juice can embed the styles in the HTML for us and present a much better
+        # view in the coverage results tab.
+        for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+        echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;]"
+      displayName: Fix coverage result and publish it
+      condition: succeededOrFailed()
 
 
 - job: TestComplete
