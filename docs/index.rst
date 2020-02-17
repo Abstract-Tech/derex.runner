@@ -1,5 +1,5 @@
-Welcome to derex.runner’s documentation!
-===========================================================
+derex.runner: simplify edx project management
+=============================================
 
 .. toctree::
    :maxdepth: 2
