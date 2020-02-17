@@ -1,4 +1,5 @@
 -r requirements.txt
+-r requirements_doc.txt
 black
 bumpversion
 coverage
@@ -16,7 +17,6 @@ pytest-mock
 pytest-runner
 pyyaml
 requests
-Sphinx
 tox
 twine
 watchdog
