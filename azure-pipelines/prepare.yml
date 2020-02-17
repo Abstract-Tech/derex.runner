@@ -4,7 +4,15 @@ steps:
       versionSpec: '3.7'
     displayName: 'Use Python 3.7'
 
+  - task: Cache@2
+    inputs:
+      key: pipcache | requirements_dev.txt
+      path: $(Pipeline.Workspace)/.cache/pip
+      restoreKeys: |
+        pipcache
+    displayName: Cache pip packages
+
   - script: |
-      pip3 install -U pip setuptools
-      pip3 install -r requirements_dev.txt . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
+      pip3 install --cache-dir $(Pipeline.Workspace)/.cache/pip -U pip setuptools
+      pip3 install --cache-dir $(Pipeline.Workspace)/.cache/pip -r requirements_dev.txt . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
     displayName: 'Install derex.runner'
