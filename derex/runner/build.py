@@ -31,21 +31,23 @@ def build_requirements_image(project: Project):
         return
     dockerfile_contents = [f"FROM {project.base_image}"]
     dockerfile_contents.extend(docker_commands_to_install_requirements(project))
-    compile_command = (
-        # Remove files from the previous image
-        "rm -rf /openedx/staticfiles;"
-        "cd /openedx/edx-platform;"
-        "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}; "
-        # The rmlint optmization breaks the build process.
-        # We clean the repo files
-        "git checkout HEAD -- common;"
-        "git clean -fdx common/static;"
-        # Make sure ./manage.py sets the SERVICE_VARIANT variable each time it's invoked
-        "unset SERVICE_VARIANT;"
-        # XXX we only compile the `open-edx` theme. We could make this configurable per-project
-        # but probably most people are only interested in their own theme
-        "paver update_assets --settings derex.assets --themes open-edx;"
-        'rmlint -g -c sh:symlink -o json:stderr /openedx/staticfiles 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null'
+    compile_command = ("; \\\n").join(
+        (
+            # Remove files from the previous image
+            "rm -rf /openedx/staticfiles",
+            "cd /openedx/edx-platform",
+            "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}",
+            # The rmlint optmization breaks the build process.
+            # We clean the repo files
+            "git checkout HEAD -- common",
+            "git clean -fdx common/static",
+            # Make sure ./manage.py sets the SERVICE_VARIANT variable each time it's invoked
+            "unset SERVICE_VARIANT",
+            # XXX we only compile the `open-edx` theme. We could make this configurable per-project
+            # but probably most people are only interested in their own theme
+            "paver update_assets --settings derex.assets --themes open-edx",
+            'rmlint -g -c sh:symlink -o json:stderr /openedx/staticfiles 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null',
+        )
     )
     if project.config.get("compile_assets", False):
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
