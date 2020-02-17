@@ -64,7 +64,9 @@ def reset_mysql(project: Project, dry_run: bool = False):
         )
     logger.warning("Resetting mysql database")
 
-    restore_dump_path = abspath_from_egg("derex.runner", "derex/runner/restore_dump.py.source")
+    restore_dump_path = abspath_from_egg(
+        "derex.runner", "derex/runner/restore_dump.py.source"
+    )
     assert (
         restore_dump_path
     ), "Could not find restore_dump.py in derex.runner distribution"

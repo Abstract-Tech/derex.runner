@@ -152,4 +152,9 @@ texinfo_documents = [
 nitpicky = True
 # Solve `class reference target not found: object`
 # as advised on https://stackoverflow.com/a/30624034
-nitpick_ignore = [("py:class", "type"), ("py:class", "object")]
+nitpick_ignore = [
+    ("py:class", "type"),
+    ("py:class", "object"),
+    ("py:class", "RuntimeError"),
+    ("py:class", "enum.Enum"),
+]

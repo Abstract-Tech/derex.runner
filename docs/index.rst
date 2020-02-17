@@ -10,10 +10,10 @@ derex.runner: simplify edx project management
    project_configuration
    autocomplete
    contributing
+   modules
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

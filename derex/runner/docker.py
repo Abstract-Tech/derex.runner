@@ -161,4 +161,5 @@ def pull_images(image_tags: List[str]):
 
 
 class BuildError(RuntimeError):
-    pass
+    """An error occurred while building a docker image
+    """
