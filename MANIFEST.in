@@ -3,6 +3,7 @@ include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
+include derex/runner/restore_dump.py.source
 
 recursive-include derex/runner/templates *
 recursive-include derex/runner/compose_files *
