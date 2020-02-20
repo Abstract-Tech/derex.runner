@@ -10,8 +10,6 @@ Manage Open edX projects
    :target: https://dev.azure.com/abstract-technology/derex.runner/_build
    :alt: Coverage results
 
-Run Open edX docker images
-
 Requirements
 ------------
 
