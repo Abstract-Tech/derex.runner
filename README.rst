@@ -10,6 +10,19 @@ Manage Open edX projects
    :target: https://dev.azure.com/abstract-technology/derex.runner/_build
    :alt: Coverage results
 
+Introduction
+------------
+
+Derex simplifies running edX: it takes care of starting the needed services
+(mysql, mongodb, rabbitmq etc) and introduces the concept of edX _projects_.
+
+A project is a directory that defines what an edX instance should look like.
+It can specify additional requirements, custom themes and plugins.
+
+```derex.runner``` uses docker compose (it's bundled, you don't have to
+install it separately) to orchestrate the many necessary pieces.
+
+
 Requirements
 ------------
 
