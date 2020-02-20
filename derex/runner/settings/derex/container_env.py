@@ -3,7 +3,7 @@ import os
 
 SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 
-wildcard_prefix = "DEREX_" + "*" + "_"
+wildcard_prefix = "DEREX_" + "ALL" + "_"
 prefix = "DEREX_" + SERVICE_VARIANT.upper() + "_"
 
 for key, value in os.environ.items():
