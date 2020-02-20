@@ -13,9 +13,9 @@ with open("HISTORY.rst") as history_file:
 requirements = [
     "Click>=6.0",
     "click_plugins",
-    "docker-compose",
+    "docker-compose>=1.25.4",
     "importlib_metadata",
-    "pyyaml>=4.2b4,<4.3",
+    "pyyaml",
     "pluggy",
     "jinja2",
 ]
