@@ -35,7 +35,7 @@ master_doc = "index"
 
 # General information about the project.
 project = u"derex.runner"
-copyright = u"2019, Silvio Tomatis"
+copyright = u"2020, Silvio Tomatis"
 author = u"Silvio Tomatis"
 
 # The version info for the project you're documenting, acts as replacement
