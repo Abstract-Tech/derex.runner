@@ -1,4 +1,4 @@
-.. highlight:: shell
+.. highlight:: console
 
 ============
 Contributing
@@ -16,38 +16,16 @@ Report Bugs
 ~~~~~~~~~~~
 
 Report bugs at
-https://github.com/silviot/derex.runner/issues.
+https://github.com/Abstract-Tech/derex.runner/issues.
 
-If you are reporting a bug, please include:
+If possible, provide a minimal derex project to trigger the bug.
 
-* Your operating system name and version.
-* Any details about your local setup that might be helpful in troubleshooting.
-* Detailed steps to reproduce the bug.
-
-Fix Bugs
-~~~~~~~~
-
-Look through the GitHub issues for bugs. Anything tagged with "bug" and "help
-wanted" is open to whoever wants to implement it.
-
-Implement Features
-~~~~~~~~~~~~~~~~~~
-
-Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.
-
-Write Documentation
-~~~~~~~~~~~~~~~~~~~
-
-derex.runner could always use more documentation, whether as part of the
-official derex.runner docs, in docstrings, or even on the web in blog posts,
-articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
 The best way to send feedback is to file an issue at
-https://github.com/silviot/derex.runner/issues.
+https://github.com/Abstract-Tech/derex.runner/issues.
 
 If you are proposing a feature:
 
@@ -67,30 +45,29 @@ local development.
 
     $ git clone git@github.com:your_name_here/derex.runner.git
 
-3. Install your local copy into a virtualenv. Assuming you have
-   virtualenvwrapper installed, this is how you set up your fork for local
-   development::
+3. Activate a virtualenv for this project (we recommend direnv) and install derex.runner there::
 
-    $ mkvirtualenv derex.runner
     $ cd derex.runner/
+    $ direnv allow  # Or, alternatively, activate a pristine python>=3.6 virtualenv
+    $ pip install -r requirements_dev.txt -e .
     $ python setup.py develop
 
-4. Create a branch for local development::
+4. Install git pre commit hooks::
+
+    $ pre-commit install
+
+5. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox::
+6. When you're done making changes, check that all tests still pass::
 
-    $ flake8 derex.runner tests
-    $ python setup.py test or py.test
-    $ tox
+    $ pytest -m "not slowtest"  # will run only the faster tests
+    $ pytest -m "slowtest"  # will run only the slow tests
 
-   To get flake8 and tox, just pip install them into your virtualenv.
-
-6. Commit your changes and push your branch to GitHub::
+7. Commit your changes and push your branch to GitHub::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
@@ -107,13 +84,6 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-
-Tips
-----
-
-To run a subset of tests::
-
-$ py.test tests.test_derex.runner
 
 
 Deploying

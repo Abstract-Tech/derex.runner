@@ -77,7 +77,9 @@ html_theme = "press"
 # theme further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    "external_links": [("Github", "https://github.com/Abstract-Tech/derex.runner")]
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -150,4 +152,9 @@ texinfo_documents = [
 nitpicky = True
 # Solve `class reference target not found: object`
 # as advised on https://stackoverflow.com/a/30624034
-nitpick_ignore = [("py:class", "type"), ("py:class", "object")]
+nitpick_ignore = [
+    ("py:class", "type"),
+    ("py:class", "object"),
+    ("py:class", "RuntimeError"),
+    ("py:class", "enum.Enum"),
+]
