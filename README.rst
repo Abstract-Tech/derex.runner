@@ -2,11 +2,11 @@ Manage Open edX projects
 ========================
 
 
-.. image:: https://img.shields.io/azure-devops/tests/abstract-technology/derex.runner/5?compact_message&style=for-the-badge
+.. image:: https://img.shields.io/azure-devops/tests/abstract-technology/derex.runner/5/master?compact_message&style=for-the-badge
    :target: https://dev.azure.com/abstract-technology/derex.runner/_build
    :alt: Test results
 
-.. image:: https://img.shields.io/azure-devops/coverage/abstract-technology/derex.runner/5?style=for-the-badge
+.. image:: https://img.shields.io/azure-devops/coverage/abstract-technology/derex.runner/5/master?style=for-the-badge
    :target: https://dev.azure.com/abstract-technology/derex.runner/_build
    :alt: Coverage results
 
