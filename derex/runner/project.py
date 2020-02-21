@@ -179,7 +179,7 @@ class Project:
             path = os.getcwd()
         self.root = find_project_root(Path(path))
         config_path = self.root / CONF_FILENAME
-        self.config = yaml.load(config_path.open())
+        self.config = yaml.load(config_path.open(), Loader=yaml.FullLoader)
         self.base_image = self.config.get("base_image", "derex/openedx-ironwood:latest")
         self.final_base_image = self.config.get(
             "final_base_image", "derex/openedx-nostatic:latest"
