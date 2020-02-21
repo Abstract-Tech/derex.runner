@@ -107,6 +107,6 @@ def build_themes_image(project: Project):
         build_image(
             dockerfile_text, paths_to_copy, tag=project.themes_image_tag, tag_final=True
         )
-        logger.warn(
+        logger.warning(
             "To build a smaller image enable the --experimental flag in the docker server"
         )

@@ -92,7 +92,7 @@ class Project:
             if mode_str in ProjectRunMode.__members__:
                 return ProjectRunMode[mode_str]
             # We found a string but we don't recognize it: warn the user
-            logger.warn(
+            logger.warning(
                 f"Value `{mode_str}` found in `{self.private_filepath(name)}` "
                 "is not valid for runmode "
                 "(valid values are `debug` and `production`)"
@@ -100,7 +100,7 @@ class Project:
         default = self.config.get(f"default_{name}")
         if default:
             if default not in ProjectRunMode.__members__:
-                logger.warn(
+                logger.warning(
                     f"Value `{default}` found in config `{self.root / CONF_FILENAME}` "
                     "is not a valid default for runmode "
                     "(valid values are `debug` and `production`)"
