@@ -346,3 +346,10 @@ def find_project_root(path: Path) -> Path:
     raise ValueError(
         f"No directory found with a {CONF_FILENAME} file in it, starting from {path}"
     )
+
+
+class DebugProject(Project):
+    """A project in debug mode, regardless of hte state saved on disk.
+    """
+
+    runmode = ProjectRunMode.debug

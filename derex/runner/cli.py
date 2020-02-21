@@ -2,6 +2,7 @@
 
 """Console script for derex.runner."""
 from click_plugins import with_plugins
+from derex.runner.project import DebugProject
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.project import SettingsModified
@@ -101,7 +102,7 @@ def compile_theme(project):
             paver compile_sass --theme-dirs /openedx/themes --themes {themes}
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
-    run_compose(args, project=project)
+    run_compose(args, project=DebugProject())
     return
 
 
