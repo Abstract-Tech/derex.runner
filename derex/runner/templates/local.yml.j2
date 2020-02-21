@@ -28,23 +28,12 @@ x-common:
     {%- endif %}
   environment:
     &common-env
-    SERVICE_VARIANT: lms
     DEREX_PROJECT: {{ project.name }}
-    DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB: {{ project.mysql_db_name }}
     {%- for key, value in project.get_container_env().items() %}
     {{ key }}: {{ value }}
     {%- endfor %}
-
-x-common-cms:
-  environment:
-    &cms-env
-    SERVICE_VARIANT: cms
-    DEREX_PROJECT: {{ project.name }}
-    DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
-    SETTINGS: derex_project.{{ project.settings.name }}
-    MYSQL_DB: {{ project.mysql_db_name }}
 
 services:
   flower:
@@ -73,6 +62,10 @@ services:
         --max-requests=1000
         wsgi:application'
     {% endif -%}
+    environment:
+      <<: *common-env
+      SERVICE_VARIANT: lms
+      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
     ports:
       - 127.0.0.1:4700:4700
       - 127.0.0.1:4701:4701
@@ -91,7 +84,9 @@ services:
         wsgi:application'
     {% endif -%}
     environment:
-      <<: *cms-env
+      <<: *common-env
+      SERVICE_VARIANT: cms
+      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
     ports:
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801
@@ -105,6 +100,8 @@ services:
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
+      SERVICE_VARIANT: lms
+      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
 
   cms_worker:
     <<: *common-conf
@@ -112,8 +109,10 @@ services:
       sh -c './manage.py lms celery worker --loglevel=INFO -n cms.edx -Q cms.default'
     container_name: {{ project.name }}_cms_worker
     environment:
-      <<: *cms-env
+      <<: *common-env
       C_FORCE_ROOT: "True"
+      SERVICE_VARIANT: cms
+      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
 
 networks:
   derex:
