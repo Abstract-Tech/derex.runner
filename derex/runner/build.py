@@ -37,6 +37,8 @@ def build_requirements_image(project: Project):
             "rm -rf /openedx/staticfiles",
             "cd /openedx/edx-platform",
             "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}",
+            "export ENV NO_PREREQ_INSTALL=True",
+            "export ENV NO_PYTHON_UNINSTALL=True",
             # The rmlint optmization breaks the build process.
             # We clean the repo files
             "git checkout HEAD -- common",
