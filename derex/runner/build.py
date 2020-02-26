@@ -48,7 +48,9 @@ def build_requirements_image(project: Project):
             # XXX we only compile the `open-edx` theme. We could make this configurable per-project
             # but probably most people are only interested in their own theme
             "paver update_assets --settings derex.assets --themes open-edx",
-            'rmlint -g -c sh:symlink -o json:stderr /openedx/staticfiles 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null',
+            "rmlint -c sh:symlink /openedx/staticfiles 2> /dev/null",
+            'sed "/# empty /d" -i rmlint.sh',
+            "./rmlint.sh -d > /dev/null",
         )
     )
     if project.config.get("compile_assets", False):
