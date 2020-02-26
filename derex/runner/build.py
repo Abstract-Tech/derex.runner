@@ -48,8 +48,11 @@ def build_requirements_image(project: Project):
             # XXX we only compile the `open-edx` theme. We could make this configurable per-project
             # but probably most people are only interested in their own theme
             "paver update_assets --settings derex.assets --themes open-edx",
+            "echo Running rmlint to cllect duplicates",
             "rmlint -c sh:symlink /openedx/staticfiles 2> /dev/null",
+            "echo Fixing rmlint file: we want to preserve empty files",
             'sed "/# empty /d" -i rmlint.sh',
+            "echo Removing duplicates with rmlint",
             "./rmlint.sh -d > /dev/null",
         )
     )
