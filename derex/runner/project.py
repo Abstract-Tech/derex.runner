@@ -182,7 +182,7 @@ class Project:
         self.config = yaml.load(config_path.open(), Loader=yaml.FullLoader)
         self.base_image = self.config.get("base_image", "derex/edx-ironwood-dev:latest")
         self.final_base_image = self.config.get(
-            "final_base_image", "derex/edx-ironwood-base:latest"
+            "final_base_image", "derex/edx-ironwood-nostatic:latest"
         )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
