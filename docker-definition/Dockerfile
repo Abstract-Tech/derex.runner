@@ -83,7 +83,7 @@ RUN sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysq
 
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/openedx,from=sourceonly,target=/openedx,rw=true \
     cat /openedx/edx-platform/requirements/edx/base.txt | grep -v github | grep -v ^-e > /openedx/edx-platform/requirements/edx/derex.txt && \
-    pip wheel --find-links http://pypi.abzt.de/alpine-3.11 --trusted-host pypi.abzt.de --wheel-dir=/wheelhouse -r /openedx/edx-platform/requirements/edx/derex.txt
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/edx-platform/requirements/edx/derex.txt
 
 FROM wheels as rmlint
 RUN pip install scons && \
