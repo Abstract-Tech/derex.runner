@@ -17,7 +17,10 @@ def docker_commands_to_install_requirements(project: Project):
             if requirments_file.endswith(".txt"):
                 dockerfile_contents.append(
                     f"RUN pip install pip==20.0.2\n"
-                    f"RUN cd /openedx/derex.requirements && pip install -r {requirments_file}"
+                    # Constrain edx version, but omit the relative paths: we run this from our
+                    # requirements dir so that the derex user can use `./` in their requirements files
+                    f"RUN grep == /openedx/edx-platform/requirements/edx/base.txt |grep -v ^git+https > /tmp/base.txt\n"
+                    f"RUN cd /openedx/derex.requirements && pip install -c /tmp/base.txt -r {requirments_file}\n"
                 )
     return dockerfile_contents
 
