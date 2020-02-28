@@ -135,7 +135,9 @@ COPY assets.py /openedx/edx-platform/cms/envs/derex
 RUN /usr/local/bin/compile_assets.sh && \
     cleanup_assets.sh
 
-FROM nostatic as dump
+FROM dev-nodump as dev
+
+COPY fixtures /openedx/fixtures/
 COPY migration.py /openedx/edx-platform/lms/envs/derex/
 COPY migration.py /openedx/edx-platform/cms/envs/derex/
 RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
@@ -152,8 +154,3 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     ./manage.py lms --settings=derex.migration migrate; \
     ./manage.py cms --settings=derex.migration migrate; \
     chroot /mysql mysqldump edxapp | bzip2 -9 - > /openedx/empty_dump.sql.bz2;
-
-FROM dev-nodump as dev
-
-COPY --from=dump /openedx/empty_dump.sql.bz2 /openedx/empty_dump.sql.bz2
-COPY fixtures /openedx/fixtures/
