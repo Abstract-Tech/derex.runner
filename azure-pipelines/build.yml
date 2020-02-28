@@ -8,7 +8,7 @@ stages:
     - name: DOCKER_COMMAND
       value: 'buildctl build --frontend=dockerfile.v0 --local context=docker-definition/ --local dockerfile=docker-definition/'
     - name: CACHE_KEY_BASE  # Increment this value to reset the layers cache
-      value: 4
+      value: 5
     - name: LAYERS_CACHE_DIR
       value: '$(Pipeline.Workspace)/layers_cache'
     - name: CACHE_KEY_BUILDKIT
