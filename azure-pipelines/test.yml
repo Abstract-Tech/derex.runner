@@ -116,7 +116,7 @@ stages:
       - script: |
           set -ex
           cd tests/fixtures/complete
-          derex build-final-refresh
+          derex build final
         displayName: 'Build image for project "complete"'
 
       - script: cd tests/fixtures/complete; ddc-project up -d
@@ -165,7 +165,7 @@ stages:
 
       - script: |
           derex runmode production
-          cd tests/fixtures/complete; derex build-themes; ddc-project up -d lms cms
+          cd tests/fixtures/complete; derex build themes; ddc-project up -d lms cms
           sleep 5  # Give it time to start up
         displayName: 'Start production image lms/cms'
 
