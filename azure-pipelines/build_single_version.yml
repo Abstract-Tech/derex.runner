@@ -1,35 +1,5 @@
 steps:
-  # Build/restore the BuildKit tool
-  - task: Cache@2
-    inputs:
-      key: $(CACHE_KEY_BUILDKIT)
-      path: '$(System.DefaultWorkingDirectory)/buildkit'
-      cacheHitVar: 'BuildKitToolHit'
-    displayName: 'cache buildkit tool'
-
-  - script: |
-      git clone https://github.com/moby/buildkit.git --branch $(BUILDKIT_COMMIT) --depth 1
-      cd buildkit
-      make
-    displayName: "Build BuildKit on cache miss"
-    condition: and(succeeded(), ne(variables['BuildKitToolHit'], 'true'))
-
-  - script: |
-      cd buildkit
-      sudo make install
-      which buildctl
-      which buildkitd
-      set -e -x
-      echo | sudo nohup sh -c "buildkitd --debug --root /var/lib/buildkit > /buildkit.log 2> /buildkit_err.log &"
-      until sudo buildctl du -v
-      do
-        echo "Waiting for daemon to load"
-        sleep 1
-      done
-      sudo chown -R ${USER} /run/buildkit/ || true
-    displayName: "Install and start buildkit"
-
-  # restore the BuildKit cache based on the Dockerfile
+  # restore the docker cache based on the Dockerfile
   - task: Cache@2
     inputs:
       key: $(CACHE_KEY_EXACT)
@@ -42,16 +12,27 @@ steps:
       if [ -d "$(LAYERS_CACHE_DIR)" ]; then
         echo "Will use cached layers from $(LAYERS_CACHE_DIR)"
         find $(LAYERS_CACHE_DIR)
-        DOCKER_COMMAND="$DOCKER_COMMAND --import-cache type=local,src=$(LAYERS_CACHE_DIR)"
+        DOCKER_COMMAND="$DOCKER_COMMAND --cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
       else
         mkdir ${LAYERS_CACHE_DIR}
       fi
       if [ "$(BuildKitLayersHit)" != "true" ]; then
         echo "Will store cached layers to $(LAYERS_CACHE_DIR)"
-        DOCKER_COMMAND="$DOCKER_COMMAND --export-cache mode=max,type=local,dest=$(LAYERS_CACHE_DIR)"
+        DOCKER_COMMAND="$DOCKER_COMMAND --cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
       fi
       echo  "##vso[task.setvariable variable=DOCKER_COMMAND]${DOCKER_COMMAND}"
     displayName: 'Setup docker layers cache'
+
+  - script: |
+      set -ex
+      sudo apt-get remove moby-cli -y
+      curl -fsSL https://get.docker.com |sudo bash
+      sudo mv /etc/docker/daemon.json /etc/docker/daemon.json.orig
+      sudo cat /etc/docker/daemon.json.orig|jq '. + {experimental: true}' |sudo tee /etc/docker/daemon.json
+      sudo systemctl restart docker.service
+      docker version
+      docker buildx create --use
+    displayName: Replace Microsoft docker with upsream docker and create build context
 
   - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     displayName: 'Log into docker registry'
@@ -59,8 +40,8 @@ steps:
       DOCKER_USERNAME: $(DOCKER_USERNAME)
       DOCKER_PASSWORD: $(DOCKER_PASSWORD)
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-nostatic,push=true --opt target=nostatic
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-nostatic,push=true --target=nostatic
     displayName: Build/push nostatic image
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-dev,push=true --opt target=dev
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-dev,push=true --target=dev
     displayName: Build/push dev image

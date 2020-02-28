@@ -5,27 +5,16 @@ stages:
     #- group: Transifex credentials
     - name: DOCKER_BUILDKIT
       value: '1'
+    - name: DOCKER_CLI_EXPERIMENTAL
+      value: enabled
     - name: DOCKER_COMMAND
-      value: 'buildctl build --frontend=dockerfile.v0 --local context=docker-definition/ --local dockerfile=docker-definition/'
+      value: docker buildx build docker-definition
     - name: CACHE_KEY_BASE  # Increment this value to reset the layers cache
-      value: 5
+      value: 6
     - name: LAYERS_CACHE_DIR
       value: '$(Pipeline.Workspace)/layers_cache'
-    - name: CACHE_KEY_BUILDKIT
-      value: '"DOCKER_BUILDKIT=$(DOCKER_BUILDKIT)"'
-    - name: CACHE_KEY_FALLBACK
-      value: '"CACHE_KEY_BASE=$(CACHE_KEY_BASE)" | "$(Agent.OS) $(Agent.JobName)" | $(CACHE_KEY_BUILDKIT)'
     - name: CACHE_KEY_EXACT
       value: '$(CACHE_KEY_FALLBACK) | $(System.DefaultWorkingDirectory)/docker-definition/*'
-
-    # buildkit tool itself
-    - name: BUILDKIT_COMMIT
-      value: v0.6.4
-    - name: BUILDKIT_CACHE_KEY
-      value: GOOFS=0 | buildkit | $(BUILDKIT_COMMIT)
-    - name: CACHE_KEY_BUILDKIT
-      value: '"DOCKER_BUILDKIT=$(DOCKER_BUILDKIT)" | "BUILDKIT_COMMIT=$(BUILDKIT_COMMIT)"'
-
 
   jobs:
   - job: Build_hawthorn_image
@@ -36,7 +25,7 @@ stages:
       - name: DOCKER_IMAGES_SLUG
         value: hawthorn
       - name: DOCKER_OPTS
-        value: --opt build-arg:PYTHON_VERSION=2.7 --opt build-arg:EDX_PLATFORM_VERSION=open-release/hawthorn.master
+        value: --build-arg PYTHON_VERSION=2.7 --build-arg EDX_PLATFORM_VERSION=open-release/$(DOCKER_IMAGES_SLUG).master
     steps:
       - template: build_single_version.yml
 
@@ -49,7 +38,7 @@ stages:
       - name: DOCKER_IMAGES_SLUG
         value: ironwood
       - name: DOCKER_OPTS
-        value: --opt build-arg:PYTHON_VERSION=2.7 --opt build-arg:EDX_PLATFORM_VERSION=open-release/ironwood.master
+        value: --build-arg PYTHON_VERSION=2.7 --build-arg EDX_PLATFORM_VERSION=open-release/$(DOCKER_IMAGES_SLUG).master
     steps:
       - template: build_single_version.yml
 
