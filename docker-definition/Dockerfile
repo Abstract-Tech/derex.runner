@@ -148,8 +148,8 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     chroot /mysql /usr/local/bin/docker-entrypoint.sh mysqld > /mysql/mysqld.out & \
     until grep "MySQL init process done. Ready for start up" /mysql/mysqld.out ; do sleep 1; done; \
     until chroot /mysql mysqladmin -P 3399 create edxapp ; do sleep 1; done; \
-    ./manage.py lms --settings=derex.migration migrate --run-syncdb; \
-    ./manage.py cms --settings=derex.migration migrate --run-syncdb; \
+    ./manage.py lms --settings=derex.migration migrate; \
+    ./manage.py cms --settings=derex.migration migrate; \
     chroot /mysql mysqldump edxapp | bzip2 -9 - > /openedx/empty_dump.sql.bz2;
 
 FROM dev-nodump as dev
