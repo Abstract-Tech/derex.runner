@@ -353,3 +353,23 @@ class DebugProject(Project):
     """
 
     runmode = ProjectRunMode.debug
+
+
+class OpenEdXVersions(Enum):
+    hawthorn = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/hawthorn.master",
+        "docker_image_prefix": "docker.io/derex/edx-hawthorn",
+        "python_version": "2.7",
+    }
+    ironwood = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/ironwood.master",
+        "docker_image_prefix": "docker.io/derex/edx-ironwood",
+        "python_version": "2.7",
+    }
+    juniper = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/juniper.master",
+        "docker_image_prefix": "docker.io/derex/edx-juniper",
+    }

@@ -4,3 +4,5 @@ variables:
   lms_site_name:
     base: courses.localhost
     production: localhost:4700
+
+openedx_version: ironwood
