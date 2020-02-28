@@ -58,6 +58,7 @@ FROM basebase as wheels
 
 RUN --mount=type=cache,target=/var/cache/apk apk add \
     alpine-sdk \
+    blas-dev \
     freetype-dev \
     gettext \
     gfortran \
