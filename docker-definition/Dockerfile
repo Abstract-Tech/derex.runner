@@ -80,11 +80,12 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
 
 # From https://github.com/jfloff/alpine-python/issues/32
 RUN sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i
+COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
+    pip install numpy -c /tmp/derex.txt
 
-RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/openedx,from=sourceonly,target=/openedx,rw=true \
-    cat /openedx/edx-platform/requirements/edx/base.txt | grep -v github | grep -v ^-e > /openedx/edx-platform/requirements/edx/derex.txt && \
-    pip  install numpy -c /openedx/edx-platform/requirements/edx/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse -r /openedx/edx-platform/requirements/edx/derex.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt
 
 FROM wheels as rmlint
 RUN pip install scons && \
