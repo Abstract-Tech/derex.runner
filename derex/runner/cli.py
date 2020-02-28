@@ -3,10 +3,13 @@
 """Console script for derex.runner."""
 from click_plugins import with_plugins
 from derex.runner.project import DebugProject
+from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.project import SettingsModified
+from derex.runner.utils import abspath_from_egg
 from functools import wraps
+from subprocess import call
 from typing import Any
 from typing import Optional
 
@@ -150,10 +153,15 @@ def reset_rabbitmq(project):
     return 0
 
 
-@derex.command()
+@derex.group()
+def build():
+    """Commands to build container images"""
+
+
+@build.command()
 @click.pass_obj
 @ensure_project
-def build_requirements(project):
+def requirements(project):
     """Build the image that contains python requirements"""
     from derex.runner.build import build_requirements_image
 
@@ -163,15 +171,15 @@ def build_requirements(project):
     build_requirements_image(project)
 
 
-@derex.command()
+@build.command()
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def build_themes(ctx, project: Project):
+def themes(ctx, project: Project):
     """Build the image that includes compiled themes"""
     from derex.runner.build import build_themes_image
 
-    ctx.forward(build_requirements)
+    ctx.forward(requirements)
     click.echo(
         f'Building docker image {project.themes_image_tag} with "{project.name}" themes'
     )
@@ -179,26 +187,63 @@ def build_themes(ctx, project: Project):
     click.echo(f"Built image {project.themes_image_tag}")
 
 
-@derex.command()
+@build.command()
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def build_final(ctx, project: Project):
+def final(ctx, project: Project):
     """Build the final image for this project.
     For now this is the same as the final image"""
-    ctx.forward(build_themes)
+    ctx.forward(themes)
 
 
-@derex.command()
+@build.command()
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def build_final_refresh(ctx, project: Project):
+def final_refresh(ctx, project: Project):
     """Also pull base docker image before starting building"""
     from derex.runner.docker import pull_images
 
     pull_images([project.base_image, project.final_base_image])
-    ctx.forward(build_final)
+    ctx.forward(final)
+
+
+@build.command()
+@click.argument(
+    "version",
+    type=click.Choice(OpenEdXVersions.__members__),
+    required=True,
+    callback=lambda _, __, value: value and OpenEdXVersions[value],
+)
+@click.option(
+    "--push/--no-push", default=False, help="Also push image to registry after building"
+)
+def openedx(version, push):
+    """Build openedx dev and base image using docker"""
+    dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
+    git_repo = version.value["git_repo"]
+    git_branch = version.value["git_branch"]
+    python_version = version.value.get("python_version", "3.6")
+    docker_image_prefix = version.value["docker_image_prefix"]
+    push_arg = ",push=true" if push else ""
+    command = [
+        "docker",
+        "buildx",
+        "build",
+        str(dockerdir),
+        "--output",
+        f"type=image,name={docker_image_prefix}-dev{push_arg}",
+        "--build-arg",
+        f"PYTHON_VERSION={python_version}",
+        "--build-arg",
+        f"EDX_PLATFORM_VERSION={git_branch}",
+        "--build-arg",
+        f"EDX_PLATFORM_REPOSITORY={git_repo}",
+        "--target=dev",
+    ]
+    print("Invoking\n" + " ".join(command))
+    call(command)
 
 
 @derex.command()
