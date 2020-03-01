@@ -1,0 +1,22 @@
+steps:
+  - download: current
+    artifact: $(DOCKER_IMAGES_SLUG)_image_dev
+
+  - download: current
+    artifact: $(DOCKER_IMAGES_SLUG)_image_nostatic
+
+  - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+    displayName: 'Log into docker registry'
+    env:
+      DOCKER_USERNAME: $(DOCKER_USERNAME)
+      DOCKER_PASSWORD: $(DOCKER_PASSWORD)
+
+  - script: |
+      docker image import $(Pipeline.Workspace)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar derex/edx-$(DOCKER_IMAGES_SLUG)-dev
+      docker push derex/edx-$(DOCKER_IMAGES_SLUG)-dev
+    displayName: 'Push $(DOCKER_IMAGES_SLUG) dev image'
+
+  - script: |
+      docker image import $(Pipeline.Workspace)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic
+      docker push derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic
+    displayName: 'Push $(DOCKER_IMAGES_SLUG) nostatic image'
