@@ -370,6 +370,6 @@ class OpenEdXVersions(Enum):
     }
     juniper = {
         "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/juniper.master",
+        "git_branch": "open-release/juniper.alpha1",
         "docker_image_prefix": "docker.io/derex/edx-juniper",
     }
