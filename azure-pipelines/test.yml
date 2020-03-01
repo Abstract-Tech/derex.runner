@@ -37,7 +37,6 @@ stages:
         displayName: 'Start service daemons'
 
       - script: |
-          # Slow tests do not currently contribute to coverage
           set -ex
           set -o pipefail
           cd tests
