@@ -5,7 +5,20 @@ stages:
         timeoutInMinutes: 40
         pool:
           vmImage: 'ubuntu-latest'
-        steps:
+        variables:
+        - group: Docker credentials
 
-        - script: echo TODO
+        steps:
+        - download: current
+
+        - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+          displayName: 'Log into docker registry'
+          env:
+            DOCKER_USERNAME: $(DOCKER_USERNAME)
+            DOCKER_PASSWORD: $(DOCKER_PASSWORD)
+
+        - script: |
+            ls -l;
+            docker image import edx-ironwood-dev.tar derex/edx-ironwood-dev
+            docker push derex/edx-ironwood-dev
           displayName: 'Push images'
