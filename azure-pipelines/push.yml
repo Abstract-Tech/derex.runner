@@ -1,0 +1,11 @@
+stages:
+    - stage: Push
+      jobs:
+      - job: Push
+        timeoutInMinutes: 40
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+
+        - script: echo TODO
+          displayName: 'Push images'
