@@ -34,12 +34,6 @@ steps:
       docker buildx create --use
     displayName: Replace Microsoft docker with upsream docker and create build context
 
-  - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-    displayName: 'Log into docker registry'
-    env:
-      DOCKER_USERNAME: $(DOCKER_USERNAME)
-      DOCKER_PASSWORD: $(DOCKER_PASSWORD)
-
   - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=oci,dest=$(System.DefaultWorkingDirectory)/edx-${DOCKER_IMAGES_SLUG}-nostatic.tar --target=nostatic
     displayName: Build/push nostatic image
 
