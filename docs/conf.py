@@ -35,8 +35,8 @@ master_doc = "index"
 
 # General information about the project.
 project = u"derex.runner"
-copyright = u"2020, Silvio Tomatis"
-author = u"Silvio Tomatis"
+copyright = u"2020, Abstract-Technology GmbH"
+author = u"Abstract-Technology GmbH"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -121,7 +121,7 @@ latex_documents = [
         master_doc,
         "derex.runner.tex",
         u"derex.runner Documentation",
-        u"Silvio Tomatis",
+        u"Abstract-Technology GmbH",
         "manual",
     )
 ]
