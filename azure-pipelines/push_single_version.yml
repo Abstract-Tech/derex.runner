@@ -5,6 +5,8 @@ steps:
       DOCKER_USERNAME: $(DOCKER_USERNAME)
       DOCKER_PASSWORD: $(DOCKER_PASSWORD)
   - template: load_images.yml
+    parameters:
+        DOCKER_IMAGES_SLUG: $(DOCKER_IMAGES_SLUG)
 
   - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-dev
     displayName: 'Push $(DOCKER_IMAGES_SLUG) dev image'

@@ -1,14 +1,19 @@
+parameters:
+  - name: DOCKER_IMAGES_SLUG
+    type: string
+    default: ironwood
+
 steps:
   - download: current
-    artifact: $(DOCKER_IMAGES_SLUG)_image_dev
+    artifact: ${{ parameters.DOCKER_IMAGES_SLUG }}_image_dev
 
   - download: current
-    artifact: $(DOCKER_IMAGES_SLUG)_image_nostatic
+    artifact: ${{ parameters.DOCKER_IMAGES_SLUG }}_image_nostatic
 
   - script: |
-      docker image import $(Pipeline.Workspace)/$(DOCKER_IMAGES_SLUG)_image_dev/edx-$(DOCKER_IMAGES_SLUG)-dev.tar derex/edx-$(DOCKER_IMAGES_SLUG)-dev
-    displayName: 'Load $(DOCKER_IMAGES_SLUG) dev image'
+      docker image import $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_dev/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev
+    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} dev image'
 
   - script: |
-      docker image import $(Pipeline.Workspace)/$(DOCKER_IMAGES_SLUG)_image_nostatic/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic
-    displayName: 'Load $(DOCKER_IMAGES_SLUG) nostatic image'
+      docker image import $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_nostatic/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic
+    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} nostatic image'
