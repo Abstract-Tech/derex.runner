@@ -13,7 +13,7 @@ steps:
       key: $(CACHE_KEY_FILES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
-    displayName: 'Docker images sentinel cache'
+    displayName: 'Docker images cache'
 
   # restore the docker cache based on the Dockerfile
   - task: Cache@2
@@ -37,6 +37,9 @@ steps:
         DOCKER_COMMAND="$DOCKER_COMMAND --cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
       fi
       echo  "##vso[task.setvariable variable=DOCKER_COMMAND]${DOCKER_COMMAND}"
+      mkdir $(SENTINEL_CACHE_PATH)
+      mkdir $(IMAGE_CACHE_PATH)
+      cp $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
     displayName: 'Setup docker layers cache'
 
   - script: |
