@@ -230,6 +230,7 @@ stages:
           set -ex
           cd tests/fixtures/minimal
           docker images
+          docker run --rm derex/edx-ironwood-dev ls -l
           ddc-project config
           derex reset-mysql
           derex reset-rabbitmq
