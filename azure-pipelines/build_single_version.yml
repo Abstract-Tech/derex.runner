@@ -65,6 +65,6 @@ steps:
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: Build dev image
 
-  - script: docker save derex/edx-${DOCKER_IMAGES_SLUG}-dev derex/edx-${DOCKER_IMAGES_SLUG}-nostatic | xz -9 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
+  - script: docker save derex/edx-${DOCKER_IMAGES_SLUG}-dev derex/edx-${DOCKER_IMAGES_SLUG}-nostatic | xz -5 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: Save docker images into image cache
