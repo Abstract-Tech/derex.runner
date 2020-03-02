@@ -34,7 +34,7 @@ COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
 COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
 # Patch ldconfig and test that libgeos works
-RUN /tmp/patch_ldconfig_to_fix_shapely.sh &&
+RUN /tmp/patch_ldconfig_to_fix_shapely.sh && \
      python -c "from  ctypes import CDLL; CDLL('$(echo /usr/lib/libgeos_c.so)').GEOSversion"
 
 
