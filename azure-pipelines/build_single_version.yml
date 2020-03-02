@@ -34,10 +34,14 @@ steps:
       docker buildx create --use
     displayName: Replace Microsoft docker with upsream docker and create build context
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=oci,dest=$(System.DefaultWorkingDirectory)/edx-${DOCKER_IMAGES_SLUG}-nostatic.tar --target=nostatic
+  - script: |
+      ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
+      docker save -o $(System.DefaultWorkingDirectory)/edx-${DOCKER_IMAGES_SLUG}-nostatic.tar docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-nostatic
     displayName: Build/push nostatic image
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=oci,dest=$(System.DefaultWorkingDirectory)/edx-${DOCKER_IMAGES_SLUG}-dev.tar --target=dev
+  - script: |
+      ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
+      docker save -o $(System.DefaultWorkingDirectory)/edx-${DOCKER_IMAGES_SLUG}-nostatic.tar docker.io/derex/edx-${DOCKER_IMAGES_SLUG}-dev
     displayName: Build/push dev image
 
   - publish: $(System.DefaultWorkingDirectory)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar
