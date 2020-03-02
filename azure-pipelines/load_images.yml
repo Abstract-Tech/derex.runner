@@ -12,9 +12,5 @@ steps:
     displayName: 'Docker images cache'
 
   - script: |
-      docker load -i $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar
-    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} dev image'
-
-  - script: |
-      docker load -i $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar
-    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} nostatic image'
+      docker load -i $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}.tar
+    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} images'
