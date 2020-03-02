@@ -13,6 +13,7 @@ steps:
       key: $(CACHE_KEY_FILES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
+    condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Docker images cache'
 
   # restore the docker cache based on the Dockerfile
@@ -22,6 +23,7 @@ steps:
       path: '$(LAYERS_CACHE_DIR)'
       cacheHitVar: 'BuildKitLayersHit'
       restoreKeys: $(CACHE_KEY_FALLBACK)
+    condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Docker layers cache'
 
   - script: |
@@ -40,6 +42,7 @@ steps:
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
+    condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Setup docker layers cache'
 
   - script: |
@@ -51,20 +54,17 @@ steps:
       sudo systemctl restart docker.service
       docker version
       docker buildx create --use
+    condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: Replace Microsoft docker with upsream docker and create build context
 
-  - script: |
-      set -ex
-      docker images
-      ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
-      docker images
-      docker save -o $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-nostatic
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
+    condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: Build nostatic image
 
-  - script: |
-      set -ex
-      docker images
-      ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
-      docker images
-      docker save -o $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-dev
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
+    condition: ne(variables.ImagesSentinelHit, 'true')
+    displayName: Build dev image
+
+  - script: docker save -o $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar derex/edx-${DOCKER_IMAGES_SLUG}-dev derex/edx-${DOCKER_IMAGES_SLUG}-nostatic
+    condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: Build dev image
