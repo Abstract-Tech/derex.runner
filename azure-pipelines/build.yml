@@ -3,26 +3,6 @@ stages:
   variables:
     - group: Docker credentials
     #- group: Transifex credentials
-    - name: DOCKER_BUILDKIT
-      value: '1'
-    - name: DOCKER_CLI_EXPERIMENTAL
-      value: enabled
-    - name: DOCKER_COMMAND
-      value: docker buildx build docker-definition
-    - name: CACHE_KEY_BASE  # Increment this value to reset the layers cache
-      value: 1
-    - name: LAYERS_CACHE_DIR
-      value: '$(Pipeline.Workspace)/layers_cache'
-    - name: CACHE_KEY_FALLBACK
-      value: '"CACHE_KEY_BASE=$(CACHE_KEY_BASE)" | "$(Agent.OS) $(Agent.JobName)"'
-    - name: CACHE_KEY_FILES
-      value: $(System.DefaultWorkingDirectory)/docker-definition/*
-    - name: CACHE_KEY_EXACT
-      value: $(CACHE_KEY_FALLBACK) | $(CACHE_KEY_FILES)
-    - name: SENTINEL_CACHE_PATH
-      value: $(Pipeline.Workspace)/sentinel_cache
-    - name: IMAGE_CACHE_PATH
-      value: $(Pipeline.Workspace)/image_cache
 
   jobs:
   - job: Build_hawthorn_image
