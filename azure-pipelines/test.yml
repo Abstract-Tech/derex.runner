@@ -1,8 +1,5 @@
 stages:
 - stage: Test
-  variables:
-    name: DOCKER_IMAGES_SLUG
-    value: ironwood
   jobs:
   - job: RunPytests
     timeoutInMinutes: 40
