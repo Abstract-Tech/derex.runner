@@ -7,8 +7,8 @@ steps:
 
   - script: |
       docker image import $(Pipeline.Workspace)/$(DOCKER_IMAGES_SLUG)_image_dev/edx-$(DOCKER_IMAGES_SLUG)-dev.tar derex/edx-$(DOCKER_IMAGES_SLUG)-dev
-    displayName: 'Push $(DOCKER_IMAGES_SLUG) dev image'
+    displayName: 'Load $(DOCKER_IMAGES_SLUG) dev image'
 
   - script: |
-      docker image import $(Pipeline.Workspace)/$(DOCKER_IMAGES_SLUG)_image_nostatic/edx-$(DOCKER_IMAGES_SLUG)-dev.tar derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic
-    displayName: 'Push $(DOCKER_IMAGES_SLUG) nostatic image'
+      docker image import $(Pipeline.Workspace)/$(DOCKER_IMAGES_SLUG)_image_nostatic/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic
+    displayName: 'Load $(DOCKER_IMAGES_SLUG) nostatic image'
