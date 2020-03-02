@@ -206,6 +206,9 @@ stages:
     timeoutInMinutes: 40
     pool:
       vmImage: 'ubuntu-latest'
+    variables:
+      - group: Docker credentials
+
     steps:
       - template: prepare.yml
       - template: load_images.yml
@@ -226,11 +229,19 @@ stages:
           ddc-project pull
         displayName: 'Pull edx image'
 
+      - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        displayName: 'Log into docker registry'
+        env:
+          DOCKER_USERNAME: $(DOCKER_USERNAME)
+          DOCKER_PASSWORD: $(DOCKER_PASSWORD)
+
       - script: |
           set -ex
           cd tests/fixtures/minimal
           docker images
           ddc-project config
+          docker tag derex/edx-ironwood-dev derex/edx-ironwood-dev:test
+          docker push derex/edx-ironwood-dev:test
           derex reset-mysql
           derex reset-rabbitmq
         displayName: 'Prime Mysql DB'
