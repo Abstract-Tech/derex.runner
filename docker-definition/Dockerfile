@@ -96,11 +96,9 @@ RUN wget -q https://github.com/sahib/rmlint/tarball/e56626d39134b7ac6317c19940c4
     scons && \
     mv rmlint /usr/local/bin/
 
-FROM basebase as base
-# This image will be used as base for final images: it includes rmlint
-COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
-
 FROM sourceonly as nostatic
+
+COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
 RUN --mount=type=cache,target=/root/.cache/pip pip install whitenoise==4.1.3 flower==0.9.3 tornado==5.1.1 backports_abc==0.5 -c /openedx/edx-platform/requirements/edx/base.txt
@@ -123,7 +121,6 @@ RUN --mount=type=cache,target=/root/.npm \
     pip install pdbpp ipython ipdb
 
 FROM nostatic-dev as dev-nodump
-COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 COPY cleanup_assets.sh /usr/local/bin/
 RUN mkdir -p /openedx/edx-platform/lms/envs/derex /openedx/edx-platform/cms/envs/derex && \
     touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py
