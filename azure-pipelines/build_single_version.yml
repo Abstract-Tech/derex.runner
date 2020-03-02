@@ -39,7 +39,7 @@ steps:
       echo  "##vso[task.setvariable variable=DOCKER_COMMAND]${DOCKER_COMMAND}"
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
-      cp $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
+      cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
     displayName: 'Setup docker layers cache'
 
   - script: |
@@ -59,7 +59,7 @@ steps:
       ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
       docker images
       docker save -o $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-nostatic
-    displayName: Build/push nostatic image
+    displayName: Build nostatic image
 
   - script: |
       set -ex
@@ -67,10 +67,4 @@ steps:
       ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
       docker images
       docker save -o $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-dev
-    displayName: Build/push dev image
-
-  - publish: $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar
-    artifact: $(DOCKER_IMAGES_SLUG)_image_nostatic
-
-  - publish: $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar
-    artifact: $(DOCKER_IMAGES_SLUG)_image_dev
+    displayName: Build dev image
