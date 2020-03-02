@@ -18,3 +18,6 @@ steps:
     displayName: 'Install derex.runner'
 
   - template: load_images.yml
+    variables:
+      name: DOCKER_IMAGES_SLUG
+      value: ironwood
