@@ -4,16 +4,17 @@ parameters:
     default: ironwood
 
 steps:
-  - download: current
-    artifact: ${{ parameters.DOCKER_IMAGES_SLUG }}_image_dev
-
-  - download: current
-    artifact: ${{ parameters.DOCKER_IMAGES_SLUG }}_image_nostatic
+  - task: Cache@2
+    inputs:
+      key: $(CACHE_KEY_FILES)
+      path: $(IMAGE_CACHE_PATH)
+      cacheHitVar: 'ImagesHit'
+    displayName: 'Docker images cache'
 
   - script: |
-      docker load -i $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_dev/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar
+      docker load -i $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} dev image'
 
   - script: |
-      docker load -i $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_nostatic/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar
+      docker load -i $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} nostatic image'
