@@ -15,8 +15,12 @@ stages:
       value: '$(Pipeline.Workspace)/layers_cache'
     - name: CACHE_KEY_FALLBACK
       value: '"CACHE_KEY_BASE=$(CACHE_KEY_BASE)" | "$(Agent.OS) $(Agent.JobName)"'
+    - name: CACHE_KEY_FILES
+      value: $(System.DefaultWorkingDirectory)/docker-definition/*
     - name: CACHE_KEY_EXACT
-      value: '$(CACHE_KEY_FALLBACK) | $(System.DefaultWorkingDirectory)/docker-definition/*'
+      value: $(CACHE_KEY_FALLBACK) | $(CACHE_KEY_FILES)
+    - name: SENTINEL_CACHE_PATH
+      value: $(Pipeline.Workspace)/sentinel_cache
 
   jobs:
   - job: Build_hawthorn_image
