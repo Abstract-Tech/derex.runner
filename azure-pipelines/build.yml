@@ -21,6 +21,8 @@ stages:
       value: $(CACHE_KEY_FALLBACK) | $(CACHE_KEY_FILES)
     - name: SENTINEL_CACHE_PATH
       value: $(Pipeline.Workspace)/sentinel_cache
+    - name: IMAGE_CACHE_PATH
+      value: $(Pipeline.Workspace)/image_cache
 
   jobs:
   - job: Build_hawthorn_image
