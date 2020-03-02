@@ -30,13 +30,13 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     sqlite \
     xmlsec
 
-COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
-# Test that it works
-RUN python -c "from  ctypes import CDLL; CDLL('$(echo /usr/lib/libgeos_c.so)').GEOSversion"
-
 COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
-RUN /tmp/patch_ldconfig_to_fix_shapely.sh
+COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
+# Patch ldconfig and test that libgeos works
+RUN /tmp/patch_ldconfig_to_fix_shapely.sh &&
+     python -c "from  ctypes import CDLL; CDLL('$(echo /usr/lib/libgeos_c.so)').GEOSversion"
+
 
 # we want to use paver without remembering to specify these
 ENV NO_PREREQ_INSTALL=True
