@@ -3,14 +3,14 @@ steps:
   # We don't use the image cache for performance reasons
   - task: Cache@2
     inputs:
-      key: $(CACHE_KEY_FILES)
+      key: SENTINEL=1 | $(CACHE_KEY_IMAGES)
       path: $(SENTINEL_CACHE_PATH)
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'
 
   - task: Cache@2
     inputs:
-      key: $(CACHE_KEY_FILES)
+      key: $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
     condition: ne(variables.ImagesSentinelHit, 'true')
