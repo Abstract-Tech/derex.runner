@@ -229,6 +229,8 @@ stages:
       - script: |
           set -ex
           cd tests/fixtures/minimal
+          docker images
+          ddc-project config
           derex reset-mysql
           derex reset-rabbitmq
         displayName: 'Prime Mysql DB'
