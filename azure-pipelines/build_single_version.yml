@@ -69,6 +69,6 @@ steps:
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: Install pxz
 
-  - script: docker save derex/edx-${DOCKER_IMAGES_SLUG}-dev derex/edx-${DOCKER_IMAGES_SLUG}-nostatic | pxz -5 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
+  - script: docker save derex/edx-${DOCKER_IMAGES_SLUG}-dev derex/edx-${DOCKER_IMAGES_SLUG}-nostatic | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: Save docker images into image cache
