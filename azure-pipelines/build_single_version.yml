@@ -10,7 +10,7 @@ steps:
 
   - task: Cache@2
     inputs:
-      key: $(CACHE_KEY_IMAGES)
+      key: $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
     condition: ne(variables.ImagesSentinelHit, 'true')
