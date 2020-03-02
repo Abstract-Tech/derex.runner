@@ -13,5 +13,6 @@ steps:
 
   - script: |
       ls -l $(IMAGE_CACHE_PATH)
+      tar tvJf $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}.tar.xz
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}.tar.xz | unxz | docker load
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} images'
