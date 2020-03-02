@@ -27,7 +27,7 @@ variables:
   - name: CACHE_KEY_FILES
     value: $(System.DefaultWorkingDirectory)/docker-definition/*
   - name: CACHE_KEY_IMAGES
-    value: BASE_SEED=4 | $(CACHE_KEY_FILES)
+    value: BASE_SEED=5 | $(CACHE_KEY_FILES)
   - name: CACHE_KEY_EXACT
     value: $(CACHE_KEY_FALLBACK) | $(CACHE_KEY_FILES)
   - name: SENTINEL_CACHE_PATH
