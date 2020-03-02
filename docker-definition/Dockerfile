@@ -5,10 +5,8 @@ FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as libgeos
 RUN --mount=type=cache,target=/var/cache/apk apk add alpine-sdk
 ENV GEOS_VERSION=3.8.0
 
-RUN wget -c http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2 -O - | tar xjf - --directory /usr/local
-WORKDIR /usr/local/geos-${GEOS_VERSION}
-RUN ./configure && make -j 4
-RUN make install
+RUN wget -c http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2 -O - | tar xjf - --directory /usr/local && \
+    cd /usr/local/geos-${GEOS_VERSION} && ./configure && make -j 4 && make install
 
 FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as basebase
 # This image will be used to build all other images in this Dockerfile
