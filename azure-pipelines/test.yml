@@ -7,7 +7,6 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
       - template: prepare.yml
-      - template: load_images.yml
 
       - script: |
           set -ex
