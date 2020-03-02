@@ -11,9 +11,9 @@ steps:
     artifact: ${{ parameters.DOCKER_IMAGES_SLUG }}_image_nostatic
 
   - script: |
-      docker image import $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_dev/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev
+      docker load -i $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_dev/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} dev image'
 
   - script: |
-      docker image import $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_nostatic/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic
+      docker load -i $(Pipeline.Workspace)/${{ parameters.DOCKER_IMAGES_SLUG }}_image_nostatic/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} nostatic image'
