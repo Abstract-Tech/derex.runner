@@ -16,5 +16,3 @@ steps:
       pip3 install --cache-dir $(Pipeline.Workspace)/.cache/pip -U pip setuptools
       pip3 install --cache-dir $(Pipeline.Workspace)/.cache/pip -r requirements_dev.txt . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
     displayName: 'Install derex.runner'
-
-  - template: load_images.yml

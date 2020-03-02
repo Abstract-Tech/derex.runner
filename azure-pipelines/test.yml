@@ -7,6 +7,7 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
       - template: prepare.yml
+      - template: load_images.yml
 
       - script: |
           set -ex
@@ -25,6 +26,7 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
       - template: prepare.yml
+      - template: load_images.yml
 
       - script: ddc-services pull
         displayName: 'Pull edX services images'
@@ -93,6 +95,7 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
       - template: prepare.yml
+      - template: load_images.yml
 
       - script: ddc-services pull
         displayName: 'Pull edX services images'
@@ -206,6 +209,7 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
       - template: prepare.yml
+      - template: load_images.yml
 
       - script: ddc-services pull
         displayName: 'Pull edX services images'
