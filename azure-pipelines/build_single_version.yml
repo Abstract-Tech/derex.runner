@@ -5,6 +5,13 @@ steps:
     inputs:
       key: $(CACHE_KEY_FILES)
       path: $(SENTINEL_CACHE_PATH)
+      cacheHitVar: 'ImagesSentinelHit'
+    displayName: 'Docker images sentinel cache'
+
+  - task: Cache@2
+    inputs:
+      key: $(CACHE_KEY_FILES)
+      path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
     displayName: 'Docker images sentinel cache'
 
@@ -46,21 +53,21 @@ steps:
   - script: |
       set -ex
       docker images
-      ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
+      ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
       docker images
-      docker save -o $(System.DefaultWorkingDirectory)/edx-${DOCKER_IMAGES_SLUG}-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-nostatic
+      docker save -o $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-nostatic
     displayName: Build/push nostatic image
 
   - script: |
       set -ex
       docker images
-      ${DOCKER_COMMAND} ${DOCKER_OPTS} --output type=image,name=derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
+      ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
       docker images
-      docker save -o $(System.DefaultWorkingDirectory)/edx-${DOCKER_IMAGES_SLUG}-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-dev
+      docker save -o $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar derex/edx-${DOCKER_IMAGES_SLUG}-dev
     displayName: Build/push dev image
 
-  - publish: $(System.DefaultWorkingDirectory)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar
+  - publish: $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar
     artifact: $(DOCKER_IMAGES_SLUG)_image_nostatic
 
-  - publish: $(System.DefaultWorkingDirectory)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar
+  - publish: $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar
     artifact: $(DOCKER_IMAGES_SLUG)_image_dev
