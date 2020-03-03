@@ -245,6 +245,8 @@ def openedx(version, push):
     transifex_path = os.path.expanduser("~/.transifexrc")
     if os.path.exists(transifex_path):
         command.extend(["--secret", f"id=transifex,src={transifex_path}"])
+    if os.environ.get("DOCKER_OPTS"):
+        command.extend(os.environ.get("DOCKER_OPTS").split(" "))
     print("Invoking\n" + " ".join(command))
     call(command)
 

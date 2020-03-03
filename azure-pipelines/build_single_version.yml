@@ -73,11 +73,13 @@ steps:
     condition: eq(variables.needs_build, 'true')
     displayName: Replace Microsoft docker with upsream docker and create build context
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
+  - template: prepare.yml
+
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=~/.transifexrc
     condition: eq(variables.needs_build, 'true')
     displayName: Build nostatic image
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
+  - script: derex build openedx ${DOCKER_IMAGES_SLUG}
     condition: eq(variables.needs_build, 'true')
     displayName: Build dev image
 
