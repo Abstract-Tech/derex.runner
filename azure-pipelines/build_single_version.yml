@@ -76,7 +76,7 @@ steps:
 
   - template: prepare.yml
 
-  - script: derex build openedx ${DOCKER_IMAGES_SLUG}
+  - script: echo ${DOCKER_OPTS}; derex build openedx ${DOCKER_IMAGES_SLUG}
     condition: eq(variables.needs_build, 'true')
     displayName: Build dev image
 
