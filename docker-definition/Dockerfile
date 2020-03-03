@@ -121,13 +121,12 @@ RUN --mount=type=cache,target=/root/.npm \
     pip install pdbpp ipython ipdb
 
 FROM nostatic-dev as dev-nodump
-COPY cleanup_assets.sh /usr/local/bin/
+COPY assets.py cleanup_assets.sh compile_assets.sh /usr/local/bin/
 RUN mkdir -p /openedx/edx-platform/lms/envs/derex /openedx/edx-platform/cms/envs/derex && \
-    touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py
-COPY compile_assets.sh /usr/local/bin
-COPY assets.py /openedx/edx-platform/lms/envs/derex
-COPY assets.py /openedx/edx-platform/cms/envs/derex
-RUN /usr/local/bin/compile_assets.sh && \
+    mv /usr/local/bin/assets.py /openedx/edx-platform/lms/envs/derex && \
+    cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py && \
+    touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py && \
+    /usr/local/bin/compile_assets.sh && \
     cleanup_assets.sh
 
 FROM dev-nodump as dev
