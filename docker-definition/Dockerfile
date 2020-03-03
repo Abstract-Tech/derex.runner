@@ -101,9 +101,12 @@ FROM sourceonly as nostatic
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
-RUN --mount=type=cache,target=/root/.cache/pip pip install whitenoise==4.1.3 flower==0.9.3 tornado==5.1.1 backports_abc==0.5 -c /openedx/edx-platform/requirements/edx/base.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install transifex-client==0.13.7 whitenoise==4.1.3 flower==0.9.3 tornado==5.1.1 backports_abc==0.5 -c /openedx/edx-platform/requirements/edx/base.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
+
+COPY translations.sh /usr/local/bin
+RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc /usr/local/bin/translations.sh
 
 FROM nostatic as nostatic-dev
 ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v10.19.0/node-v10.19.0-linux-x64-musl.tar.xz

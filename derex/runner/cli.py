@@ -242,6 +242,9 @@ def openedx(version, push):
         f"EDX_PLATFORM_REPOSITORY={git_repo}",
         "--target=dev",
     ]
+    transifex_path = os.path.expanduser("~/.transifexrc")
+    if os.path.exists(transifex_path):
+        command.extend(["--secret", f"id=transifex,src={transifex_path}"])
     print("Invoking\n" + " ".join(command))
     call(command)
 
