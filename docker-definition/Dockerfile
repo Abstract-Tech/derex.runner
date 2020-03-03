@@ -15,7 +15,7 @@ ENV GEOS_VERSION=3.8.0
 RUN wget -c http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2 -O - | tar xjf - --directory /usr/local && \
     cd /usr/local/geos-${GEOS_VERSION} && ./configure && make -j 4 && make install
 
-FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as basebase
+FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as base
 # This image will be used to build all other images in this Dockerfile
 # The base image is defined later, and it has rmlint added to this base
 ENV GEOS_VERSION=3.8.0
@@ -49,7 +49,7 @@ RUN /tmp/patch_ldconfig_to_fix_shapely.sh && \
 ENV NO_PREREQ_INSTALL=True
 ENV NO_PYTHON_UNINSTALL=True
 
-FROM basebase as sourceonly
+FROM base as sourceonly
 ARG EDX_PLATFORM_VERSION=open-release/juniper.alpha1
 
 ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
@@ -59,7 +59,7 @@ RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ && \
 
 WORKDIR /openedx/edx-platform
 
-FROM basebase as wheels
+FROM base as wheels
 
 RUN --mount=type=cache,target=/var/cache/apk apk add \
     alpine-sdk \
