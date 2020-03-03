@@ -1,8 +1,7 @@
 stages:
 - stage: Build
-  variables:
-    - group: Docker credentials
-    #- group: Transifex credentials
+  # variables:
+  # - group: Transifex credentials
 
   jobs:
   - job: Build_hawthorn_image
