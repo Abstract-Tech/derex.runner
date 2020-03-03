@@ -8,10 +8,21 @@ steps:
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'
 
-  - script: |
-      echo  "##vso[task.setvariable variable=needs_build]true"
+  - script: echo  "##vso[task.setvariable variable=needs_build]true"
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Set needs_build pipeline variable'
+
+  - script: |
+      if [ -z "$TRANSIFEX_USERNAME" ] || [ -z "$TRANSIFEX_PASSWORD" ]; then
+          echo "Transifex credentials unset. Building without translations."
+          exit 0
+      fi
+      printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > ~/.transifexrc
+    condition: ne(variables.ImagesSentinelHit, 'true')
+    displayName: 'Prepare Transifex credentials'
+    env:
+      TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
+      TRANSIFEX_PASSWORD: $(TRANSIFEX_PASSWORD)
 
   - task: Cache@2
     inputs:
