@@ -1,4 +1,11 @@
 # syntax = docker/dockerfile:experimental
+
+# Debugging a Dockerfile can be difficult. A good pattern is to put a breakpoint, enter
+# the build container and have a look. To do this, put the command
+# sleep infinity
+# in the place you want to examine. When execution stops there, run
+# sudo nsenter --target $(pgrep sleep) --mount --uts --ipc --net --pid sh
+
 ARG PYTHON_VERSION=3.6
 FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as libgeos
 
@@ -106,7 +113,7 @@ RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelho
     pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
 
 COPY translations.sh /usr/local/bin
-RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc /usr/local/bin/translations.sh
+RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig /usr/local/bin/translations.sh
 
 FROM nostatic as nostatic-dev
 ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v10.19.0/node-v10.19.0-linux-x64-musl.tar.xz
