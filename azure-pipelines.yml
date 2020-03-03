@@ -34,3 +34,5 @@ variables:
     value: $(Pipeline.Workspace)/sentinel_cache
   - name: IMAGE_CACHE_PATH
     value: $(Pipeline.Workspace)/image_cache
+  - name: needs_build
+    value: "false"

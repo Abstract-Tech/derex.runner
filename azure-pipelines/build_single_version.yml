@@ -8,12 +8,17 @@ steps:
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'
 
+  - script: |
+      echo  "##vso[task.setvariable variable=needs_build]true"
+    condition: ne(variables.ImagesSentinelHit, 'true')
+    displayName: 'Set needs_build pipeline variable'
+
   - task: Cache@2
     inputs:
       key: $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: 'Docker images cache'
 
   # restore the docker cache based on the Dockerfile
@@ -23,7 +28,7 @@ steps:
       path: '$(LAYERS_CACHE_DIR)'
       cacheHitVar: 'BuildKitLayersHit'
       restoreKeys: $(CACHE_KEY_FALLBACK)
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: 'Docker layers cache'
 
   - script: |
@@ -42,7 +47,7 @@ steps:
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: 'Setup docker layers cache'
 
   - script: |
@@ -54,21 +59,21 @@ steps:
       sudo systemctl restart docker.service
       docker version
       docker buildx create --use
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: Replace Microsoft docker with upsream docker and create build context
 
   - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: Build nostatic image
 
   - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: Build dev image
 
   - script: sudo apt-get install pxz -y
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: Install pxz
 
   - script: docker save derex/edx-${DOCKER_IMAGES_SLUG}-dev derex/edx-${DOCKER_IMAGES_SLUG}-nostatic | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
-    condition: ne(variables.ImagesSentinelHit, 'true')
+    condition: eq(variables.needs_build, 'true')
     displayName: Save docker images into image cache
