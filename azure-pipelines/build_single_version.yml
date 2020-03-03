@@ -47,15 +47,15 @@ steps:
       if [ -d "$(LAYERS_CACHE_DIR)" ]; then
         echo "Will use cached layers from $(LAYERS_CACHE_DIR)"
         find $(LAYERS_CACHE_DIR)
-        DOCKER_COMMAND="$DOCKER_COMMAND --cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
+        DOCKER_OPTS="$DOCKER_OPTS --cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
       else
         mkdir ${LAYERS_CACHE_DIR}
       fi
       if [ "$(BuildKitLayersHit)" != "true" ]; then
         echo "Will store cached layers to $(LAYERS_CACHE_DIR)"
-        DOCKER_COMMAND="$DOCKER_COMMAND --cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
+        DOCKER_OPTS="$DOCKER_OPTS --cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
       fi
-      echo  "##vso[task.setvariable variable=DOCKER_COMMAND]${DOCKER_COMMAND}"
+      echo  "##vso[task.setvariable variable=DOCKER_OPTS]${DOCKER_OPTS}"
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
