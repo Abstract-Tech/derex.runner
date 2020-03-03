@@ -17,8 +17,9 @@ steps:
           echo "Transifex credentials unset. Building without translations."
           exit 0
       fi
-      printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > ~/.transifexrc
-    condition: ne(variables.ImagesSentinelHit, 'true')
+      printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $HOME/.transifexrc
+      ls -l $HOME/.transifexrc
+    condition: eq(variables.needs_build, 'true')
     displayName: 'Prepare Transifex credentials'
     env:
       TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
@@ -75,7 +76,7 @@ steps:
 
   - template: prepare.yml
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=~/.transifexrc
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc
     condition: eq(variables.needs_build, 'true')
     displayName: Build nostatic image
 
