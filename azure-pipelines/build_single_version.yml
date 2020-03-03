@@ -76,7 +76,11 @@ steps:
 
   - template: prepare.yml
 
-  - script: echo ${DOCKER_OPTS}; derex build openedx ${DOCKER_IMAGES_SLUG}
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc
+    condition: eq(variables.needs_build, 'true')
+    displayName: Build nostatic image
+
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc
     condition: eq(variables.needs_build, 'true')
     displayName: Build dev image
 
