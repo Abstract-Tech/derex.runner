@@ -131,12 +131,13 @@ RUN mkdir -p /openedx/edx-platform/lms/envs/derex /openedx/edx-platform/cms/envs
 
 FROM dev-nodump as dev
 
+# TODO: fixtures should not be included in the image
 COPY fixtures /openedx/fixtures/
 COPY migration.py /openedx/edx-platform/lms/envs/derex/
-COPY migration.py /openedx/edx-platform/cms/envs/derex/
 RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     --mount=type=bind,from=docker.io/mysql:5.6.36,target=/mysql,rw=true \
     set -ex; \
+    cp /openedx/edx-platform/lms/envs/derex/migration.py /openedx/edx-platform/cms/envs/derex/; \
     cp -a /dev/ /mysql; \
     touch /openedx/edx-platform/lms/envs/derex/__init__.py; \
     touch /openedx/edx-platform/cms/envs/derex/__init__.py; \
