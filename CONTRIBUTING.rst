@@ -18,21 +18,8 @@ Report Bugs
 Report bugs at
 https://github.com/Abstract-Tech/derex.runner/issues.
 
-If possible, provide a minimal derex project to trigger the bug.
+Please provide a minimal derex project and instructions to trigger the bug.
 
-
-Submit Feedback
-~~~~~~~~~~~~~~~
-
-The best way to send feedback is to file an issue at
-https://github.com/Abstract-Tech/derex.runner/issues.
-
-If you are proposing a feature:
-
-* Explain in detail how it would work.
-* Keep the scope as narrow as possible, to make it easier to implement.
-* Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)
 
 Get Started!
 ------------
@@ -73,7 +60,9 @@ local development.
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+8. Create an azure pipeline to run your tests and make sure you keep it green.
+
+9. When everything is green submit a pull request through the GitHub website.
 
 Pull Request Guidelines
 -----------------------
