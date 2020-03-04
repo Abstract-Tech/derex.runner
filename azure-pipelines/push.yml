@@ -11,7 +11,7 @@ stages:
       variables:
         - name: DOCKER_IMAGES_SLUG
           value: hawthorn
-      condition: eq(variables.needs_build, 'true')
+      condition: ne(variables.needs_build, 'false')
       steps:
         - template: push_single_version.yml
 
@@ -21,7 +21,7 @@ stages:
       variables:
         - name: DOCKER_IMAGES_SLUG
           value: ironwood
-      condition: eq(variables.needs_build, 'true')
+      condition: ne(variables.needs_build, 'false')
       steps:
         - template: push_single_version.yml
 
@@ -31,6 +31,6 @@ stages:
       variables:
         - name: DOCKER_IMAGES_SLUG
           value: hawthorn
-      condition: eq(variables.needs_build, 'true')
+      condition: ne(variables.needs_build, 'false')
       steps:
         - template: push_single_version.yml

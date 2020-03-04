@@ -8,7 +8,7 @@ steps:
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'
 
-  - script: echo  "##vso[task.setvariable variable=needs_build]true"
+  - script: echo '##vso[task.setvariable variable=needs_build]true'
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Set needs_build pipeline variable'
 
@@ -25,7 +25,7 @@ steps:
       fi
       printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $HOME/.transifexrc
       ls -l $HOME/.transifexrc
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: 'Prepare Transifex credentials'
     env:
       TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
@@ -36,7 +36,7 @@ steps:
       key: $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: 'Docker images cache'
 
   # restore the docker cache based on the Dockerfile
@@ -46,7 +46,7 @@ steps:
       path: '$(LAYERS_CACHE_DIR)'
       cacheHitVar: 'BuildKitLayersHit'
       restoreKeys: $(CACHE_KEY_FALLBACK)
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: 'Docker layers cache'
 
   - script: |
@@ -65,7 +65,7 @@ steps:
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: 'Setup docker layers cache'
 
   - script: |
@@ -77,19 +77,19 @@ steps:
       sudo systemctl restart docker.service
       docker version
       docker buildx create --use
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Replace Microsoft docker with upsream docker and create build context
 
   - script: sudo apt-get install pxz -y
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Install pxz
 
   - script: set -euxo pipefail; ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build nostatic image
 
   - script: set -euxo pipefail; ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
-    condition: and(succeeded(), eq(variables.needs_build, 'true'))
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build dev image
 
   - script: |
