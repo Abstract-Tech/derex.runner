@@ -3,7 +3,7 @@ steps:
   # We don't use the image cache for performance reasons
   - task: Cache@2
     inputs:
-      key: SENTINEL=1 | $(CACHE_KEY_IMAGES)
+      key: SENTINEL=1 | "$(Agent.OS) $(Agent.JobName)"' | $(CACHE_KEY_IMAGES)
       path: $(SENTINEL_CACHE_PATH)
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'

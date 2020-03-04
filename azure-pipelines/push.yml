@@ -5,7 +5,7 @@ stages:
     - group: Docker credentials
     jobs:
 
-    - job: Push_hawthorn_image
+    - job: hawthorn
       pool:
         vmImage: 'ubuntu-18.04'
       variables:
@@ -14,7 +14,7 @@ stages:
       steps:
         - template: push_single_version.yml
 
-    - job: Push_ironwood_image
+    - job: ironwood
       pool:
         vmImage: 'ubuntu-18.04'
       variables:
@@ -23,7 +23,7 @@ stages:
       steps:
         - template: push_single_version.yml
 
-    - job: Push_juniper_image
+    - job: juniper
       pool:
         vmImage: 'ubuntu-18.04'
       variables:

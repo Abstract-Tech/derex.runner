@@ -4,7 +4,7 @@ stages:
   - group: Transifex credentials
 
   jobs:
-  - job: Build_hawthorn_image
+  - job: hawthorn
     timeoutInMinutes: 180
     pool:
       vmImage: 'ubuntu-18.04'
@@ -16,7 +16,7 @@ stages:
     steps:
       - template: build_single_version.yml
 
-  - job: Build_ironwood_image
+  - job: ironwood
     timeoutInMinutes: 180
     pool:
       vmImage: 'ubuntu-18.04'
@@ -30,7 +30,7 @@ stages:
       - template: build_single_version.yml
 
 
-  - job: Build_juniper_image
+  - job: juniper
     timeoutInMinutes: 180
     pool:
       vmImage: 'ubuntu-18.04'

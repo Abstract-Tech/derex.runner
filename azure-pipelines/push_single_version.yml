@@ -1,4 +1,10 @@
 steps:
+  - task: Cache@2
+    inputs:
+      key: SENTINEL=1 | "$(Agent.OS) $(Agent.JobName)"' | $(CACHE_KEY_IMAGES)
+      path: $(SENTINEL_CACHE_PATH)
+      cacheHitVar: 'ImagesSentinelHit'
+    displayName: 'Docker images sentinel cache'
 
   - script: diff <(git rev-parse --verify HEAD) $(SENTINEL_CACHE_PATH)/built_version || echo '##vso[task.setvariable variable=needs_build]true'
     displayName: 'Set needs_build pipeline variable'
