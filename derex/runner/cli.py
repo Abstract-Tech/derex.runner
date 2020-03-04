@@ -221,11 +221,18 @@ def final_refresh(ctx, project: Project):
     "--target",
     type=click.Choice(["dev", "nostatic", "translations", "nodump"]),
     default="dev",
+    help="Target to build (nostatic, dev, translations)",
 )
 @click.option(
     "--push/--no-push", default=False, help="Also push image to registry after building"
 )
-def openedx(version, target, push):
+@click.option(
+    "-d",
+    "--docker-opts",
+    envvar="DOCKER_OPTS",
+    help="Additional options to pass to the docker invocation",
+)
+def openedx(version, target, push, docker_opts):
     """Build openedx image using docker. Defaults to dev image target."""
     dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
     git_repo = version.value["git_repo"]
@@ -251,8 +258,8 @@ def openedx(version, target, push):
     transifex_path = os.path.expanduser("~/.transifexrc")
     if os.path.exists(transifex_path):
         command.extend(["--secret", f"id=transifex,src={transifex_path}"])
-    if os.environ.get("DOCKER_OPTS"):
-        command.extend(os.environ.get("DOCKER_OPTS").split(" "))
+    if docker_opts:
+        command.extend(docker_opts.split(" "))
     print("Invoking\n" + " ".join(command))
     call(command)
 
