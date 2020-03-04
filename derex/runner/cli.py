@@ -217,10 +217,16 @@ def final_refresh(ctx, project: Project):
     callback=lambda _, __, value: value and OpenEdXVersions[value],
 )
 @click.option(
+    "-t",
+    "--target",
+    type=click.Choice(["dev", "nostatic", "translations", "nodump"]),
+    default="dev",
+)
+@click.option(
     "--push/--no-push", default=False, help="Also push image to registry after building"
 )
-def openedx(version, push):
-    """Build openedx dev and base image using docker"""
+def openedx(version, target, push):
+    """Build openedx image using docker. Defaults to dev image target."""
     dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
     git_repo = version.value["git_repo"]
     git_branch = version.value["git_branch"]
@@ -233,14 +239,14 @@ def openedx(version, push):
         "build",
         str(dockerdir),
         "--output",
-        f"type=image,name={docker_image_prefix}-dev{push_arg}",
+        f"type=image,name={docker_image_prefix}-{target}{push_arg}",
         "--build-arg",
         f"PYTHON_VERSION={python_version}",
         "--build-arg",
         f"EDX_PLATFORM_VERSION={git_branch}",
         "--build-arg",
         f"EDX_PLATFORM_REPOSITORY={git_repo}",
-        "--target=dev",
+        f"--target={target}",
     ]
     transifex_path = os.path.expanduser("~/.transifexrc")
     if os.path.exists(transifex_path):
