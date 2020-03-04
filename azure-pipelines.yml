@@ -18,7 +18,7 @@ variables:
     value: enabled
   - name: DOCKER_COMMAND
     value: docker buildx build docker-definition
-  - name: CACHE_KEY_BASE  # Increment this value to reset the layers cache
+  - name: CACHE_KEY_BASE  # Increment this value to reset the layers cache and the image cache
     value: 1
   - name: LAYERS_CACHE_DIR
     value: '$(Pipeline.Workspace)/layers_cache'
@@ -27,7 +27,7 @@ variables:
   - name: CACHE_KEY_FILES
     value: $(System.DefaultWorkingDirectory)/docker-definition/*
   - name: CACHE_KEY_IMAGES
-    value: BASE_SEED=1 | $(CACHE_KEY_FILES)
+    value: BASE_SEED=$(CACHE_KEY_BASE) | $(CACHE_KEY_FILES)
   - name: CACHE_KEY_EXACT
     value: $(CACHE_KEY_FALLBACK) | $(CACHE_KEY_FILES)
   - name: SENTINEL_CACHE_PATH
