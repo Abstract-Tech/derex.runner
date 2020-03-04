@@ -22,6 +22,9 @@ sed -i '/de_DE/ s/# -/-/' conf/locale/config.yaml
 # Enable Italian translations
 sed -i '/it_IT/ s/# -/-/' conf/locale/config.yaml
 
+# The Basque translations has issues in Juniper (the only release where it's enabled so far)
+sed -i '/eu_ES/d' conf/locale/config.yaml
+
 i18n_tool transifex pull
 i18n_tool extract
 
