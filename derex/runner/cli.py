@@ -17,6 +17,7 @@ import click
 import importlib_metadata
 import logging
 import os
+import sys
 
 
 logger = logging.getLogger(__name__)
@@ -230,7 +231,11 @@ def final_refresh(ctx, project: Project):
     "-d",
     "--docker-opts",
     envvar="DOCKER_OPTS",
-    help="Additional options to pass to the docker invocation",
+    default="--output type=image,name={docker_image_prefix}-{target}{push_arg}",
+    help=(
+        "Additional options to pass to the docker invocation.\n"
+        "By default outputs the image to the local docker daemon."
+    ),
 )
 def openedx(version, target, push, docker_opts):
     """Build openedx image using docker. Defaults to dev image target."""
@@ -245,8 +250,6 @@ def openedx(version, target, push, docker_opts):
         "buildx",
         "build",
         str(dockerdir),
-        "--output",
-        f"type=image,name={docker_image_prefix}-{target}{push_arg}",
         "--build-arg",
         f"PYTHON_VERSION={python_version}",
         "--build-arg",
@@ -259,8 +262,8 @@ def openedx(version, target, push, docker_opts):
     if os.path.exists(transifex_path):
         command.extend(["--secret", f"id=transifex,src={transifex_path}"])
     if docker_opts:
-        command.extend(docker_opts.split(" "))
-    print("Invoking\n" + " ".join(command))
+        command.extend(docker_opts.format(locals()).split())
+    print("Invoking\n" + " ".join(command), file=sys.stderr)
     call(command)
 
 

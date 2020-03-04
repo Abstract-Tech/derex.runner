@@ -47,15 +47,19 @@ steps:
       if [ -d "$(LAYERS_CACHE_DIR)" ]; then
         echo "Will use cached layers from $(LAYERS_CACHE_DIR)"
         find $(LAYERS_CACHE_DIR)
-        DOCKER_OPTS="$DOCKER_BASE_OPTS --cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
+        CACHE_FROM_OPTS="--cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
+        DOCKER_OPTS="$DOCKER_BASE_OPTS ${CACHE_FROM_OPTS}"
       else
         mkdir ${LAYERS_CACHE_DIR}
       fi
       if [ "$(BuildKitLayersHit)" != "true" ]; then
         echo "Will store cached layers to $(LAYERS_CACHE_DIR)"
-        DOCKER_OPTS="$DOCKER_BASE_OPTS --cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
+        CACHE_TO_OPTS="--cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
+        DOCKER_OPTS="$DOCKER_BASE_OPTS ${CACHE_TO_OPTS}"
       fi
       echo  "##vso[task.setvariable variable=DOCKER_OPTS]${DOCKER_OPTS}"
+      echo  "##vso[task.setvariable variable=CACHE_FROM_OPTS]${CACHE_FROM_OPTS}"
+      echo  "##vso[task.setvariable variable=CACHE_TO_OPTS]${CACHE_TO_OPTS}"
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
@@ -79,16 +83,20 @@ steps:
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Install pxz
 
-  - script: set -euxo pipefail; ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
+  - script: |
+      set -euxo pipefail;
+      derex build openedx $(DOCKER_IMAGES_SLUG) --docker-opts "${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=nostatic  | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build nostatic image
 
-  - script: set -euxo pipefail; ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
+  - script: |
+      set -euxo pipefail;
+      derex build openedx $(DOCKER_IMAGES_SLUG) --docker-opts "${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=dev --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build dev image
 
   - script: |
-      ${DOCKER_COMMAND} --cache-from=type=local,src=$(LAYERS_CACHE_DIR) ${DOCKER_BASE_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-translations --target=translations
+      derex build openedx $(DOCKER_IMAGES_SLUG) --docker-opts "${CACHE_FROM_OPTS} -o type=docker,dest=- --output type=image,name={docker_image_prefix}-{target}" --target=translations | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
       docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
     continueOnError: true  # Do not make the build fail because of translation issues
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
