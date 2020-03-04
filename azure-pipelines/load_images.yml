@@ -2,6 +2,9 @@ parameters:
   - name: DOCKER_IMAGES_SLUG
     type: string
     default: ironwood
+  - name: CONDITION
+    type: string
+    default: "true"
 
 steps:
   - task: Cache@2
@@ -9,14 +12,17 @@ steps:
       key: ${{ parameters.DOCKER_IMAGES_SLUG }} | $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
+    condition: ${{ parameters.CONDITION }}
     displayName: 'Docker images cache'
 
   - script: |
       ls -l $(IMAGE_CACHE_PATH)
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar.xz | unxz | docker load
+    condition: ${{ parameters.CONDITION }}
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic images'
 
   - script: |
       ls -l $(IMAGE_CACHE_PATH)
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar.xz | unxz | docker load
+    condition: ${{ parameters.CONDITION }}
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-dev images'

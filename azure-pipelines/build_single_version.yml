@@ -59,6 +59,7 @@ steps:
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
+      git rev-parse --verify HEAD > $(SENTINEL_CACHE_PATH)/built_version
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: 'Setup docker layers cache'
 
