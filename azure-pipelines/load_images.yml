@@ -13,5 +13,10 @@ steps:
 
   - script: |
       ls -l $(IMAGE_CACHE_PATH)
-      cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}.tar.xz | unxz | docker load
-    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} images'
+      cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar.xz | unxz | docker load
+    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic images'
+
+  - script: |
+      ls -l $(IMAGE_CACHE_PATH)
+      cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar.xz | unxz | docker load
+    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-dev images'

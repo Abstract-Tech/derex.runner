@@ -74,18 +74,14 @@ steps:
     condition: eq(variables.needs_build, 'true')
     displayName: Replace Microsoft docker with upsream docker and create build context
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc
-    condition: eq(variables.needs_build, 'true')
-    displayName: Build nostatic image
-
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc
-    condition: eq(variables.needs_build, 'true')
-    displayName: Build dev image
-
   - script: sudo apt-get install pxz -y
     condition: eq(variables.needs_build, 'true')
     displayName: Install pxz
 
-  - script: docker save derex/edx-${DOCKER_IMAGES_SLUG}-dev derex/edx-${DOCKER_IMAGES_SLUG}-nostatic | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
     condition: eq(variables.needs_build, 'true')
-    displayName: Save docker images into image cache
+    displayName: Build nostatic image
+
+  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
+    condition: eq(variables.needs_build, 'true')
+    displayName: Build dev image
