@@ -78,10 +78,10 @@ steps:
     condition: eq(variables.needs_build, 'true')
     displayName: Install pxz
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
+  - script: set -euxo pipefail; ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-nostatic --target=nostatic --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
     condition: eq(variables.needs_build, 'true')
     displayName: Build nostatic image
 
-  - script: ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
+  - script: set -euxo pipefail; ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
     condition: eq(variables.needs_build, 'true')
     displayName: Build dev image
