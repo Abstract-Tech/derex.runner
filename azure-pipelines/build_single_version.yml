@@ -47,13 +47,13 @@ steps:
       if [ -d "$(LAYERS_CACHE_DIR)" ]; then
         echo "Will use cached layers from $(LAYERS_CACHE_DIR)"
         find $(LAYERS_CACHE_DIR)
-        DOCKER_OPTS="$DOCKER_OPTS --cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
+        DOCKER_OPTS="$DOCKER_BASE_OPTS --cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
       else
         mkdir ${LAYERS_CACHE_DIR}
       fi
       if [ "$(BuildKitLayersHit)" != "true" ]; then
         echo "Will store cached layers to $(LAYERS_CACHE_DIR)"
-        DOCKER_OPTS="$DOCKER_OPTS --cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
+        DOCKER_OPTS="$DOCKER_BASE_OPTS --cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
       fi
       echo  "##vso[task.setvariable variable=DOCKER_OPTS]${DOCKER_OPTS}"
       mkdir $(SENTINEL_CACHE_PATH)
@@ -88,7 +88,7 @@ steps:
     displayName: Build dev image
 
   - script: |
-      ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-translations --target=translations
+      ${DOCKER_COMMAND} --cache-from=type=local,src=$(LAYERS_CACHE_DIR) ${DOCKER_BASE_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-translations --target=translations
       docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
     continueOnError: true  # Do not make the build fail because of translation issues
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
