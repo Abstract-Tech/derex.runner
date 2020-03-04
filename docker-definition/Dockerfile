@@ -112,8 +112,14 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install transifex-client==0.1
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
 
-COPY translations.sh /usr/local/bin
-RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig /usr/local/bin/translations.sh
+COPY assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
+
+RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
+    mkdir -p /openedx/edx-platform/lms/envs/derex/ /openedx/edx-platform/cms/envs/derex/ && \
+    touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py && \
+    mv /usr/local/bin/assets.py /openedx/edx-platform/lms/envs/derex/ && \
+    cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py && \
+    /usr/local/bin/translations.sh
 
 FROM nostatic as nostatic-dev
 ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v10.19.0/node-v10.19.0-linux-x64-musl.tar.xz
@@ -131,12 +137,7 @@ RUN --mount=type=cache,target=/root/.npm \
     pip install pdbpp ipython ipdb
 
 FROM nostatic-dev as dev-nodump
-COPY assets.py cleanup_assets.sh compile_assets.sh /usr/local/bin/
-RUN mkdir -p /openedx/edx-platform/lms/envs/derex /openedx/edx-platform/cms/envs/derex && \
-    mv /usr/local/bin/assets.py /openedx/edx-platform/lms/envs/derex && \
-    cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py && \
-    touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py && \
-    /usr/local/bin/compile_assets.sh && \
+RUN /usr/local/bin/compile_assets.sh && \
     cleanup_assets.sh
 
 FROM dev-nodump as dev
