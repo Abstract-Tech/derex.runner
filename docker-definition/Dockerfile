@@ -149,6 +149,7 @@ RUN /usr/local/bin/compile_assets.sh && \
     cleanup_assets.sh
 
 FROM dev-nodump as dev
+# This image will be used to compile themes and collect assets
 
 # TODO: fixtures should not be included in the image
 COPY fixtures /openedx/fixtures/
