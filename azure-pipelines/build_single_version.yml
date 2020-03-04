@@ -91,4 +91,5 @@ steps:
       ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-translations --target=translations
       docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
     continueOnError: true  # Do not make the build fail because of translation issues
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Check translations
