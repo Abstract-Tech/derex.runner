@@ -169,3 +169,6 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     ./manage.py lms --settings=derex.migration migrate; \
     ./manage.py cms --settings=derex.migration migrate; \
     chroot /mysql mysqldump edxapp | bzip2 -9 - > /openedx/empty_dump.sql.bz2;
+
+ENV DJANGO_SETTINGS_MODULE=lms.envs.derex.migration
+ENV SERVICE_VARIANT=lms
