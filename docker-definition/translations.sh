@@ -33,6 +33,7 @@ python manage.py cms --settings=derex.assets compilemessages -v2
 python manage.py lms --settings=derex.assets compilejsi18n -v2
 python manage.py cms --settings=derex.assets compilejsi18n -v2
 
-i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)
+# This check is currently done in the azure pipeline.
+# i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)
 
 rm /root/.transifexrc

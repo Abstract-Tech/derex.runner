@@ -103,7 +103,7 @@ RUN wget -q https://github.com/sahib/rmlint/tarball/e56626d39134b7ac6317c19940c4
     scons && \
     mv rmlint /usr/local/bin/
 
-FROM sourceonly as nostatic
+FROM sourceonly as notranslations
 
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
@@ -114,12 +114,20 @@ RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelho
 
 COPY assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 
-RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
-    mkdir -p /openedx/edx-platform/lms/envs/derex/ /openedx/edx-platform/cms/envs/derex/ && \
+RUN mkdir -p /openedx/edx-platform/lms/envs/derex/ /openedx/edx-platform/cms/envs/derex/ && \
     touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py && \
     mv /usr/local/bin/assets.py /openedx/edx-platform/lms/envs/derex/ && \
-    cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py && \
+    cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py
+
+FROM notranslations as translations
+
+RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
     /usr/local/bin/translations.sh
+
+FROM notranslations as nostatic
+
+RUN --mount=type=bind,from=translations,target=/translations \
+    cp -avu /translations/openedx/edx-platform/conf/locale/ conf/
 
 FROM nostatic as nostatic-dev
 ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v10.19.0/node-v10.19.0-linux-x64-musl.tar.xz

@@ -89,3 +89,9 @@ steps:
   - script: set -euxo pipefail; ${DOCKER_COMMAND} ${DOCKER_OPTS} -o type=docker,dest=- -t derex/edx-${DOCKER_IMAGES_SLUG}-dev --target=dev --secret id=transifex,src=$HOME/.transifexrc | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
     condition: and(succeeded(), eq(variables.needs_build, 'true'))
     displayName: Build dev image
+
+  - script: |
+      ${DOCKER_COMMAND} ${DOCKER_OPTS} --load -t derex/edx-${DOCKER_IMAGES_SLUG}-translations --target=translations
+      docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
+    continueOnError: true  # Do not make the build fail because of translation issues
+    displayName: Check translations
