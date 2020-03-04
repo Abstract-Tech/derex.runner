@@ -12,12 +12,6 @@ steps:
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Set needs_build pipeline variable'
 
-  - script: echo ---"${needs_build}"___; echo ___"$(needs_build)---
-    condition: ne(variables.ImagesSentinelHit, 'true')
-    displayName: 'Show needs_build pipeline variable'
-    env:
-      needs_build: $(needs_build)
-
   - script: |
       if [ -z "$TRANSIFEX_USERNAME" ] || [ -z "$TRANSIFEX_PASSWORD" ]; then
           echo "Transifex credentials unset. Building without translations."
