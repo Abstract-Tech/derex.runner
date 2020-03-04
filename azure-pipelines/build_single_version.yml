@@ -8,11 +8,11 @@ steps:
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'
 
-  - script: set -ex; echo  "##vso[task.setvariable variable=needs_build]true"
+  - script: echo  "##vso[task.setvariable variable=needs_build]true"
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Set needs_build pipeline variable'
 
-  - script: echo "${needs_build}"
+  - script: echo ---"${needs_build}"___
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Show needs_build pipeline variable'
 
