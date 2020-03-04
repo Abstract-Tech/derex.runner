@@ -83,6 +83,8 @@ steps:
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Install pxz
 
+  - template: prepare.yml
+
   - script: |
       set -euxo pipefail;
       derex build openedx $(DOCKER_IMAGES_SLUG) --docker-opts "${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=nostatic  | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
