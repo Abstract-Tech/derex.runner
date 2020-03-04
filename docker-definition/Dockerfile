@@ -87,7 +87,7 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i
 
 COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base.txt
-RUN --mount=type=cache,target=/root/.cache/pip --mount=type=cache,target=/root/.cache/pip \
+RUN --mount=type=cache,target=/root/.cache/pip \
     cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
     pip install numpy -c /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt
