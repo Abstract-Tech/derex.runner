@@ -32,7 +32,7 @@ x-common:
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB: {{ project.mysql_db_name }}
     {%- for key, value in project.get_container_env().items() %}
-    {{ key }}: {{ value }}
+    {{ key }}: {{ value | tojson }}
     {%- endfor %}
 
 services:
