@@ -9,7 +9,7 @@ parameters:
 steps:
   - task: Cache@2
     inputs:
-      key: ${{ parameters.DOCKER_IMAGES_SLUG }} | $(CACHE_KEY_IMAGES)
+      key: $(IMAGES_CACHE_KEY)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
     condition: ${{ parameters.CONDITION }}
