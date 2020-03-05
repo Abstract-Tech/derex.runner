@@ -34,10 +34,5 @@ variables:
     value: $(Pipeline.Workspace)/sentinel_cache
   - name: IMAGE_CACHE_PATH
     value: $(Pipeline.Workspace)/image_cache
-  # This is the key used by images cache and images cache sentinel
-  # It does not include $(CACHE_KEY_FILES) as it should, because
-  # if it does Azure can't find the files.
-  - name: IMAGE_CACHE_KEY
-    value: SENTINEL=1 | $(DOCKER_IMAGES_SLUG)
   - name: needs_build
     value: "false"
