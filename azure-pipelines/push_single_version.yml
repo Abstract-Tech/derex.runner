@@ -1,7 +1,7 @@
 steps:
   - task: Cache@2
     inputs:
-      key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
+      key: $(IMAGES_CACHE_KEY) | $(CACHE_KEY_IMAGES)
       path: $(SENTINEL_CACHE_PATH)
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'
