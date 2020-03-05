@@ -8,6 +8,7 @@ from openedx.core.lib.derived import derive_settings
 from path import Path
 from xmodule.modulestore.modulestore_settings import update_module_store_settings
 
+import json
 import os
 
 
@@ -15,6 +16,15 @@ SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 assert SERVICE_VARIANT in ("lms", "cms")
 
 exec("from {}.envs.common import *".format(SERVICE_VARIANT), globals(), locals())
+
+json_var_prefix = "DEREX_JSON_" + SERVICE_VARIANT.upper() + "_"
+var_prefix = "DEREX_" + SERVICE_VARIANT.upper() + "_"
+for varname in os.environ:
+    if varname.startswith(json_var_prefix):
+        locals()[varname[len(json_var_prefix) :]] = json.loads(os.environ[varname])
+    elif varname.startswith(var_prefix):
+        locals()[varname[len(var_prefix) :]] = os.environ[varname]
+del varname, var_prefix, json_var_prefix
 
 PLATFORM_NAME = "TestEdX"
 MYSQL_HOST = os.environ.get("MYSQL_HOST", "mysql")
@@ -122,7 +132,8 @@ if SERVICE_VARIANT == "cms":
 
 # Prevent KeyError: u'cornerstone' error in simple_history/models:212
 # https://github.com/treyhunner/django-simple-history/blob/b1d9adbd838836246b052b4c9c4598e02f6471c5/simple_history/models.py#L213
-INSTALLED_APPS.append("integrated_channels.cornerstone")
+# INSTALLED_APPS.append("integrated_channels.cornerstone")
+# ^^^^ Is the above needed? What is cornerstone?
 
 # enterprise.views tries to access settings.ECOMMERCE_PUBLIC_URL_ROOT,
 ECOMMERCE_PUBLIC_URL_ROOT = None

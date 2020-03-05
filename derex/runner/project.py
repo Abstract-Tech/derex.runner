@@ -10,6 +10,7 @@ from typing import Optional
 from typing import Union
 
 import hashlib
+import json
 import os
 import yaml
 
@@ -311,7 +312,14 @@ class Project:
         result = {}
         variables = self.config.get("variables", {})
         for variable in variables:
-            result[f"DEREX_{variable.upper()}"] = variables[variable][settings]
+            value = variables[variable][settings]
+            if not isinstance(value, str):
+                # Double dumps: the inner one converts the object to a string
+                # the outer one escapes the string so that we can safely embed it
+                # in the docker-compose yaml file
+                result[f"DEREX_JSON_{variable.upper()}"] = json.dumps(json.dumps(value))
+            else:
+                result[f"DEREX_{variable.upper()}"] = value
         return result
 
 

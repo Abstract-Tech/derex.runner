@@ -2,6 +2,7 @@ from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from pathlib import Path
 
+import json
 import os
 import yaml
 
@@ -112,6 +113,33 @@ def test_container_variables(testproj):
         project.settings = project.get_available_settings().production
         env = project.get_container_env()
         assert env["DEREX_LMS_SITE_NAME"] == "onlinecourses.example"
+
+
+def test_container_variables_json_serialized(testproj):
+    with testproj as projdir:
+        conf_file = Path(projdir) / "derex.config.yaml"
+        config = {
+            "project_name": "minimal",
+            "variables": {
+                "lms_ALL_JWT_AUTH": {
+                    "base": {
+                        "JWT_AUDIENCE": "jwt-audience",
+                        "JWT_SECRET_KEY": "jwt-secret",
+                    },
+                    "production": {
+                        "JWT_AUDIENCE": "prod-audience",
+                        "JWT_SECRET_KEY": "prod-secret",
+                    },
+                }
+            },
+        }
+        conf_file.write_text(yaml.dump(config))
+        create_settings_file(Path(projdir), "production")
+        project = Project()
+        env = project.get_container_env()
+        assert "DEREX_JSON_LMS_ALL_JWT_AUTH" in env
+        expected = json.loads(env["DEREX_JSON_LMS_ALL_JWT_AUTH"])
+        assert expected == config["variables"]["lms_ALL_JWT_AUTH"]["base"]
 
 
 def create_settings_file(project_root: Path, filename: str):
