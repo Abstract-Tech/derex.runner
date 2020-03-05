@@ -262,7 +262,7 @@ def openedx(version, target, push, docker_opts):
     if os.path.exists(transifex_path):
         command.extend(["--secret", f"id=transifex,src={transifex_path}"])
     if docker_opts:
-        command.extend(docker_opts.format(locals()).split())
+        command.extend(docker_opts.format(**locals()).split())
     print("Invoking\n" + " ".join(command), file=sys.stderr)
     call(command)
 
