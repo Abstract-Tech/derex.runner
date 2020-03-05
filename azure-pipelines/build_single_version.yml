@@ -102,7 +102,8 @@ steps:
     displayName: Build dev image
 
   - script: |
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} -o type=docker,dest=- --output type=image,name={docker_image_prefix}-{target}" --target=translations $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
+      set -ex
+      derex build openedx --docker-opts "${CACHE_FROM_OPTS} -o type=docker,dest=- --output type=image,name={docker_image_prefix}-{target}" --target=translations $(DOCKER_IMAGES_SLUG)
       docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
     continueOnError: true  # Do not make the build fail because of translation issues
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
