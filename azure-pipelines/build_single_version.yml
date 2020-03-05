@@ -3,7 +3,7 @@ steps:
   # We don't use the image cache for performance reasons
   - task: Cache@2
     inputs:
-      key: $(IMAGES_CACHE_KEY) | $(CACHE_KEY_IMAGES)
+      key: $(IMAGE_CACHE_KEY) | $(CACHE_KEY_IMAGES)
       path: $(SENTINEL_CACHE_PATH)
       cacheHitVar: 'ImagesSentinelHit'
     displayName: 'Docker images sentinel cache'
@@ -27,7 +27,7 @@ steps:
 
   - task: Cache@2
     inputs:
-      key: $(IMAGES_CACHE_KEY)
+      key: $(IMAGE_CACHE_KEY)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
@@ -36,10 +36,10 @@ steps:
   # restore the docker cache based on the Dockerfile
   - task: Cache@2
     inputs:
-      key: $(CACHE_KEY_EXACT)
+      key: $(LAYERS_CACHE_KEY)
       path: '$(LAYERS_CACHE_DIR)'
       cacheHitVar: 'BuildKitLayersHit'
-      restoreKeys: $(CACHE_KEY_FALLBACK)
+      restoreKeys: $(LAYERS_CACHE_KEY_FALLBACK)
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: 'Docker layers cache'
 

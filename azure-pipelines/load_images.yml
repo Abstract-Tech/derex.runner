@@ -9,7 +9,7 @@ parameters:
 steps:
   - task: Cache@2
     inputs:
-      key: $(IMAGES_CACHE_KEY)
+      key: $(IMAGE_CACHE_KEY)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
     condition: ${{ parameters.CONDITION }}
