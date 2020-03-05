@@ -1,4 +1,9 @@
 steps:
+
+  - script: pwd; ls -ld $(System.DefaultWorkingDirectory)/docker-definition/;ls -l $(System.DefaultWorkingDirectory)/docker-definition/*
+    displayName: 'Debug: remove me please'
+
+
   # Sentinel cache: if this one hits, it means the image cache will hit too
   # We don't use the image cache for performance reasons
   - task: Cache@2
