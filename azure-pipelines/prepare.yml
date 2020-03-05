@@ -1,7 +1,13 @@
+parameters:
+  - name: CONDITION
+    type: string
+    default: "true"
+
 steps:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.7'
+    condition: ${{ parameters.CONDITION }}
     displayName: 'Use Python 3.7'
 
   - task: Cache@2
@@ -10,9 +16,11 @@ steps:
       path: $(Pipeline.Workspace)/.cache/pip
       restoreKeys: |
         pipcache
+    condition: ${{ parameters.CONDITION }}
     displayName: Cache pip packages
 
   - script: |
       pip3 install --cache-dir $(Pipeline.Workspace)/.cache/pip -U pip setuptools
       pip3 install --cache-dir $(Pipeline.Workspace)/.cache/pip -r requirements_dev.txt -e . git+https://github.com/Abstract-Tech/pytest-azurepipelines.git
+    condition: ${{ parameters.CONDITION }}
     displayName: 'Install derex.runner'

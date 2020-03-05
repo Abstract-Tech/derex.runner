@@ -18,8 +18,8 @@ steps:
 
   - template: load_images.yml
     parameters:
-        DOCKER_IMAGES_SLUG: $(DOCKER_IMAGES_SLUG)
-        CONDITION: "ne(variables.needs_build, 'false')"
+      DOCKER_IMAGES_SLUG: $(DOCKER_IMAGES_SLUG)
+      CONDITION: "ne(variables.needs_build, 'false')"
 
   - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-dev
     condition: ne(variables.needs_build, 'false')

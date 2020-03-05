@@ -84,6 +84,8 @@ steps:
     displayName: Install pxz
 
   - template: prepare.yml
+    parameters:
+      CONDITION: "ne(variables.needs_build, 'false')"
 
   - script: |
       set -euxo pipefail;
