@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath(".."))
 extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+templates_path = ["html_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -35,8 +35,8 @@ master_doc = "index"
 
 # General information about the project.
 project = u"derex.runner"
-copyright = u"2020, Silvio Tomatis"
-author = u"Silvio Tomatis"
+copyright = u"2020, Abstract-Technology GmbH"
+author = u"Abstract-Technology GmbH"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -84,7 +84,14 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+html_static_path = ["_static"]
+
+html_logo = "assets/logo.svg"
+html_favicon = "assets/favicon.ico"
+
+html_css_files = [
+    "css/custom.css",
+]
 
 
 # -- Options for HTMLHelp output ---------------------------------------
@@ -118,7 +125,7 @@ latex_documents = [
         master_doc,
         "derex.runner.tex",
         u"derex.runner Documentation",
-        u"Silvio Tomatis",
+        u"Abstract-Technology GmbH",
         "manual",
     )
 ]

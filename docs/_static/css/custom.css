@@ -1,0 +1,15 @@
+.navbar .home-link .logo {
+    margin-right: 0px;
+}
+
+@font-face {
+    font-family: 'RunMedium';
+    src: url('run.ttf')  format('truetype');
+}
+
+.navbar .packagename {
+    color: #C1256B;
+    font-family: 'RunMedium';
+    font-size: 1.5rem;
+    margin-top: 7px;
+}
