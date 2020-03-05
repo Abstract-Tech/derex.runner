@@ -34,5 +34,7 @@ variables:
     value: $(Pipeline.Workspace)/sentinel_cache
   - name: IMAGE_CACHE_PATH
     value: $(Pipeline.Workspace)/image_cache
+  - name: IMAGES_CACHE_KEY
+    value: '"SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)"'
   - name: needs_build
     value: "false"
