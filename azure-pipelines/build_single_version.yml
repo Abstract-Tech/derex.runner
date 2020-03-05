@@ -47,7 +47,9 @@ steps:
       if [ -d "$(LAYERS_CACHE_DIR)" ]; then
         echo "Will use cached layers from $(LAYERS_CACHE_DIR)"
         find $(LAYERS_CACHE_DIR)
-        CACHE_FROM_OPTS="--cache-from=type=local,src=$(LAYERS_CACHE_DIR)"
+        mv $(LAYERS_CACHE_DIR) $(LAYERS_CACHE_DIR).old
+        mkdir $(LAYERS_CACHE_DIR)
+        CACHE_FROM_OPTS="--cache-from=type=local,src=$(LAYERS_CACHE_DIR).old"
         DOCKER_OPTS="$DOCKER_BASE_OPTS ${CACHE_FROM_OPTS}"
       else
         mkdir ${LAYERS_CACHE_DIR}
@@ -57,9 +59,9 @@ steps:
         CACHE_TO_OPTS="--cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
         DOCKER_OPTS="$DOCKER_BASE_OPTS ${CACHE_TO_OPTS}"
       fi
-      echo  "##vso[task.setvariable variable=DOCKER_OPTS]${DOCKER_OPTS}"
-      echo  "##vso[task.setvariable variable=CACHE_FROM_OPTS]${CACHE_FROM_OPTS}"
-      echo  "##vso[task.setvariable variable=CACHE_TO_OPTS]${CACHE_TO_OPTS}"
+      echo "##vso[task.setvariable variable=DOCKER_OPTS]${DOCKER_OPTS}"
+      echo "##vso[task.setvariable variable=CACHE_FROM_OPTS]${CACHE_FROM_OPTS}"
+      echo "##vso[task.setvariable variable=CACHE_TO_OPTS]${CACHE_TO_OPTS}"
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
@@ -89,7 +91,7 @@ steps:
 
   - script: |
       set -euxo pipefail;
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=nostatic $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
+      derex build openedx --docker-opts "${CACHE_FROM_OPTS} -o type=docker,dest=-" --target=nostatic $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build nostatic image
 
