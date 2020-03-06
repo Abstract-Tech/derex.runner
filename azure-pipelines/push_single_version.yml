@@ -21,10 +21,10 @@ steps:
       DOCKER_IMAGES_SLUG: $(DOCKER_IMAGES_SLUG)
       CONDITION: "ne(variables.needs_build, 'false')"
 
-  - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-dev
+  - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
     condition: ne(variables.needs_build, 'false')
     displayName: 'Push $(DOCKER_IMAGES_SLUG) dev image'
 
-  - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic
+  - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
     condition: ne(variables.needs_build, 'false')
     displayName: 'Push $(DOCKER_IMAGES_SLUG) nostatic image'

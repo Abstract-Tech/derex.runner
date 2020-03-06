@@ -2,6 +2,7 @@
 
 """Console script for derex.runner."""
 from click_plugins import with_plugins
+from derex.runner import __version__
 from derex.runner.project import DebugProject
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
@@ -251,7 +252,7 @@ def openedx(version, target, push, docker_opts):
         "build",
         str(dockerdir),
         "-t",
-        f"{docker_image_prefix}-{target}",
+        f"{docker_image_prefix}-{target}:{__version__}",
         "--build-arg",
         f"PYTHON_VERSION={python_version}",
         "--build-arg",
