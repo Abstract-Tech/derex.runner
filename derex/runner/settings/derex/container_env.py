@@ -1,15 +1,20 @@
+import json
 import os
 
 
 SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 
-wildcard_prefix = "DEREX_" + "ALL" + "_"
-prefix = "DEREX_" + SERVICE_VARIANT.upper() + "_"
+string_prefixes = ["DEREX_ALL_", "DEREX_{}_".format(SERVICE_VARIANT.upper())]
+json_prefixes = ["DEREX_JSON_ALL_", "DEREX_JSON_{}_".format(SERVICE_VARIANT.upper())]
+
 
 for key, value in os.environ.items():
-    if key.startswith(prefix):
-        varname = key[len(prefix) :]  # noqa  This is the way black likes it
-        locals()[varname] = value
-    elif key.startswith(wildcard_prefix):
-        varname = key[len(wildcard_prefix) :]  # noqa  This is the way black likes it
-        locals()[varname] = value
+    for prefix in string_prefixes:
+        if key.startswith(prefix):
+            varname = key[len(prefix) :]  # noqa  This is the way black likes it
+            locals()[varname] = value
+
+    for prefix in json_prefixes:
+        if key.startswith(prefix):
+            varname = key[len(prefix) :]  # noqa  This is the way black likes it
+            locals()[varname] = json.loads(value)

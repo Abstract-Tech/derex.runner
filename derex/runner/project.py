@@ -10,6 +10,7 @@ from typing import Optional
 from typing import Union
 
 import hashlib
+import json
 import os
 import yaml
 
@@ -311,7 +312,11 @@ class Project:
         result = {}
         variables = self.config.get("variables", {})
         for variable in variables:
-            result[f"DEREX_{variable.upper()}"] = variables[variable][settings]
+            value = variables[variable][settings]
+            if not isinstance(value, str):
+                result[f"DEREX_JSON_{variable.upper()}"] = json.dumps(value)
+            else:
+                result[f"DEREX_{variable.upper()}"] = value
         return result
 
 
