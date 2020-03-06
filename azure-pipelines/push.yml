@@ -31,3 +31,18 @@ stages:
           value: hawthorn
       steps:
         - template: push_single_version.yml
+
+    - job: pypi
+      pool:
+        vmImage: 'ubuntu-18.04'
+      variables:
+        - group: Pypi credentials
+      steps:
+        - template: prepare.yml
+        - script: |
+            echo -e "[testpypi]\nrepository: https://test.pypi.org/legacy/\nusername: __token__\npassword: ${PYPI_TOKEN}" > ${HOME}/.pypirc
+            make dist
+            twine upload --verbose --repository=testpypi dist/*
+          displayName: Upload to test pypi
+          env:
+            PYPI_TOKEN: $(PYPI_TOKEN)
