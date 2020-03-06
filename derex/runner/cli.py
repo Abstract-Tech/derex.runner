@@ -250,6 +250,8 @@ def openedx(version, target, push, docker_opts):
         "buildx",
         "build",
         str(dockerdir),
+        "-t",
+        f"{docker_image_prefix}-{target}",
         "--build-arg",
         f"PYTHON_VERSION={python_version}",
         "--build-arg",
