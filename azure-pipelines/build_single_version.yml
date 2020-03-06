@@ -65,6 +65,8 @@ steps:
       mkdir $(SENTINEL_CACHE_PATH)
       mkdir $(IMAGE_CACHE_PATH)
       cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
+      # We save the sha of the repo that built this image, so that we can push
+      # it only in a build of the same commit, after tests are passed
       git rev-parse --verify HEAD > $(SENTINEL_CACHE_PATH)/built_version
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: 'Setup docker layers cache'
