@@ -125,6 +125,8 @@ RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
     /usr/local/bin/translations.sh
 
 FROM notranslations as nostatic
+# This image contains the Open edX source code and all necessary python packages installed.
+# It's still missing the static files, hence the name.
 
 RUN --mount=type=bind,from=translations,target=/translations \
     cp -avu /translations/openedx/edx-platform/conf/locale/ conf/
