@@ -149,6 +149,7 @@ RUN --mount=type=cache,target=/root/.npm \
     pip install pdbpp ipython ipdb
 
 FROM nostatic-dev as dev-nodump
+# This image is one step away from being a complete dev image: it has the assets, but lacks an initial db dump
 RUN /usr/local/bin/compile_assets.sh && \
     cleanup_assets.sh
 
