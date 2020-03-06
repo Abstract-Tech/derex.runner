@@ -20,7 +20,6 @@ steps:
       docker images
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar.xz | unxz | docker load
       docker images
-      docker tag derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic
     condition: ${{ parameters.CONDITION }}
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic images'
 
@@ -29,6 +28,5 @@ steps:
       docker images
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar.xz | unxz | docker load
       docker images
-      docker tag derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') derex/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev
     condition: ${{ parameters.CONDITION }}
     displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-dev images'
