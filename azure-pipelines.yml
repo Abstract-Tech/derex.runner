@@ -122,7 +122,7 @@ jobs:
     - script: |
         set -ex
         cd tests/fixtures/complete
-        derex build-final-refresh
+        derex build-final
       displayName: 'Build image for project "complete"'
 
     - script: cd tests/fixtures/complete; ddc-project up -d
