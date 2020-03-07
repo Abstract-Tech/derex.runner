@@ -93,7 +93,7 @@ steps:
 
   - script: |
       set -euxo pipefail;
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} -o type=docker,dest=-" --target=nostatic $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
+      derex build openedx --docker-opts "${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=nostatic $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build nostatic image
 
