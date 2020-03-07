@@ -44,5 +44,6 @@ stages:
             make dist
             twine upload --verbose --repository=testpypi dist/*
           displayName: Upload to test pypi
+          continueOnError: true  # Do not make the build fail because of translation issues
           env:
             PYPI_TOKEN: $(PYPI_TOKEN)
