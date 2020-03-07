@@ -8,7 +8,7 @@
 
 ARG PYTHON_VERSION=3.6
 FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as libgeos
-
+# We need libgeos 3.8.0, not available in alpine 3.11. We compile it ourselves.
 RUN --mount=type=cache,target=/var/cache/apk apk add alpine-sdk
 ENV GEOS_VERSION=3.8.0
 
