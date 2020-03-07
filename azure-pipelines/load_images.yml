@@ -18,6 +18,7 @@ steps:
   - script: |
       ls -l $(IMAGE_CACHE_PATH)
       docker images
+      set -euxo pipefail
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar.xz | unxz | docker load
       docker images
     condition: ${{ parameters.CONDITION }}
@@ -26,6 +27,7 @@ steps:
   - script: |
       ls -l $(IMAGE_CACHE_PATH)
       docker images
+      set -euxo pipefail
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar.xz | unxz | docker load
       docker images
     condition: ${{ parameters.CONDITION }}
