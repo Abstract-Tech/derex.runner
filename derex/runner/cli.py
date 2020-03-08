@@ -9,8 +9,8 @@ from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.project import SettingsModified
 from derex.runner.utils import abspath_from_egg
+from distutils.spawn import find_executable
 from functools import wraps
-from subprocess import call
 from typing import Any
 from typing import Optional
 
@@ -267,7 +267,7 @@ def openedx(version, target, push, docker_opts):
     if docker_opts:
         command.extend(docker_opts.format(**locals()).split())
     print("Invoking\n" + " ".join(command), file=sys.stderr)
-    call(command)
+    os.execve(find_executable(command[0]), command, os.environ)
 
 
 @derex.command()
