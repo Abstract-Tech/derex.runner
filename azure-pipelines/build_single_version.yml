@@ -99,14 +99,15 @@ steps:
 
   - script: |
       set -euxo pipefail;
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=dev  $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
+      [ -f $(LAYERS_CACHE_DIR)/index.json ] && cp -av $(LAYERS_CACHE_DIR) $(LAYERS_CACHE_DIR).fresh
+      derex build openedx --docker-opts "$([ -f $(LAYERS_CACHE_DIR)/index.json ] && echo --cache-from=type=local,src=$(LAYERS_CACHE_DIR).fresh) ${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=dev  $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build dev image
 
   - script: |
       set -ex
       docker images
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target}" --target=translations $(DOCKER_IMAGES_SLUG)
+      derex build openedx --docker-opts "$([ -f $(LAYERS_CACHE_DIR)/index.json ] && echo --cache-from=type=local,src=$(LAYERS_CACHE_DIR).fresh) ${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target}" --target=translations $(DOCKER_IMAGES_SLUG)
       docker images
       docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
     continueOnError: true  # Do not make the build fail because of translation issues
