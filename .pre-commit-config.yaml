@@ -3,10 +3,11 @@ repos:
   rev: v2.4.0
   hooks:
   - id: trailing-whitespace
+    exclude: .bumpversion.cfg
   - id: debug-statements
   - id: check-added-large-files
   - id: end-of-file-fixer
-    exclude: .bumpversion
+    exclude: .bumpversion.cfg
   - id: check-yaml
   - id: flake8
 

@@ -4,7 +4,7 @@
 
 __author__ = """Silvio Tomatis"""
 __email__ = "silviot@gmail.com"
-__version__ = "0.0.13"
+__version__ = "0.0.13+dev1"
 
 
 import pluggy

@@ -57,6 +57,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.0.13",
+    version="0.0.13+dev1",
     zip_safe=False,
 )
