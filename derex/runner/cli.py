@@ -221,7 +221,18 @@ def final_refresh(ctx, project: Project):
 @click.option(
     "-t",
     "--target",
-    type=click.Choice(["dev", "nostatic", "translations", "nodump"]),
+    type=click.Choice(
+        [
+            "dev",
+            "nostatic",
+            "libgeos",
+            "base",
+            "sourceonly",
+            "wheels",
+            "translations",
+            "nodump",
+        ]
+    ),
     default="dev",
     help="Target to build (nostatic, dev, translations)",
 )

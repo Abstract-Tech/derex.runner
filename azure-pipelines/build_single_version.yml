@@ -72,15 +72,23 @@ steps:
     parameters:
       CONDITION: "ne(variables.needs_build, 'false')"
 
-  - script: |
-      set -euxo pipefail;
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=nostatic $(DOCKER_IMAGES_SLUG)
+  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=libgeos $(DOCKER_IMAGES_SLUG)
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Build libgeos image
+
+  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=wheels $(DOCKER_IMAGES_SLUG)
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Build wheels image
+
+  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=nostatic $(DOCKER_IMAGES_SLUG)
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build nostatic image
 
-  - script: |
-      set -euxo pipefail;
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=dev $(DOCKER_IMAGES_SLUG)
+  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=nostatic-dev $(DOCKER_IMAGES_SLUG)
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Build nostatic-dev image
+
+  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=dev $(DOCKER_IMAGES_SLUG)
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build dev image
 
@@ -95,6 +103,12 @@ steps:
 
   - script: |
       set -euxo pipefail;
-      docker save $(derex build openedx --only-print-image-name -t nostatic $(DOCKER_IMAGES_SLUG)) $(derex build openedx --only-print-image-name -t dev $(DOCKER_IMAGES_SLUG)) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
+      docker save \
+        $(derex build openedx --only-print-image-name -t libgeos $(DOCKER_IMAGES_SLUG)) \
+        $(derex build openedx --only-print-image-name -t wheels $(DOCKER_IMAGES_SLUG)) \
+        $(derex build openedx --only-print-image-name -t nostatic $(DOCKER_IMAGES_SLUG)) \
+        $(derex build openedx --only-print-image-name -t nostatic-dev $(DOCKER_IMAGES_SLUG)) \
+        $(derex build openedx --only-print-image-name -t dev $(DOCKER_IMAGES_SLUG)) \
+        | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG).tar.xz
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Save images
