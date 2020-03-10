@@ -229,6 +229,11 @@ def final_refresh(ctx, project: Project):
     "--push/--no-push", default=False, help="Also push image to registry after building"
 )
 @click.option(
+    "--only-print-image-name/--do-build",
+    default=False,
+    help="Only print image name for the given target",
+)
+@click.option(
     "-d",
     "--docker-opts",
     envvar="DOCKER_OPTS",
@@ -238,13 +243,17 @@ def final_refresh(ctx, project: Project):
         "By default outputs the image to the local docker daemon."
     ),
 )
-def openedx(version, target, push, docker_opts):
+def openedx(version, target, push, only_print_image_name, docker_opts):
     """Build openedx image using docker. Defaults to dev image target."""
     dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
     git_repo = version.value["git_repo"]
     git_branch = version.value["git_branch"]
     python_version = version.value.get("python_version", "3.6")
     docker_image_prefix = version.value["docker_image_prefix"]
+    image_name = f"{docker_image_prefix}-{target}:{__version__}"
+    if only_print_image_name:
+        click.echo(image_name)
+        return
     push_arg = ",push=true" if push else ""
     command = [
         "docker",
@@ -252,7 +261,7 @@ def openedx(version, target, push, docker_opts):
         "build",
         str(dockerdir),
         "-t",
-        f"{docker_image_prefix}-{target}:{__version__}",
+        image_name,
         "--build-arg",
         f"PYTHON_VERSION={python_version}",
         "--build-arg",
