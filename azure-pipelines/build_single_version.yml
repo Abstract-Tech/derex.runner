@@ -9,9 +9,9 @@ steps:
     displayName: 'Docker images sentinel cache'
 
   - template: load_images.yml
-    condition: ne(variables.ImagesSentinelHit, 'true')
     parameters:
       DOCKER_IMAGES_SLUG: $(DOCKER_IMAGES_SLUG)
+      CONDITION: ne(variables.ImagesSentinelHit, 'true')
 
   - script: |
       echo '##vso[task.setvariable variable=needs_build]true'
