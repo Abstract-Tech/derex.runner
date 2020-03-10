@@ -1,0 +1,24 @@
+stages:
+  - stage: Mac
+    jobs:
+    - job: macos
+      pool:
+        vmImage: 'macOS-latest'
+      variables:
+        - group: Pypi credentials
+      steps:
+        - template: prepare.yml
+        - script: |
+            echo -e "[testpypi]\nrepository: https://test.pypi.org/legacy/\nusername: __token__\npassword: ${PYPI_TOKEN}" > ${HOME}/.pypirc
+            sudo pip install -U py2app
+            DOCKER_URL=https://download.docker.com/mac/stable/31259/Docker.dmg
+            curl -O -sSL $DOCKER_URL
+            open -W Docker.dmg && cp -r /Volumes/Docker/Docker.app /Applications
+            sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
+            nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+            docker ps
+            docker images
+          displayName: Test mac os build with py2app
+          continueOnError: true  # Do not make the build fail because of translation issues
+          env:
+            PYPI_TOKEN: $(PYPI_TOKEN)
