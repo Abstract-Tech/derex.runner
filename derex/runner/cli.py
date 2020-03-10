@@ -224,6 +224,7 @@ def final_refresh(ctx, project: Project):
     type=click.Choice(
         [
             "dev",
+            "nostatic-dev",
             "nostatic",
             "libgeos",
             "base",
