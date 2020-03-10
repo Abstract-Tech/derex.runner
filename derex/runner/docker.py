@@ -73,7 +73,9 @@ def execute_mysql_query(query: str):
     """
     container = client.containers.get("mysql")
     res = container.exec_run(f'mysql -psecret -e "{query}"')
-    assert res.exit_code == 0, f"Error running {query}"
+    assert (
+        res.exit_code == 0
+    ), f"Error running {query}\nOutput:\n{res.output.decode('utf-8', errors='replace')}"
 
 
 def wait_for_mysql(max_seconds: int = 20):
