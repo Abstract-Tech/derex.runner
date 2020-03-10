@@ -16,6 +16,7 @@ steps:
     displayName: 'Docker images cache'
 
   - script: |
+      [ -d $(IMAGE_CACHE_PATH) ] || exit 0
       ls -l $(IMAGE_CACHE_PATH)
       docker images
       set -euxo pipefail
