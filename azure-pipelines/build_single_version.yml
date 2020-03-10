@@ -38,6 +38,7 @@ steps:
         echo "Will use cached layers from images $images"
         for image in $images; do
           CACHE_FROM_OPTS="${CACHE_FROM_OPTS} --cache-from=$image"
+        done
       fi
       echo "##vso[task.setvariable variable=CACHE_FROM_OPTS]${CACHE_FROM_OPTS}"
       mkdir $(SENTINEL_CACHE_PATH)
