@@ -9,7 +9,7 @@ parameters:
 steps:
   - task: Cache@2
     inputs:
-      key: ${{ parameters.DOCKER_IMAGES_SLUG }} | $(CACHE_KEY_IMAGES)
+      key: BASE_SEED=$(CACHE_KEY_BASE) | ${{ parameters.DOCKER_IMAGES_SLUG }} | $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
     condition: ${{ parameters.CONDITION }}
@@ -19,16 +19,7 @@ steps:
       ls -l $(IMAGE_CACHE_PATH)
       docker images
       set -euxo pipefail
-      cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic.tar.xz | unxz | docker load
+      cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}.tar.xz | unxz | docker load
       docker images
     condition: ${{ parameters.CONDITION }}
-    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-nostatic images'
-
-  - script: |
-      ls -l $(IMAGE_CACHE_PATH)
-      docker images
-      set -euxo pipefail
-      cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}-dev.tar.xz | unxz | docker load
-      docker images
-    condition: ${{ parameters.CONDITION }}
-    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }}-dev images'
+    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} images'
