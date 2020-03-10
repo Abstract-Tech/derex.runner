@@ -12,6 +12,7 @@ steps:
       key: BASE_SEED=$(CACHE_KEY_BASE) | ${{ parameters.DOCKER_IMAGES_SLUG }} | $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
       cacheHitVar: 'ImagesHit'
+      restoreKeys: BASE_SEED=$(CACHE_KEY_BASE) | ${{ parameters.DOCKER_IMAGES_SLUG }}
     condition: ${{ parameters.CONDITION }}
     displayName: 'Docker images cache'
 
