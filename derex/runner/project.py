@@ -181,9 +181,9 @@ class Project:
         self.root = find_project_root(Path(path))
         config_path = self.root / CONF_FILENAME
         self.config = yaml.load(config_path.open(), Loader=yaml.FullLoader)
-        self.base_image = self.config.get("base_image", "derex/openedx-ironwood:latest")
+        self.base_image = self.config.get("base_image", "derex/edx-ironwood-dev:latest")
         self.final_base_image = self.config.get(
-            "final_base_image", "derex/openedx-nostatic:latest"
+            "final_base_image", "derex/edx-ironwood-nostatic:latest"
         )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
@@ -358,3 +358,23 @@ class DebugProject(Project):
     """
 
     runmode = ProjectRunMode.debug
+
+
+class OpenEdXVersions(Enum):
+    hawthorn = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/hawthorn.master",
+        "docker_image_prefix": "docker.io/derex/edx-hawthorn",
+        "python_version": "2.7",
+    }
+    ironwood = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/ironwood.master",
+        "docker_image_prefix": "docker.io/derex/edx-ironwood",
+        "python_version": "2.7",
+    }
+    juniper = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/juniper.alpha1",
+        "docker_image_prefix": "docker.io/derex/edx-juniper",
+    }

@@ -1,0 +1,114 @@
+steps:
+  # Sentinel cache: if this one hits, it means the image cache will hit too
+  # We don't use the image cache for performance reasons
+  - task: Cache@2
+    inputs:
+      key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
+      path: $(SENTINEL_CACHE_PATH)
+      cacheHitVar: 'ImagesSentinelHit'
+    displayName: 'Docker images sentinel cache'
+
+  - script: echo '##vso[task.setvariable variable=needs_build]true'
+    condition: ne(variables.ImagesSentinelHit, 'true')
+    displayName: 'Set needs_build pipeline variable'
+
+  - script: |
+      if [ -z "$TRANSIFEX_USERNAME" ] || [ -z "$TRANSIFEX_PASSWORD" ]; then
+          echo "Transifex credentials unset. Building without translations."
+          exit 0
+      fi
+      printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $HOME/.transifexrc
+      ls -l $HOME/.transifexrc
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: 'Prepare Transifex credentials'
+    env:
+      TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
+      TRANSIFEX_PASSWORD: $(TRANSIFEX_PASSWORD)
+
+  - task: Cache@2
+    inputs:
+      key: $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
+      path: $(IMAGE_CACHE_PATH)
+      cacheHitVar: 'ImagesHit'
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: 'Docker images cache'
+
+  # restore the docker cache based on the Dockerfile
+  - task: Cache@2
+    inputs:
+      key: $(LAYERS_CACHE_KEY)
+      path: '$(LAYERS_CACHE_DIR)'
+      cacheHitVar: 'BuildKitLayersHit'
+      restoreKeys: $(LAYERS_CACHE_KEY_FALLBACK)
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: 'Docker layers cache'
+
+  - script: |
+      if [ -d "$(LAYERS_CACHE_DIR)" ]; then
+        echo "Will use cached layers from $(LAYERS_CACHE_DIR)"
+        find $(LAYERS_CACHE_DIR)
+        mv $(LAYERS_CACHE_DIR) $(LAYERS_CACHE_DIR).old
+        mkdir $(LAYERS_CACHE_DIR)
+        CACHE_FROM_OPTS="--cache-from=type=local,src=$(LAYERS_CACHE_DIR).old"
+        DOCKER_OPTS="$DOCKER_BASE_OPTS ${CACHE_FROM_OPTS}"
+      else
+        mkdir ${LAYERS_CACHE_DIR}
+      fi
+      if [ "$(BuildKitLayersHit)" != "true" ]; then
+        echo "Will store cached layers to $(LAYERS_CACHE_DIR)"
+        CACHE_TO_OPTS="--cache-to=type=local,dest=$(LAYERS_CACHE_DIR)"
+        DOCKER_OPTS="$DOCKER_BASE_OPTS ${CACHE_TO_OPTS}"
+      fi
+      echo "##vso[task.setvariable variable=DOCKER_OPTS]${DOCKER_OPTS}"
+      echo "##vso[task.setvariable variable=CACHE_FROM_OPTS]${CACHE_FROM_OPTS}"
+      echo "##vso[task.setvariable variable=CACHE_TO_OPTS]${CACHE_TO_OPTS}"
+      mkdir $(SENTINEL_CACHE_PATH)
+      mkdir $(IMAGE_CACHE_PATH)
+      cp -r $(CACHE_KEY_FILES) $(SENTINEL_CACHE_PATH)
+      # We save the sha of the repo that built this image, so that we can push
+      # it only in a build of the same commit, after tests are passed
+      git rev-parse --verify HEAD > $(SENTINEL_CACHE_PATH)/built_version
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: 'Setup docker layers cache'
+
+  - script: |
+      set -ex
+      sudo apt-get remove moby-cli -y
+      curl -fsSL https://get.docker.com |sudo bash
+      sudo mv /etc/docker/daemon.json /etc/docker/daemon.json.orig
+      sudo cat /etc/docker/daemon.json.orig|jq '. + {experimental: true}' |sudo tee /etc/docker/daemon.json
+      sudo systemctl restart docker.service
+      docker version
+      docker buildx create --use
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Replace Microsoft docker with upsream docker and create build context
+
+  - script: sudo apt-get install pxz -y
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Install pxz
+
+  - template: prepare.yml
+    parameters:
+      CONDITION: "ne(variables.needs_build, 'false')"
+
+  - script: |
+      set -euxo pipefail;
+      derex build openedx --docker-opts "${CACHE_FROM_OPTS} -o type=docker,dest=-" --target=nostatic $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-nostatic.tar.xz
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Build nostatic image
+
+  - script: |
+      set -euxo pipefail;
+      derex build openedx --docker-opts "${CACHE_FROM_OPTS} ${CACHE_TO_OPTS} -o type=docker,dest=-" --target=dev  $(DOCKER_IMAGES_SLUG) | pxz -0 -z > $(IMAGE_CACHE_PATH)/edx-$(DOCKER_IMAGES_SLUG)-dev.tar.xz
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Build dev image
+
+  - script: |
+      set -ex
+      docker images
+      derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target}" --target=translations $(DOCKER_IMAGES_SLUG)
+      docker images
+      docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
+    continueOnError: true  # Do not make the build fail because of translation issues
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: Check translations

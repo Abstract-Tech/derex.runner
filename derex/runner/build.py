@@ -17,7 +17,10 @@ def docker_commands_to_install_requirements(project: Project):
             if requirments_file.endswith(".txt"):
                 dockerfile_contents.append(
                     f"RUN pip install pip==20.0.2\n"
-                    f"RUN cd /openedx/derex.requirements && pip install -r {requirments_file}"
+                    # Constrain edx version, but omit the relative paths: we run this from our
+                    # requirements dir so that the derex user can use `./` in their requirements files
+                    f"RUN grep == /openedx/edx-platform/requirements/edx/base.txt |grep -v ^git+https > /tmp/base.txt\n"
+                    f"RUN cd /openedx/derex.requirements && pip install -c /tmp/base.txt -r {requirments_file}\n"
                 )
     return dockerfile_contents
 
@@ -37,6 +40,8 @@ def build_requirements_image(project: Project):
             "rm -rf /openedx/staticfiles",
             "cd /openedx/edx-platform",
             "export PATH=/openedx/edx-platform/node_modules/.bin:${PATH}",
+            "export ENV NO_PREREQ_INSTALL=True",
+            "export ENV NO_PYTHON_UNINSTALL=True",
             # The rmlint optmization breaks the build process.
             # We clean the repo files
             "git checkout HEAD -- common",
@@ -46,7 +51,7 @@ def build_requirements_image(project: Project):
             # XXX we only compile the `open-edx` theme. We could make this configurable per-project
             # but probably most people are only interested in their own theme
             "paver update_assets --settings derex.assets --themes open-edx",
-            'rmlint -g -c sh:symlink -o json:stderr /openedx/staticfiles 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null',
+            'rmlint -c sh:symlink -o sh:rmlint.sh /openedx/staticfiles > /dev/null 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null',
         )
     )
     if project.config.get("compile_assets", False):
@@ -74,7 +79,7 @@ def build_themes_image(project: Project):
         # When experimental is enabled we have the `squash` option: we can remove duplicates
         # so they won't end up in our layer.
         dockerfile_contents.append(
-            'RUN rmlint -g -c sh:symlink -o json:stderr /openedx/ 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null'
+            'RUN rmlint -g -c sh:symlink -o sh:rmlint.sh /openedx/ > /dev/null 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null'
         )
     paths_to_copy = [str(project.themes_dir)]
     if project.requirements_dir is not None:
