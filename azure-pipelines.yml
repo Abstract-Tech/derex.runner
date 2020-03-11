@@ -6,243 +6,29 @@ schedules:
       - master
   always: true
 
-jobs:
-- job: RunPytests
-  timeoutInMinutes: 40
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-    - template: azure-pipelines/prepare.yml
+stages:
+  - template: azure-pipelines/build.yml
+  - template: azure-pipelines/test.yml
+  - template: azure-pipelines/push.yml
 
-    - script: |
-        set -ex
-        set -o pipefail
-        cd tests
-        pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
-      displayName: 'Run python tests'
-
-    - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
-      artifact: fasttests_coverage
-
-
-- job: RunSlowPytests
-  timeoutInMinutes: 40
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-    - template: azure-pipelines/prepare.yml
-
-    - script: ddc-services pull
-      displayName: 'Pull edX services images'
-
-    - script: |
-        set -ex
-        export DEREX_ADMIN_SERVICES=False
-        ddc-services up -d
-        derex reset-mailslurper
-      displayName: 'Start service daemons'
-
-    - script: |
-        # Slow tests do not currently contribute to coverage
-        set -ex
-        set -o pipefail
-        cd tests
-        pytest -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
-      displayName: 'Run python tests'
-
-    - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
-      artifact: slowtests_coverage
-
-- job: CombineCoverage
-  dependsOn:
-    - RunPytests
-    - RunSlowPytests
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-    - template: azure-pipelines/prepare.yml
-
-    - download: current
-
-    - task: Cache@2
-      inputs:
-        key: npmcache2
-        path: $(Pipeline.Workspace)/.cache/npm
-      displayName: Cache npm packages
-
-    - script: |
-        set -ex
-        cp $(Pipeline.Workspace)/slowtests_coverage/.coverage tests/.coverage.slow
-        cp $(Pipeline.Workspace)/fasttests_coverage/.coverage tests/.coverage.fast
-        cd tests
-        coverage combine
-        coverage html
-        coverage xml
-        cd ..
-        # We installed the package with pip, and coverage reports the full absolute path.
-        # We cut to derex/runner/etc/etc
-        DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
-        echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
-        sudo npm config set cache $(Pipeline.Workspace)/.cache/npm --global
-        npm install juice
-        # Azure pipelines strips style sheets but leaves styles in place.
-        # juice can embed the styles in the HTML for us and present a much better
-        # view in the coverage results tab.
-        for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-        echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;]"
-      displayName: Fix coverage result and publish it
-      condition: succeededOrFailed()
-
-
-- job: TestComplete
-  timeoutInMinutes: 40
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-    - template: azure-pipelines/prepare.yml
-
-    - script: ddc-services pull
-      displayName: 'Pull edX services images'
-
-    - script: |
-        set -ex
-        export DEREX_ADMIN_SERVICES=False
-        ddc-services up -d
-        derex reset-mailslurper
-      displayName: 'Start service daemons'
-
-    - script: |
-        set -ex
-        cd tests/fixtures/complete
-        derex reset-mysql
-        derex reset-rabbitmq
-        ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
-      displayName: 'Test complete project fixtures'
-
-    - script: |
-        set -ex
-        cd tests/fixtures/complete
-        derex build-final
-      displayName: 'Build image for project "complete"'
-
-    - script: cd tests/fixtures/complete; ddc-project up -d
-      displayName: 'Start edX daemons'
-
-    - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
-      displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
-
-    - script: |
-        echo 127.0.0.1 localhost studio.localhost | sudo tee -a /etc/hosts
-        sleep 3  # Give the services a little time to start up
-      displayName: Add studio.localhost to /etc/hosts
-
-    - script: |
-        cd tests/fixtures/complete; ddc-project logs cms lms
-      condition: always()
-      displayName: 'Show CMS/LMS logs'
-
-    - script: |
-        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/"
-        $CMD || (sleep 10; $CMD )
-      displayName: 'Curl the LMS'
-
-    - script: |
-        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4800/"
-        $CMD || (sleep 10; $CMD )
-      displayName: 'Curl the CMS'
-
-    - script: |
-        set -ex
-        cd tests/fixtures/complete
-        docker images
-        # This should not be needed, but for some reason Azure does not tag the image
-        docker tag $(docker images -q|head -n1) complete/openedx-themes
-        docker images
-
-        echo Installing dive
-        wget -q https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
-        DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.8.0_linux_amd64.deb
-        echo Analyzing image
-        dive --ci complete/openedx-themes
-      condition: always()
-      displayName: 'Test the complete image with dive'
-      continueOnError: true  # Do not make the build fail because of this step, for now
-      timeoutInMinutes: 40
-
-    - script: |
-        derex runmode production
-        cd tests/fixtures/complete; derex build-themes; ddc-project up -d lms cms
-        sleep 5  # Give it time to start up
-      displayName: 'Start production image lms/cms'
-
-    - script: |
-        cd tests/fixtures/complete
-        ddc-project config
-        ddc-project logs cms lms
-      condition: always()
-      displayName: 'Show CMS/LMS final logs'
-
-    - script: |
-        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/"
-        $CMD || (sleep 10; $CMD )
-      continueOnError: true  # Temporarily disable this test: it's failing with this line in the logs:
-      # pymongo.errors.OperationFailure: command SON([('saslStart', 1), ('mechanism', 'SCRAM-SHA-1'), ('autoAuthorize', 1), ('payload', Binary(b'n,,n=edxapp,r=MDg3MjIwMjQyMDc4MTg3MjQ=', 0))]) on namespace complete_mongoedx.$cmd failed: Authentication failed.
-      displayName: 'Curl the final LMS'
-
-    - script: |
-        $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4810/"
-        $CMD || (sleep 10; $CMD )
-      continueOnError: true  # Temporarily disable this test: it's failing with the line mentioned above
-      displayName: 'Curl the final CMS'
-
-    - script: |
-        ddc-services logs
-        cd tests/fixtures/complete; ddc-project logs
-      condition: always()
-      displayName: 'Show logs'
-
-    - script: |
-        cd tests/fixtures/complete; ddc-project config
-      condition: always()
-      displayName: 'Show ddc-project config'
-
-
-- job: TestMinimal
-  timeoutInMinutes: 40
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-    - template: azure-pipelines/prepare.yml
-
-    - script: ddc-services pull
-      displayName: 'Pull edX services images'
-
-    - script: |
-        set -ex
-        export DEREX_ADMIN_SERVICES=False
-        ddc-services up -d
-        derex reset-mailslurper
-      displayName: 'Start service daemons'
-
-    - script: |
-        set -ex
-        cd tests/fixtures/minimal
-        ddc-project pull
-      displayName: 'Pull edx image'
-
-    - script: |
-        set -ex
-        cd tests/fixtures/minimal
-        derex reset-mysql
-        derex reset-rabbitmq
-      displayName: 'Prime Mysql DB'
-
-
-- job: CheckDocs
-  timeoutInMinutes: 40
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-    - template: azure-pipelines/prepare.yml
-    - script: make docs
-      displayName: 'Compile docs'
+variables:
+  - name: DOCKER_BUILDKIT
+    value: '1'
+  - name: DOCKER_CLI_EXPERIMENTAL
+    value: enabled
+  - name: DOCKER_COMMAND
+    value: docker buildx build docker-definition
+  - name: CACHE_KEY_BASE  # Increment this value to reset the images cache
+    value: 21
+  - name: CACHE_KEY_FILES
+    value: $(System.DefaultWorkingDirectory)/docker-definition/*
+  - name: CACHE_KEY_IMAGES
+    value: BASE_SEED=$(CACHE_KEY_BASE) | $(CACHE_KEY_FILES)
+  - name: CACHE_KEY_IMAGES_FALLBACK
+    value: BASE_SEED=$(CACHE_KEY_BASE)
+  - name: SENTINEL_CACHE_PATH
+    value: $(Pipeline.Workspace)/sentinel_cache
+  - name: IMAGE_CACHE_PATH
+    value: $(Pipeline.Workspace)/image_cache
+  - name: needs_build
+    value: "false"
