@@ -59,7 +59,7 @@ steps:
       sudo cat /etc/docker/daemon.json.orig|jq '. + {experimental: true}' |sudo tee /etc/docker/daemon.json
       sudo systemctl restart docker.service
       docker version
-      docker buildx create --use
+      docker buildx create --use --driver docker-container --driver-opt image=moby/buildkit:master,network=host
       docker images
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Replace Microsoft docker with upsream docker and create build context
