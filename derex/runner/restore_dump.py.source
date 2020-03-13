@@ -58,8 +58,9 @@ def run_fixtures():
             str, sorted(variant_dir.listdir())
         )
         if sys.version_info[0] < 3:
+            # In python 2 we should use execfile
             execfile("manage.py", {"__name__": "__main__"})  # noqa: F821
-        else:
+        else:  # python 3: use exec
             exec(open("manage.py").read())
 
 
