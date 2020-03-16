@@ -1,5 +1,7 @@
 stages:
 - stage: Test
+  variables:
+    PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black --flake8
   jobs:
   - job: RunPytests
     timeoutInMinutes: 40

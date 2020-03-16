@@ -20,9 +20,13 @@ requirements = [
     "jinja2",
 ]
 
-setup_requirements = ["pytest-runner"]
+setup_requirements = ["setuptools"]
 
-test_requirements = ["pytest"]
+test_requirements = ["pytest", "pytest-mock"]
+
+extras_requirements = {
+    "test": test_requirements,
+}
 
 setup(
     author="Silvio Tomatis",
@@ -59,6 +63,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
+    extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
     version="0.0.1",
     zip_safe=False,
