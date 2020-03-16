@@ -2,12 +2,12 @@ repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v2.4.0
   hooks:
-  - id: trailing-whitespace
+  #- id: trailing-whitespace
   - id: debug-statements
-  - id: check-added-large-files
-  - id: end-of-file-fixer
-    exclude: .bumpversion.cfg
-  - id: check-yaml
+  #- id: check-added-large-files
+  #- id: end-of-file-fixer
+  #  exclude: .bumpversion.cfg
+  #- id: check-yaml
   - id: flake8
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
