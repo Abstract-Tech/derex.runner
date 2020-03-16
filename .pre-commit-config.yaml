@@ -6,6 +6,7 @@ repos:
   - id: debug-statements
   - id: check-added-large-files
   - id: end-of-file-fixer
+    exclude: .bumpversion.cfg
   - id: check-yaml
   - id: flake8
 

@@ -1,7 +1,7 @@
 -r requirements.txt
 -r requirements_doc.txt
 black
-bumpversion
+bump2version
 coverage
 flake8
 flake8-import-order

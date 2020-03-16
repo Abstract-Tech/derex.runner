@@ -176,3 +176,4 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
 
 ENV DJANGO_SETTINGS_MODULE=lms.envs.derex.migration
 ENV SERVICE_VARIANT=lms
+ENV DEREX_VERSION=0.0.15.dev2
