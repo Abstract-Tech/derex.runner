@@ -3,15 +3,20 @@ from contextlib import contextmanager
 from derex.runner.docker import ensure_volumes_present
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
+from derex.runner.project import DebugProject
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.utils import abspath_from_egg
+from tempfile import mkstemp
+from typing import Any
 from typing import List
 from typing import Optional
 
 import click
 import derex  # noqa  # This is ugly, but makes mypy and flake8 happy and still performs type checks
+import json
 import logging
+import os
 import sys
 
 
@@ -103,3 +108,45 @@ def reset_mysql(project: Project, dry_run: bool = False):
         project=project,
         dry_run=dry_run,
     )
+
+
+def run_script(project, script_text: str, context: str = "lms") -> Any:
+    """Run a script in a django shell, decode its stdout
+    with JSON and return it.
+    If the script does not output a parsable JSON None is returned.
+    """
+    script_fp, script_path = mkstemp(".py", "derex-run-script-")
+    result_fp, result_path = mkstemp(".json", "derex-run-script-result")
+    os.write(script_fp, script_text.encode("utf-8"))
+    os.close(script_fp)
+    args = [
+        "run",
+        "--rm",
+        "-v",
+        f"{result_path}:/result.json",
+        "-v",
+        f"{script_path}:/script.py",
+        context,
+        "sh",
+        "-c",
+        f"echo \"exec(open('/script.py').read())\" | ./manage.py {context} shell > /result.json",
+    ]
+
+    try:
+        run_compose(args, project=DebugProject())
+    finally:
+        result_json = open(result_path).read()
+        try:
+            os.close(result_fp)
+        except OSError:
+            pass
+        try:
+            os.close(script_fp)
+        except OSError:
+            pass
+        os.unlink(result_path)
+        os.unlink(script_path)
+    try:
+        return json.loads(result_json)
+    except json.decoder.JSONDecodeError:
+        return None
