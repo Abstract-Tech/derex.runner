@@ -41,6 +41,9 @@ def sys_argv(mocker):
 
 @pytest.fixture
 def testproj(workdir):
+    """Return a context manager that can be used to work inside
+    a test project.
+    """
     from derex.runner.utils import CONF_FILENAME
 
     directory = TemporaryDirectory("-derex-project")
