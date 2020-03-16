@@ -7,7 +7,7 @@ from path import Path as path
 
 import bz2
 import MySQLdb
-import os
+import sys
 
 
 DUMP_FILE_PATH = "/openedx/empty_dump.sql.bz2"
@@ -53,9 +53,15 @@ def run_fixtures():
             continue
         # We sort lexicographically by file name
         # to make predictable ordering possible
-        for file in sorted(variant_dir.listdir()):
-            path("/openedx/edx-platform").chdir()
-            os.system("./manage.py {} loaddata {}".format(variant, file))
+        path("/openedx/edx-platform").chdir()
+        sys.argv = ["manage.py", variant, "loaddata"] + map(
+            str, sorted(variant_dir.listdir())
+        )
+        if sys.version_info[0] < 3:
+            # In python 2 we should use execfile
+            execfile("manage.py", {"__name__": "__main__"})  # noqa: F821
+        else:  # python 3: use exec
+            exec(open("manage.py").read())
 
 
 def main():
