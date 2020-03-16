@@ -15,4 +15,4 @@ def test_run_script(testproj):
         result = run_script(
             Project(), "import json; print('This is not { the JSON you re looking for')"
         )
-        assert result == None
+        assert result is None
