@@ -1,4 +1,5 @@
 from compose.cli.main import main
+from contextlib import contextmanager
 from derex.runner.docker import ensure_volumes_present
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
@@ -47,12 +48,31 @@ def run_compose(
         sys.argv = ["docker-compose"] + settings + args
         if not dry_run:
             click.echo(f'Running {" ".join(sys.argv)}', err=True)
-            main()
+            with exit_cm():
+                main()
         else:
             click.echo("Would have run:")
             click.echo(click.style(" ".join(sys.argv), fg="blue"))
     finally:
         sys.argv = old_argv
+
+
+@contextmanager
+def exit_cm():
+    # Context manager to monkey patch sys.exit calls
+    import sys
+
+    def myexit(result_code):
+        if result_code != 0:
+            raise RuntimeError
+
+    orig = sys.exit
+    sys.exit = myexit
+
+    try:
+        yield
+    finally:
+        sys.exit = orig
 
 
 def reset_mysql(project: Project, dry_run: bool = False):
