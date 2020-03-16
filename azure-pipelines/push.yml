@@ -1,7 +1,8 @@
 stages:
 
   - stage: Push
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    # Check if pushing is needed only on `master` and `build` branches
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/build') ))
     variables:
     - group: Docker credentials
     jobs:
