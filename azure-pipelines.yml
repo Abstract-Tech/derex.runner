@@ -6,6 +6,13 @@ schedules:
       - master
   always: true
 
+trigger:
+  branches:
+    include:
+    - master
+    - fix/*
+    - feature/*
+
 stages:
   - template: azure-pipelines/build.yml
   - template: azure-pipelines/test.yml
