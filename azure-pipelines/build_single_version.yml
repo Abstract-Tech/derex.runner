@@ -76,7 +76,7 @@ steps:
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build nostatic image
 
-  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=dev $(DOCKER_IMAGES_SLUG)
+  - script: derex build openedx --docker-opts "--cache-to=type=inline -o type=docker" --target=dev $(DOCKER_IMAGES_SLUG)
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build dev image
 
