@@ -236,7 +236,8 @@ stages:
           set -x
           cd tests/fixtures/minimal
           ddc-project up -d lms_worker cms_worker flower
-          while ! (ddc-project logs lms_worker cms_worker|grep ready) ; do sleep 1 ; done && curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1
+          while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
+          while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
           curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@lms.edx
           curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@cms.edx
         displayName: 'Check flower'

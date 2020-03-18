@@ -1,3 +1,4 @@
+from derex.runner import __version__
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
@@ -181,9 +182,11 @@ class Project:
         self.root = find_project_root(Path(path))
         config_path = self.root / CONF_FILENAME
         self.config = yaml.load(config_path.open(), Loader=yaml.FullLoader)
-        self.base_image = self.config.get("base_image", "derex/edx-ironwood-dev:latest")
+        self.base_image = self.config.get(
+            "base_image", f"derex/edx-ironwood-dev:{__version__}"
+        )
         self.final_base_image = self.config.get(
-            "final_base_image", "derex/edx-ironwood-nostatic:latest"
+            "final_base_image", f"derex/edx-ironwood-nostatic:{__version__}"
         )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")

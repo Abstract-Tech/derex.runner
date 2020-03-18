@@ -36,13 +36,9 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     entry_points={
         "console_scripts": [
@@ -65,6 +61,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.0.1",
+    version="0.0.1.dev2",
     zip_safe=False,
 )

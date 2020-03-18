@@ -2,14 +2,15 @@
 
 """Console script for derex.runner."""
 from click_plugins import with_plugins
+from derex.runner import __version__
 from derex.runner.project import DebugProject
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.project import SettingsModified
 from derex.runner.utils import abspath_from_egg
+from distutils.spawn import find_executable
 from functools import wraps
-from subprocess import call
 from typing import Any
 from typing import Optional
 
@@ -220,12 +221,29 @@ def final_refresh(ctx, project: Project):
 @click.option(
     "-t",
     "--target",
-    type=click.Choice(["dev", "nostatic", "translations", "nodump"]),
+    type=click.Choice(
+        [
+            "dev",
+            "nostatic-dev",
+            "nostatic",
+            "libgeos",
+            "base",
+            "sourceonly",
+            "wheels",
+            "translations",
+            "nodump",
+        ]
+    ),
     default="dev",
     help="Target to build (nostatic, dev, translations)",
 )
 @click.option(
     "--push/--no-push", default=False, help="Also push image to registry after building"
+)
+@click.option(
+    "--only-print-image-name/--do-build",
+    default=False,
+    help="Only print image name for the given target",
 )
 @click.option(
     "-d",
@@ -237,13 +255,17 @@ def final_refresh(ctx, project: Project):
         "By default outputs the image to the local docker daemon."
     ),
 )
-def openedx(version, target, push, docker_opts):
+def openedx(version, target, push, only_print_image_name, docker_opts):
     """Build openedx image using docker. Defaults to dev image target."""
     dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
     git_repo = version.value["git_repo"]
     git_branch = version.value["git_branch"]
     python_version = version.value.get("python_version", "3.6")
     docker_image_prefix = version.value["docker_image_prefix"]
+    image_name = f"{docker_image_prefix}-{target}:{__version__}"
+    if only_print_image_name:
+        click.echo(image_name)
+        return
     push_arg = ",push=true" if push else ""
     command = [
         "docker",
@@ -251,7 +273,7 @@ def openedx(version, target, push, docker_opts):
         "build",
         str(dockerdir),
         "-t",
-        f"{docker_image_prefix}-{target}",
+        image_name,
         "--build-arg",
         f"PYTHON_VERSION={python_version}",
         "--build-arg",
@@ -266,7 +288,7 @@ def openedx(version, target, push, docker_opts):
     if docker_opts:
         command.extend(docker_opts.format(**locals()).split())
     print("Invoking\n" + " ".join(command), file=sys.stderr)
-    call(command)
+    os.execve(find_executable(command[0]), command, os.environ)
 
 
 @derex.command()
