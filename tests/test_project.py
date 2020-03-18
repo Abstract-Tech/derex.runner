@@ -1,6 +1,9 @@
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from pathlib import Path
+from typing import Dict
+from typing import List
+from typing import Union
 
 import json
 import os
@@ -56,6 +59,38 @@ def test_runmode(testproj):
         # Runmode changes should be persisted in the project directory
         # and picked up by a second Project instance
         assert Project().runmode == ProjectRunMode.production
+
+
+def test_docker_compose_addition(testproj, mocker):
+    from derex.runner import hookimpl
+    from derex.runner.compose_utils import get_compose_options
+    from derex.runner.plugins import setup_plugin_manager
+
+    class CustomAdditional:
+        @staticmethod
+        @hookimpl
+        def local_compose_options(project: Project) -> Dict[str, Union[str, List[str]]]:
+            """See derex.runner.plugin_spec.compose_options docstring
+            """
+            return {
+                "options": ["custom-additional"],
+                "name": "custom",
+                "priority": "100",
+            }
+
+    with testproj:
+        docker_compose_path = Path(testproj._tmpdir.name) / "docker-compose.yml"
+        with docker_compose_path.open("w") as fh:
+            fh.write("lms:\n  image: foobar\n")
+        project = Project()
+        mgr = setup_plugin_manager()
+        mgr.register(CustomAdditional)
+        mocker.patch(
+            "derex.runner.compose_utils.setup_plugin_manager", return_value=mgr
+        )
+        opts = get_compose_options(args=[], variant="", project=project)
+        # The last option should be the path of the user docker compose file for this project
+        assert opts[-1] == str(docker_compose_path)
 
 
 def test_settings_enum(testproj):

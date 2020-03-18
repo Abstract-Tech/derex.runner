@@ -33,6 +33,33 @@ def run_compose(
     If `variant` is passed, load plugins for that variant.
     If a project is passed, load plugins for that project.
     """
+    old_argv = sys.argv
+    try:
+        sys.argv = get_compose_options(args=args, variant=variant, project=project)
+        if not dry_run:
+            click.echo(f'Running\n{" ".join(sys.argv)}', err=True)
+            with exit_cm():
+                main()
+        else:
+            click.echo("Would have run:\n")
+            click.echo(click.style(" ".join(sys.argv), fg="blue"))
+    finally:
+        sys.argv = old_argv
+
+
+def get_compose_options(
+    args: List[str],
+    variant: str = "services",
+    project: Optional["derex.runner.project.Project"] = None,
+):
+    """Construct docker compose options in addition to the ones passed in `args`.
+    For example, if `args` is ["run", "lms", "sh"] and a project is passed in,
+    this function will return something like
+    ["-f", "/path/to/project/.derex/docker-compose.yml", run", "lms", "sh"]
+
+    It finds the options using a plugin manager, and sorts them by priority
+    using a registry
+    """
     plugin_manager = setup_plugin_manager()
     registry = Registry()
     if project:
@@ -48,18 +75,7 @@ def run_compose(
                     key=opts["name"], value=opts["options"], location=opts["priority"]
                 )
     settings = [el for lst in registry for el in lst]
-    old_argv = sys.argv
-    try:
-        sys.argv = ["docker-compose"] + settings + args
-        if not dry_run:
-            click.echo(f'Running {" ".join(sys.argv)}', err=True)
-            with exit_cm():
-                main()
-        else:
-            click.echo("Would have run:")
-            click.echo(click.style(" ".join(sys.argv), fg="blue"))
-    finally:
-        sys.argv = old_argv
+    return ["docker-compose"] + settings + args
 
 
 @contextmanager
