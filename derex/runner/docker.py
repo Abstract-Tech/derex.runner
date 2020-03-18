@@ -147,13 +147,13 @@ def build_image(
                 client.api.tag(image["Id"], final_tag)
 
 
-def pull_images(image_tags: List[str]):
+def pull_images(image_names: List[str]):
     """Pull the given image to the local docker daemon.
     """
-    # digest = client.api.inspect_distribution(image_tag)["Descriptor"]["digest"]
-    for image_tag in image_tags:
-        print(f"Pulling image {image_tag}")
-        for out in client.api.pull(image_tag, stream=True, decode=True):
+    # digest = client.api.inspect_distribution(image_name)["Descriptor"]["digest"]
+    for image_name in image_names:
+        print(f"Pulling image {image_name}")
+        for out in client.api.pull(image_name, stream=True, decode=True):
             if "progress" in out:
                 print(f'{out["id"]}: {out["progress"]}', end="\r")
             else:

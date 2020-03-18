@@ -101,9 +101,9 @@ def generate_local_docker_compose(project: Project) -> Path:
         "derex.runner", "derex/runner/templates/local.yml.j2"
     )
     final_image = None
-    if image_exists(project.image_tag):
-        final_image = project.image_tag
-    if not image_exists(project.requirements_image_tag):
+    if image_exists(project.image_name):
+        final_image = project.image_name
+    if not image_exists(project.requirements_image_name):
         click.echo("Building requirements image")
         build_requirements_image(project)
     tmpl = Template(template_path.read_text())

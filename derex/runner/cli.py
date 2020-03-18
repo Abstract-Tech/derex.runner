@@ -168,7 +168,7 @@ def requirements(project):
     from derex.runner.build import build_requirements_image
 
     click.echo(
-        f'Building docker image {project.requirements_image_tag} ("{project.name}" requirements)'
+        f'Building docker image {project.requirements_image_name} ("{project.name}" requirements)'
     )
     build_requirements_image(project)
 
@@ -183,10 +183,10 @@ def themes(ctx, project: Project):
 
     ctx.forward(requirements)
     click.echo(
-        f'Building docker image {project.themes_image_tag} with "{project.name}" themes'
+        f'Building docker image {project.themes_image_name} with "{project.name}" themes'
     )
     build_themes_image(project)
-    click.echo(f"Built image {project.themes_image_tag}")
+    click.echo(f"Built image {project.themes_image_name}")
 
 
 @build.command()

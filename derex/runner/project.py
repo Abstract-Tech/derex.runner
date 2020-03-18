@@ -41,10 +41,10 @@ class Project:
     #: The root path to this project
     root: Path
 
-    #: The tag of the base image with dev goodies and precompiled assets
+    #: The name of the base image with dev goodies and precompiled assets
     base_image: str
 
-    # Tne image tag of the base image for the final production project build
+    # Tne image name of the base image for the final production project build
     final_base_image: str
 
     #: The directory containing requirements, if defined
@@ -63,14 +63,18 @@ class Project:
     # fixtures and themes.
     plugins_dir: Optional[Path] = None
 
-    # The image tag of the image that includes requirements
-    requirements_image_tag: str
+    # The image name of the image that includes requirements
+    requirements_image_name: str
 
-    # The image tag of the image that includes requirements and themes
-    themes_image_tag: str
+    # The image name of the image that includes requirements and themes
+    themes_image_name: str
 
-    # The image tag of the final image containing everything needed for this project
-    image_tag: str
+    # The image name of the final image containing everything needed for this project
+    image_name: str
+
+    # Image prefix to construct the above image names if they're not specified.
+    # Can include a private docker name, like registry.example.com/onlinecourses/edx-ironwood
+    image_prefix: str
 
     # Name of the database this project uses
     mysql_db_name: str
@@ -191,6 +195,7 @@ class Project:
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
         self.name = self.config["project_name"]
+        self.image_prefix = self.config.get("image_prefix", f"{self.name}/openedx")
         local_compose = self.root / "docker-compose.yml"
         if local_compose.is_file():
             self.local_compose = local_compose
@@ -202,11 +207,11 @@ class Project:
             # this way changes to code can be made effective by
             # mounting the requirements directory
             img_hash = get_requirements_hash(self.requirements_dir)
-            self.requirements_image_tag = (
-                f"{self.name}/openedx-requirements:{img_hash[:6]}"
+            self.requirements_image_name = (
+                f"{self.image_prefix}-requirements:{img_hash[:6]}"
             )
         else:
-            self.requirements_image_tag = self.base_image
+            self.requirements_image_name = self.base_image
 
         themes_dir = self.root / "themes"
         if themes_dir.is_dir():
@@ -214,9 +219,9 @@ class Project:
             img_hash = get_dir_hash(
                 self.themes_dir
             )  # XXX some files are generated. We should ignore them when we hash the directory
-            self.themes_image_tag = f"{self.name}/openedx-themes:{img_hash[:6]}"
+            self.themes_image_name = f"{self.image_prefix}-themes:{img_hash[:6]}"
         else:
-            self.themes_image_tag = self.requirements_image_tag
+            self.themes_image_name = self.requirements_image_name
 
         settings_dir = self.root / "settings"
         if settings_dir.is_dir():
@@ -232,7 +237,7 @@ class Project:
         if plugins_dir.is_dir():
             self.plugins_dir = plugins_dir
 
-        self.image_tag = self.themes_image_tag
+        self.image_name = self.themes_image_name
         self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
 
     def _populate_settings(self):
