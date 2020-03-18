@@ -93,6 +93,24 @@ def test_docker_compose_addition(testproj, mocker):
         assert opts[-1] == str(docker_compose_path)
 
 
+def test_docker_compose_addition_per_runmode(testproj, mocker):
+    from derex.runner.compose_utils import get_compose_options
+
+    with testproj:
+        docker_compose_path = Path(testproj._tmpdir.name) / "docker-compose-debug.yml"
+        with docker_compose_path.open("w") as fh:
+            fh.write("lms:\n  image: foobar\n")
+        project = Project()
+        opts = get_compose_options(args=[], variant="", project=project)
+        # The last option should be the path of the debug docker compose
+        assert opts[-1] == str(docker_compose_path)
+
+        project.runmode = ProjectRunMode.production
+        opts = get_compose_options(args=[], variant="", project=project)
+        # The last option should be the path of the production docker compose file
+        assert opts[-1] != str(docker_compose_path)
+
+
 def test_settings_enum(testproj):
     with testproj:
         assert Project().settings == Project().get_available_settings().base

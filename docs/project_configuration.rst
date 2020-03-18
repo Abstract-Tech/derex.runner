@@ -75,3 +75,7 @@ Custom docker-compose.yml
 
 If a file named `docker-compose.yml` is present in the project directory, it
 will be appended to the derex configuration.
+
+Additionally, a docker compose can be specified for each runmode (`production`
+or `debug`) with the filename `docker-compose-production.yml` or
+`docker-compose-debug.yml`.

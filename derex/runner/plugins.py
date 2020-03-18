@@ -12,6 +12,7 @@ def setup_plugin_manager():
     plugin_manager.register(config.LocalOpenEdX)
     plugin_manager.register(config.BaseServices)
     plugin_manager.register(config.LocalUser)
+    plugin_manager.register(config.LocalRunmodeOpenEdX)
     return plugin_manager
 
 

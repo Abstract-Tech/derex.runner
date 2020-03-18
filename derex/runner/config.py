@@ -76,6 +76,21 @@ class LocalUser:
         }
 
 
+class LocalRunmodeOpenEdX:
+    @staticmethod
+    @hookimpl
+    def local_compose_options(
+        project: Project,
+    ) -> Optional[Dict[str, Union[str, List[str]]]]:
+        """See derex.runner.plugin_spec.compose_options docstring
+        """
+        local_path = project.root / f"docker-compose-{project.runmode.value}.yml"
+        if not local_path.is_file():
+            return None
+        options = ["-f", str(local_path)]
+        return {"options": options, "name": "local-runmode", "priority": "_end"}
+
+
 def generate_local_docker_compose(project: Project) -> Path:
     """This function is called every time ddc-project is run.
     It assembles a docker-compose file from the given configuration.
