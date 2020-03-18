@@ -75,7 +75,7 @@ def test_docker_compose_addition(testproj, mocker):
             return {
                 "options": ["custom-additional"],
                 "name": "custom",
-                "priority": "100",
+                "priority": ">base",
             }
 
     with testproj:

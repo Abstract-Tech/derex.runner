@@ -11,6 +11,7 @@ def setup_plugin_manager():
     plugin_manager.load_setuptools_entrypoints("derex.runner")
     plugin_manager.register(config.LocalOpenEdX)
     plugin_manager.register(config.BaseServices)
+    plugin_manager.register(config.LocalUser)
     return plugin_manager
 
 
