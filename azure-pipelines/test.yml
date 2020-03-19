@@ -17,7 +17,7 @@ stages:
           pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
         displayName: 'Run python tests'
 
-      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
+      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage*
         artifact: fasttests_coverage
 
 
@@ -46,7 +46,7 @@ stages:
           pytest -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
         displayName: 'Run python tests'
 
-      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
+      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage*
         artifact: slowtests_coverage
 
   - job: CombineCoverage
@@ -68,8 +68,7 @@ stages:
 
       - script: |
           set -ex
-          cp $(Pipeline.Workspace)/slowtests_coverage/.coverage tests/.coverage.slow
-          cp $(Pipeline.Workspace)/fasttests_coverage/.coverage tests/.coverage.fast
+          cp $(Pipeline.Workspace)/*/.coverage* tests/
           cd tests
           coverage combine
           coverage html
@@ -98,31 +97,31 @@ stages:
       - template: prepare.yml
       - template: load_images.yml
 
-      - script: ddc-services pull
+      - script: coverage run $(which ddc-services) pull
         displayName: 'Pull edX services images'
 
       - script: |
           set -ex
           export DEREX_ADMIN_SERVICES=False
-          ddc-services up -d
-          derex reset-mailslurper
+          coverage run $(which ddc-services) up -d
+          coverage run $(which derex) reset-mailslurper
         displayName: 'Start service daemons'
 
       - script: |
           set -ex
           cd tests/fixtures/complete
-          derex reset-mysql
-          derex reset-rabbitmq
-          ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+          coverage run $(which derex) reset-mysql
+          coverage run $(which derex) reset-rabbitmq
+          coverage run $(which ddc-services) exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
         displayName: 'Test complete project fixtures'
 
       - script: |
           set -ex
           cd tests/fixtures/complete
-          derex build final
+          coverage run $(which derex) build final
         displayName: 'Build image for project "complete"'
 
-      - script: cd tests/fixtures/complete; ddc-project up -d
+      - script: cd tests/fixtures/complete; coverage run $(which ddc-project) up -d
         displayName: 'Start edX daemons'
 
       - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
@@ -203,6 +202,11 @@ stages:
         condition: always()
         displayName: 'Show ddc-project config'
 
+      - publish: $(System.DefaultWorkingDirectory)/.coverage*
+        artifact: testcomplete_coverage_1
+
+      - publish: $(System.DefaultWorkingDirectory)/tests/fixtures/*/.coverage*
+        artifact: testcomplete_coverage_2
 
   - job: TestMinimal
     timeoutInMinutes: 40
