@@ -73,25 +73,23 @@ stages:
 
       - script: |
           set -ex
-          cp $(Pipeline.Workspace)/*/.coverage* tests/
-          cp $(Pipeline.Workspace)/*/tests/.coverage* tests/
-          cp $(Pipeline.Workspace)/*/tests/fixtures/*/.coverage* tests/
-          cd tests
+          shopt -s globstar
+
+          cp $(Pipeline.Workspace)/**/.coverage.* .
           coverage combine
           coverage html
           coverage xml
-          cd ..
           # We installed the package with pip, and coverage reports the full absolute path.
           # We cut to derex/runner/etc/etc
-          DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
-          echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
+          DEREX_RUNNER_PATH=`python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
+          echo Replacing ${DEREX_RUNNER_PATH} in htmlcov/*.html
           sudo npm config set cache $(Pipeline.Workspace)/.cache/npm --global
           npm install juice
           # Azure pipelines strips style sheets but leaves styles in place.
           # juice can embed the styles in the HTML for us and present a much better
           # view in the coverage results tab.
-          for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-          echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;]"
+          for filename in htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+          echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/coverage.xml;reportdirectory=${PWD}/htmlcov;]"
         displayName: Fix coverage result and publish it
         condition: succeededOrFailed()
 
