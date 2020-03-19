@@ -14,6 +14,7 @@ stages:
           set -ex
           set -o pipefail
           coverage run $(which pytest) -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+          ls -latr
         displayName: 'Run python tests'
 
       - publish: $(System.DefaultWorkingDirectory)/.coverage*
