@@ -187,3 +187,17 @@ class Registry(object):
                 'must start with a ">" or "<".' % location
             )
         self.register(value, key, priority)
+
+    def add_list(self, to_add):
+        to_add_later = []
+        for el in to_add:
+            try:
+                self.add(*el)
+            except ValueError:
+                to_add_later.append(el)
+        for _ in range(3):  # Try for three rounds (arbitrarily chosen)
+            for el in to_add_later:
+                try:
+                    self.add(*el)
+                except ValueError:
+                    continue
