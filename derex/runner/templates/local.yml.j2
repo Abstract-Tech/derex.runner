@@ -4,9 +4,9 @@ version: "3.5"
 x-common:
   &common-conf
   {% if project.runmode.name == "production" -%}
-  image: {{ project.image_tag }}
+  image: {{ project.image_name }}
   {% else -%}
-  image: {{ project.requirements_image_tag }}
+  image: {{ project.requirements_image_name }}
   {% endif -%}
   tmpfs:
     - /tmp/

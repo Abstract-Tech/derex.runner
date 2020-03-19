@@ -60,7 +60,7 @@ def build_requirements_image(project: Project):
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
     dockerfile_text = "\n".join(dockerfile_contents)
     paths_to_copy = [str(project.requirements_dir)]
-    build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_tag)
+    build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_name)
 
 
 def build_themes_image(project: Project):
@@ -70,7 +70,7 @@ def build_themes_image(project: Project):
     if project.themes_dir is None:
         return
     dockerfile_contents = [
-        f"FROM {project.requirements_image_tag} as static",
+        f"FROM {project.requirements_image_name} as static",
         f"FROM {project.final_base_image}",
         "COPY --from=static /openedx/staticfiles /openedx/staticfiles",
         "COPY themes/ /openedx/themes/",
@@ -106,13 +106,16 @@ def build_themes_image(project: Project):
         build_image(
             dockerfile_text,
             paths_to_copy,
-            tag=project.themes_image_tag,
+            tag=project.themes_image_name,
             tag_final=True,
             extra_opts=dict(squash=True),
         )
     else:
         build_image(
-            dockerfile_text, paths_to_copy, tag=project.themes_image_tag, tag_final=True
+            dockerfile_text,
+            paths_to_copy,
+            tag=project.themes_image_name,
+            tag_final=True,
         )
         logger.warning(
             "To build a smaller image enable the --experimental flag in the docker server"

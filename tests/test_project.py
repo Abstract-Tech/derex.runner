@@ -26,8 +26,8 @@ def test_complete_project(workdir):
     assert project.requirements_dir == COMPLETE_PROJ / "requirements"
     assert project.themes_dir == COMPLETE_PROJ / "themes"
     assert project.name == "complete"
-    assert project.requirements_image_tag == "complete/openedx-requirements:a2e46f"
-    # assert project.themes_image_tag == "complete/openedx-themes:1f732a"
+    assert project.requirements_image_name == "complete/openedx-requirements:a2e46f"
+    # assert project.themes_image_name == "complete/openedx-themes:1f732a"
 
 
 def test_minimal_project(workdir):
@@ -38,9 +38,9 @@ def test_minimal_project(workdir):
     assert project.requirements_dir is None
     assert project.themes_dir is None
     assert project.name == "minimal"
-    assert project.requirements_image_tag == project.image_tag
-    assert project.themes_image_tag == project.image_tag
-    assert project.themes_image_tag == project.base_image
+    assert project.requirements_image_name == project.image_name
+    assert project.themes_image_name == project.image_name
+    assert project.themes_image_name == project.base_image
 
 
 def test_runmode(testproj):
@@ -118,6 +118,22 @@ def test_settings_enum(testproj):
         create_settings_file(Project().root, "production")
         Project().settings = Project().get_available_settings().production
         assert Project().settings == Project().get_available_settings().production
+
+
+def test_image_prefix(testproj):
+    with testproj as projdir:
+        conf_file = Path(projdir) / "derex.config.yaml"
+        config = {
+            "project_name": "minimal",
+            "image_prefix": "registry.example.com/onlinecourses/edx-ironwood",
+        }
+        conf_file.write_text(yaml.dump(config))
+        # Create a requirements directory to signal derex
+        # that we're going to build images for this project
+        (Path(projdir) / "requirements").mkdir()
+        project = Project()
+        assert project.image_prefix == config["image_prefix"]
+        assert project.themes_image_name.startswith(project.image_prefix)
 
 
 def test_populate_settings(testproj):
