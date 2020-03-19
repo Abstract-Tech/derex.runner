@@ -1,7 +1,7 @@
 stages:
 - stage: Test
   variables:
-    PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black --flake8
+    PYTEST_ADDOPTS: --cov=derex.runner --black --flake8
   jobs:
   - job: RunPytests
     timeoutInMinutes: 40
@@ -14,7 +14,7 @@ stages:
           set -ex
           set -o pipefail
           cd tests
-          pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+          coverage run $(which pytest) -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
         displayName: 'Run python tests'
 
       - publish: $(System.DefaultWorkingDirectory)/tests/.coverage*
@@ -43,7 +43,7 @@ stages:
           set -ex
           set -o pipefail
           cd tests
-          pytest -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+          coverage run $(which pytest) -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
         displayName: 'Run python tests'
 
       - publish: $(System.DefaultWorkingDirectory)/tests/.coverage*
