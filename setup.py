@@ -24,9 +24,7 @@ setup_requirements = ["setuptools"]
 
 test_requirements = ["pytest", "pytest-mock"]
 
-extras_requirements = {
-    "test": test_requirements,
-}
+extras_requirements = {"test": test_requirements}
 
 setup(
     author="Silvio Tomatis",
