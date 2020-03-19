@@ -243,10 +243,19 @@ stages:
         displayName: 'Check flower'
 
   - job: CheckDocs
-    timeoutInMinutes: 40
+    timeoutInMinutes: 5
     pool:
       vmImage: 'ubuntu-latest'
     steps:
       - template: prepare.yml
       - script: make docs
         displayName: 'Compile docs'
+
+  - job: CheckPreCommit
+    timeoutInMinutes: 5
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - template: prepare.yml
+      - script: pre-commit run -a
+        displayName: 'Check pre commit hooks'
