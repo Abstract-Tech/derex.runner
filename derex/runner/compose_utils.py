@@ -83,7 +83,7 @@ def exit_cm():
     # Context manager to monkey patch sys.exit calls
     import sys
 
-    def myexit(result_code):
+    def myexit(result_code=0):
         if result_code != 0:
             raise RuntimeError
 
