@@ -1,3 +1,6 @@
+from itertools import permutations
+
+
 def test_registry_basic():
     from derex.runner.plugins import Registry
 
@@ -19,3 +22,24 @@ def test_registry_basic():
     # Now move the last to the beginning, just to prove we can
     registry.add("last", "I should be last", "_begin")
     assert registry[0] == "I should be last"
+
+
+def test_registry_add_list():
+    from derex.runner.plugins import Registry
+
+    to_add = [
+        ("last", "I should be last", "_end"),
+        ("first", "I should be first", "_begin"),
+        ("in-between-1", "I should be the first in between first and last", ">first"),
+        ("in-between-2", "I should be the second in between first and last", "<last"),
+    ]
+    # Verify that it always works, no matter how the list is sorted
+    for variant in permutations(to_add):
+        registry = Registry()
+        registry.add_list(variant)
+        assert tuple(registry) == (
+            "I should be first",
+            "I should be the first in between first and last",
+            "I should be the second in between first and last",
+            "I should be last",
+        )
