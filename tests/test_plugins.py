@@ -1,5 +1,20 @@
 from itertools import permutations
 
+import pytest
+
+
+def test_registry_exception():
+    from derex.runner.plugins import Registry
+
+    registry = Registry()
+    registry.add("one", "one", "badlocation")
+
+    with pytest.raises(ValueError):
+        registry.add("one", "one", "badlocation")
+
+    with pytest.raises(ValueError):
+        registry.deregister("doesnotexist")
+
 
 def test_registry_basic():
     from derex.runner.plugins import Registry
