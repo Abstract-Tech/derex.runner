@@ -13,11 +13,10 @@ stages:
       - script: |
           set -ex
           set -o pipefail
-          cd tests
           coverage run $(which pytest) -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
         displayName: 'Run python tests'
 
-      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage*
+      - publish: $(System.DefaultWorkingDirectory)/.coverage*
         artifact: fasttests_coverage
 
 
@@ -42,11 +41,10 @@ stages:
       - script: |
           set -ex
           set -o pipefail
-          cd tests
           coverage run $(which pytest) -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
         displayName: 'Run python tests'
 
-      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage*
+      - publish: $(System.DefaultWorkingDirectory)/.coverage*
         artifact: slowtests_coverage
 
   - job: CombineCoverage
