@@ -56,7 +56,9 @@ stages:
   - job: CombineCoverage
     dependsOn:
       - RunPytests
-      - RunSlowPytests
+      #- RunSlowPytests
+      #- TestComplete
+      #- TestMinimal
     pool:
       vmImage: 'ubuntu-latest'
     steps:
