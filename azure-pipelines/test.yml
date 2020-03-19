@@ -25,7 +25,6 @@ stages:
 
   - job: RunSlowPytests
     timeoutInMinutes: 40
-    condition: false
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -56,9 +55,9 @@ stages:
   - job: CombineCoverage
     dependsOn:
       - RunPytests
-      #- RunSlowPytests
-      #- TestComplete
-      #- TestMinimal
+      - RunSlowPytests
+      - TestComplete
+      - TestMinimal
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -99,7 +98,6 @@ stages:
 
   - job: TestComplete
     timeoutInMinutes: 40
-    condition: false
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -218,7 +216,6 @@ stages:
         artifact: testcomplete_coverage
 
   - job: TestMinimal
-    condition: false
     timeoutInMinutes: 40
     pool:
       vmImage: 'ubuntu-latest'
