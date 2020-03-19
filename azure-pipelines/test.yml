@@ -69,6 +69,8 @@ stages:
       - script: |
           set -ex
           cp $(Pipeline.Workspace)/*/.coverage* tests/
+          cp $(Pipeline.Workspace)/*/tests/.coverage* tests/
+          cp $(Pipeline.Workspace)/*/tests/fixtures/*/.coverage* tests/
           cd tests
           coverage combine
           coverage html
