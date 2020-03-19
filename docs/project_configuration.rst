@@ -61,3 +61,21 @@ For instance the following config will drive the variable DEREX_LMS_SITE_NAME.
 
 In turn the default derex config files for LMS will look into all environment variables
 of the form DEREX_LMS_VARIABLE_NAME and set the settings value VARIABLE_NAME accordingly.
+
+Runmode
+-------
+
+A project can be in one of two runmodes: `debug` or `production`.
+
+In debug mode the edx servers are run with the Django `runserver` command, while
+in production `gunicorn` is used.
+
+Custom docker-compose.yml
+-------------------------
+
+If a file named `docker-compose.yml` is present in the project directory, it
+will be appended to the derex configuration.
+
+Additionally, a docker compose can be specified for each runmode (`production`
+or `debug`) with the filename `docker-compose-production.yml` or
+`docker-compose-debug.yml`.

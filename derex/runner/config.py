@@ -7,6 +7,7 @@ from jinja2 import Template
 from pathlib import Path
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Union
 
 import click
@@ -55,9 +56,39 @@ class LocalOpenEdX:
         """
         local_path = generate_local_docker_compose(project)
         options = ["--project-name", project.name, "-f", str(local_path)]
-        if project.local_compose is not None:
-            options += ["-f", str(project.local_compose)]
-        return {"options": options, "name": "base", "priority": "_begin"}
+        return {"options": options, "name": "local-derex", "priority": "_begin"}
+
+
+class LocalUser:
+    @staticmethod
+    @hookimpl
+    def local_compose_options(
+        project: Project,
+    ) -> Optional[Dict[str, Union[str, List[str]]]]:
+        """See derex.runner.plugin_spec.compose_options docstring
+        """
+        if project.local_compose is None:
+            return None
+        return {
+            "options": ["-f", str(project.local_compose)],
+            "name": "local-user",
+            "priority": "_end",
+        }
+
+
+class LocalRunmodeOpenEdX:
+    @staticmethod
+    @hookimpl
+    def local_compose_options(
+        project: Project,
+    ) -> Optional[Dict[str, Union[str, List[str]]]]:
+        """See derex.runner.plugin_spec.compose_options docstring
+        """
+        local_path = project.root / f"docker-compose-{project.runmode.value}.yml"
+        if not local_path.is_file():
+            return None
+        options = ["-f", str(local_path)]
+        return {"options": options, "name": "local-runmode", "priority": "_end"}
 
 
 def generate_local_docker_compose(project: Project) -> Path:
