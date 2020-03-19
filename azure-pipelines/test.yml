@@ -14,10 +14,12 @@ stages:
           set -ex
           set -o pipefail
           coverage run $(which pytest) -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+          mkdir coverage
+          cp .coverage.* coverage/
           ls -latr
         displayName: 'Run python tests'
 
-      - publish: $(System.DefaultWorkingDirectory)/.coverage*
+      - publish: $(System.DefaultWorkingDirectory)/coverage
         artifact: fasttests_coverage
 
 
@@ -43,9 +45,11 @@ stages:
           set -ex
           set -o pipefail
           coverage run $(which pytest) -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+          mkdir coverage
+          cp .coverage.* coverage/
         displayName: 'Run python tests'
 
-      - publish: $(System.DefaultWorkingDirectory)/.coverage*
+      - publish: $(System.DefaultWorkingDirectory)/coverage
         artifact: slowtests_coverage
 
   - job: CombineCoverage
@@ -199,15 +203,15 @@ stages:
         displayName: 'Show logs'
 
       - script: |
+          mkdir coverage
+          cp .coverage.* coverage/
+          cp tests/fixtures/*/.coverage.* coverage/
           cd tests/fixtures/complete; ddc-project config
         condition: always()
-        displayName: 'Show ddc-project config'
+        displayName: 'Show ddc-project config and copy coverage files'
 
-      - publish: $(System.DefaultWorkingDirectory)/.coverage*
-        artifact: testcomplete_coverage_1
-
-      - publish: $(System.DefaultWorkingDirectory)/tests/fixtures/*/.coverage*
-        artifact: testcomplete_coverage_2
+      - publish: $(System.DefaultWorkingDirectory)/coverage
+        artifact: testcomplete_coverage
 
   - job: TestMinimal
     timeoutInMinutes: 40
@@ -246,6 +250,18 @@ stages:
           curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@lms.edx
           curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@cms.edx
         displayName: 'Check flower'
+
+      - script: |
+          mkdir coverage
+          cp .coverage.* coverage/
+          cp tests/fixtures/*/.coverage.* coverage/
+          cd tests/fixtures/minimal; ddc-project config
+        condition: always()
+        displayName: 'Show ddc-project config and copy coverage files'
+
+      - publish: $(System.DefaultWorkingDirectory)/coverage
+        artifact: testminimal_coverage
+
 
   - job: CheckDocs
     timeoutInMinutes: 5
