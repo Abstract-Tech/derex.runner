@@ -63,17 +63,19 @@ def get_compose_options(
     plugin_manager = setup_plugin_manager()
     registry = Registry()
     if project:
-        for opts in plugin_manager.hook.local_compose_options(project=project):
-            registry.add(
-                key=opts["name"], value=opts["options"], location=opts["priority"]
-            )
+        to_add = [
+            (opts["name"], opts["options"], opts["priority"])
+            for opts in plugin_manager.hook.local_compose_options(project=project)
+        ]
+        registry.add_list(to_add)
     else:
         ensure_volumes_present()
-        for opts in plugin_manager.hook.compose_options():
-            if opts["variant"] == variant:
-                registry.add(
-                    key=opts["name"], value=opts["options"], location=opts["priority"]
-                )
+        to_add = [
+            (opts["name"], opts["options"], opts["priority"])
+            for opts in plugin_manager.hook.compose_options()
+            if opts["variant"] == variant
+        ]
+        registry.add_list(to_add)
     settings = [el for lst in registry for el in lst]
     return ["docker-compose"] + settings + args
 
