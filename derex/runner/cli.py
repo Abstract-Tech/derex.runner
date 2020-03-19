@@ -40,6 +40,7 @@ def ensure_project(func):
 
 
 @with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
+@click.version_option(__version__)
 @click.group()
 @click.pass_context
 def derex(ctx):
