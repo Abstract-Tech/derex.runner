@@ -1,6 +1,7 @@
 from collections import namedtuple
 from derex.runner import config
 from derex.runner import plugin_spec
+from pprint import pformat
 
 import pluggy
 
@@ -190,14 +191,26 @@ class Registry(object):
 
     def add_list(self, to_add):
         to_add_later = []
+        # First pass: try to add all elements
         for el in to_add:
             try:
                 self.add(*el)
             except ValueError:
                 to_add_later.append(el)
-        for _ in range(3):  # Try for three rounds (arbitrarily chosen)
-            for el in to_add_later:
-                try:
-                    self.add(*el)
-                except ValueError:
-                    continue
+
+        # Second pass: add the elements we didn't add on first pass
+        for el in tuple(to_add_later):
+            try:
+                self.add(*el)
+                to_add_later.remove(el)
+            except ValueError:
+                continue
+
+        # Third pass: go over all elements once again in reverse order
+        # this time re-raising exceptions, so that impossible
+        # requests will raise an exception
+        for el in reversed(to_add):
+            try:
+                self.add(*el)
+            except ValueError:
+                raise ValueError(f"Could not add these to registry:\n{pformat(to_add)}")

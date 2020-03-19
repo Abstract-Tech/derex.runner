@@ -22,7 +22,7 @@ def compose_options() -> Dict[str, Union[str, float, int, List[str]]]:
 
         {
             "name": "addon",
-            "priority": ">base",
+            "priority": ">derex-local",
             "variant": "openedx",
             "options": ["-f", "/path/to/docker-compose.yml"],
         }
@@ -43,7 +43,7 @@ def local_compose_options(
 
         {
             "name": "addon",
-            "priority": ">base",
+            "priority": ">derex-local",
             "options": ["-f", "/path/to/docker-compose.yml"],
         }
     """
