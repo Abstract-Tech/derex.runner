@@ -75,7 +75,7 @@ def test_docker_compose_addition(testproj, mocker):
             return {
                 "options": ["custom-additional"],
                 "name": "custom",
-                "priority": ">base",
+                "priority": ">local-derex",
             }
 
     with testproj:
