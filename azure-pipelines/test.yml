@@ -62,9 +62,16 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - template: prepare.yml
-
       - download: current
+      - script: |
+          set -ex
+          shopt -s globstar
+          ls -l $(Pipeline.Workspace)/**/.coverage.*
+          cp $(Pipeline.Workspace)/**/.coverage.* .
+          ls -latr
+        displayName: Prepare coverage files
+
+      - template: prepare.yml
 
       - task: Cache@2
         inputs:
@@ -74,10 +81,6 @@ stages:
 
       - script: |
           set -ex
-          shopt -s globstar
-
-          cp $(Pipeline.Workspace)/**/.coverage.* .
-          ls -latr
           coverage combine
           ls -latr
           coverage html
