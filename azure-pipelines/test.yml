@@ -77,7 +77,9 @@ stages:
           shopt -s globstar
 
           cp $(Pipeline.Workspace)/**/.coverage.* .
+          ls -latr
           coverage combine
+          ls -latr
           coverage html
           coverage xml
           # We installed the package with pip, and coverage reports the full absolute path.
