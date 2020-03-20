@@ -1,5 +1,4 @@
 from derex.runner import hookimpl
-from derex.runner.build import build_requirements_image
 from derex.runner.project import Project
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
@@ -10,9 +9,12 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-import click
 import docker
+import logging
 import os
+
+
+logger = logging.getLogger(__name__)
 
 
 class BaseServices:
@@ -104,8 +106,10 @@ def generate_local_docker_compose(project: Project) -> Path:
     if image_exists(project.image_name):
         final_image = project.image_name
     if not image_exists(project.requirements_image_name):
-        click.echo("Building requirements image")
-        build_requirements_image(project)
+        logger.warn(
+            f"Image {project.requirements_image_name} not found\n"
+            "Run\nderex build requirements\n to build it"
+        )
     tmpl = Template(template_path.read_text())
     text = tmpl.render(project=project, final_image=final_image)
     local_compose_path.write_text(text)
