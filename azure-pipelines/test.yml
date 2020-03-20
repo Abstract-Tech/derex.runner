@@ -111,6 +111,8 @@ stages:
       - script: |
           set -ex
           cd tests/fixtures/complete
+          derex build requirements
+          derex build themes
           derex reset-mysql
           derex reset-rabbitmq
           DATABASE_NAME=$(ddc-project run --rm lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
