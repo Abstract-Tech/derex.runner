@@ -348,7 +348,7 @@ def get_requirements_hash(path: Path) -> str:
     logger.debug(
         f"Calculating hash for requirements dir {path}; initial (empty) hash is {hasher.hexdigest()}"
     )
-    for file in path.iterdir():
+    for file in sorted(path.iterdir()):
         if file.is_file():
             hasher.update(file.read_bytes())
         logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
