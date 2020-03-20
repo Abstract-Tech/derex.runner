@@ -1,4 +1,5 @@
 import logging
+import os
 
 
 class CustomFormatter(logging.Formatter):
@@ -26,13 +27,14 @@ class CustomFormatter(logging.Formatter):
 
 
 def setup_logging():
+    loglevel = getattr(logging, os.environ.get("DEREX_LOGLEVEL", "WARN"))
     logging.basicConfig()
     for logger in ("urllib3.connectionpool", "compose", "docker"):
         logging.getLogger(logger).setLevel(logging.WARN)
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    ch.setLevel(loglevel)
     ch.setFormatter(CustomFormatter())
     root_logger = logging.getLogger("")
     root_logger.removeHandler(root_logger.handlers[0])
     root_logger.addHandler(ch)
-    root_logger.setLevel(logging.INFO)
+    root_logger.setLevel(loglevel)

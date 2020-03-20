@@ -345,9 +345,13 @@ def get_requirements_hash(path: Path) -> str:
     """Given a directory, return a hash of the contents of the text files it contains.
     """
     hasher = hashlib.sha256()
+    logger.debug(
+        f"Calculating hash for requirements dir {path}; initial (empty) hash is {hasher.hexdigest()}"
+    )
     for file in path.iterdir():
         if file.is_file():
             hasher.update(file.read_bytes())
+        logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
     return hasher.hexdigest()
 
 
