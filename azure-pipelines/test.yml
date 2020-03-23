@@ -144,6 +144,7 @@ stages:
       - script: |
           CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/"
           $CMD || (sleep 10; $CMD )
+          curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/example_view
         displayName: 'Curl the LMS'
 
       - script: |
@@ -185,6 +186,7 @@ stages:
       - script: |
           CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/"
           $CMD || (sleep 10; $CMD )
+          curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/example_view
         continueOnError: true
         displayName: 'Curl the final LMS'
 
