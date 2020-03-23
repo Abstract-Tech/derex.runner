@@ -26,7 +26,7 @@ def test_complete_project(workdir):
     assert project.requirements_dir == COMPLETE_PROJ / "requirements"
     assert project.themes_dir == COMPLETE_PROJ / "themes"
     assert project.name == "complete"
-    assert project.requirements_image_name == "complete/openedx-requirements:34e280"
+    assert project.requirements_image_name == "complete/openedx-requirements:6c92de"
     # assert project.themes_image_name == "complete/openedx-themes:b276c6"
 
 
