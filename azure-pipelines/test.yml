@@ -183,14 +183,14 @@ stages:
         displayName: 'Show CMS/LMS final logs'
 
       - script: |
-          $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4710/"
+          $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/"
           $CMD || (sleep 10; $CMD )
         continueOnError: true  # Temporarily disable this test: it's failing with this line in the logs:
         # pymongo.errors.OperationFailure: command SON([('saslStart', 1), ('mechanism', 'SCRAM-SHA-1'), ('autoAuthorize', 1), ('payload', Binary(b'n,,n=edxapp,r=MDg3MjIwMjQyMDc4MTg3MjQ=', 0))]) on namespace complete_mongoedx.$cmd failed: Authentication failed.
         displayName: 'Curl the final LMS'
 
       - script: |
-          $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4810/"
+          $CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4800/"
           $CMD || (sleep 10; $CMD )
         continueOnError: true  # Temporarily disable this test: it's failing with the line mentioned above
         displayName: 'Curl the final CMS'
