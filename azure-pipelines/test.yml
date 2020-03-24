@@ -94,6 +94,9 @@ stages:
     timeoutInMinutes: 40
     pool:
       vmImage: 'ubuntu-latest'
+    variables:
+      name: CURL
+      value: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
     steps:
       - template: prepare.yml
       - template: load_images.yml
@@ -142,14 +145,11 @@ stages:
         displayName: 'Show CMS/LMS logs'
 
       - script: |
-          CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/"
-          $CMD || (sleep 10; $CMD )
-          curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/example_view
+          $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
+          $(CURL) http://localhost:4700/example_view
         displayName: 'Curl the LMS'
 
-      - script: |
-          CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4800/"
-          $CMD || (sleep 10; $CMD )
+      - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
         displayName: 'Curl the CMS'
 
       - script: |
@@ -184,16 +184,11 @@ stages:
         displayName: 'Show CMS/LMS logs (prod mode)'
 
       - script: |
-          CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/"
-          $CMD || (sleep 10; $CMD )
-          curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4700/example_view
-        continueOnError: true
+          $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
+          $(CURL) http://localhost:4700/example_view
         displayName: 'Curl the LMS (prod mode)'
 
-      - script: |
-          CMD="curl --connect-timeout 30 --retry 5 --retry-delay 5 -f http://localhost:4800/"
-          $CMD || (sleep 10; $CMD )
-        continueOnError: true
+      - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
         displayName: 'Curl the CMS (prod mode)'
 
       - script: |
