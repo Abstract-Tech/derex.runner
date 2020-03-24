@@ -1,8 +1,5 @@
 from path import Path
 
-import os
-import sys
-
 
 STATIC_ROOT_BASE = "/openedx/staticfiles"
 STATIC_ROOT_BASE = os.environ.get("STATIC_ROOT_LMS", "/openedx/staticfiles")
