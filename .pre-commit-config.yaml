@@ -18,8 +18,7 @@ repos:
     -   id: mypy
         args:
         - --ignore-missing-imports
-        exclude: tests/fixtures
-        exclude: derex/runner/settings/derex/*
+        exclude: tests/fixtures/.*|derex/runner/settings/derex/.*
 
 -   repo: https://github.com/ambv/black
     rev: 19.10b0
