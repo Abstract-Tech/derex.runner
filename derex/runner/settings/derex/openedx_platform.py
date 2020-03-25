@@ -1,12 +1,10 @@
 PLATFORM_NAME = "TestEdX"
-SITE_NAME = {"lms": "lms.localhost:4700", "cms": "studio.localhost:4700"}[
-    SERVICE_VARIANT
-]
 
 LMS_BASE = "lms.localhost:4700"
 CMS_BASE = "studio.localhost:4800"
 
 LMS_ROOT_URL = "//{}".format(LMS_BASE)
+SITE_NAME = {"lms": LMS_BASE, "cms": CMS_BASE}[SERVICE_VARIANT]
 
 PREVIEW_LMS_BASE = "preview.localhost:4700"
 FEATURES["PREVIEW_LMS_BASE"] = PREVIEW_LMS_BASE
