@@ -28,6 +28,7 @@ def run_compose(
     variant: str = "services",
     dry_run: bool = False,
     project: Optional["derex.runner.project.Project"] = None,
+    exit_afterwards: bool = False,
 ):
     """Run a docker-compose command passed in the `args` list.
     If `variant` is passed, load plugins for that variant.
@@ -38,8 +39,11 @@ def run_compose(
         sys.argv = get_compose_options(args=args, variant=variant, project=project)
         if not dry_run:
             click.echo(f'Running\n{" ".join(sys.argv)}', err=True)
-            with exit_cm():
+            if exit_afterwards:
                 main()
+            else:
+                with exit_cm():
+                    main()
         else:
             click.echo("Would have run:\n")
             click.echo(click.style(" ".join(sys.argv), fg="blue"))
