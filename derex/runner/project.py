@@ -369,11 +369,20 @@ def find_project_root(path: Path) -> Path:
     )
 
 
-class DebugProject(Project):
-    """A project in debug mode, regardless of hte state saved on disk.
+class DebugBaseImageProject(Project):
+    """A project that is always in debug mode and always uses the base image,
+    irregardless of the presence of requirements.
     """
 
     runmode = ProjectRunMode.debug
+
+    @property  # type: ignore
+    def requirements_image_name(self):
+        return self.base_image
+
+    @requirements_image_name.setter
+    def requirements_image_name(self, value):
+        pass
 
 
 class OpenEdXVersions(Enum):
