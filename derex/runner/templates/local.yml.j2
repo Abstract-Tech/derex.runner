@@ -100,7 +100,7 @@ services:
   lms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py lms celery worker --loglevel=INFO -n lms.edx -Q lms.default'
+      sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n lms.edx -Q lms.default'
     container_name: {{ project.name }}_lms_worker
     environment:
       <<: *common-env
@@ -111,7 +111,7 @@ services:
   cms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py cms celery worker --loglevel=INFO -n cms.edx -Q cms.default'
+      sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n cms.edx -Q cms.default'
     container_name: {{ project.name }}_cms_worker
     environment:
       <<: *common-env
