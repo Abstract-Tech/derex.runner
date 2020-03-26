@@ -2,7 +2,7 @@
 History
 =======
 
-0.0.1 (YYYY-MM-DD)
+0.0.2 (2020-03-26)
 ----------------------------------------------
 
-* Some time in the future: first release on PyPI.
+* Start versioning changes
