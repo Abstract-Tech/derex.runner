@@ -35,6 +35,9 @@ _settings_modules = [
 
 for setting_module in _settings_modules:
     setting_module_path = str(Path(__file__).parent / setting_module + ".py")
+    # We are using execfile in order to share the current scope so that we
+    # don't have to redefine and reimport everything in every single settings
+    # module
     if sys.version_info[0] < 3:
         # In python 2 we should use execfile
         execfile(setting_module_path, globals(), locals())  # noqa: F821
