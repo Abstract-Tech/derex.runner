@@ -11,7 +11,6 @@ FEATURES["PREVIEW_LMS_BASE"] = PREVIEW_LMS_BASE
 PREVIEW_DOMAIN = FEATURES["PREVIEW_LMS_BASE"].split(":")[0]
 HOSTNAME_MODULESTORE_DEFAULT_MAPPINGS = {PREVIEW_DOMAIN: "draft-preferred"}
 
-
 if SERVICE_VARIANT == "cms":
     LOGIN_URL = "/signin"
     FRONTEND_LOGIN_URL = reverse_lazy("login_redirect_to_lms")

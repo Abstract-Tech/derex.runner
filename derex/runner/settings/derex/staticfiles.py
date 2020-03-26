@@ -2,11 +2,10 @@ from path import Path
 
 
 STATIC_ROOT_BASE = "/openedx/staticfiles"
-STATIC_ROOT_BASE = os.environ.get("STATIC_ROOT_LMS", "/openedx/staticfiles")
 STATIC_ROOT = {  # type: ignore
     "lms": Path(STATIC_ROOT_BASE),
     "cms": Path(STATIC_ROOT_BASE) / "studio",
-}[os.environ.get("SERVICE_VARIANT")]
+}[SERVICE_VARIANT]
 
 WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = (  # type: ignore
     STATIC_ROOT / "webpack-stats.json"

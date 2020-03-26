@@ -1,14 +1,12 @@
 from kombu.utils.functional import maybe_list
 
 
-CELERY_BROKER_VHOST = "/"
-if DEREX_PROJECT:
-    CELERY_BROKER_VHOST = "{}_edxqueue".format(DEREX_PROJECT)
+CELERY_BROKER_VHOST = "{}_edxqueue".format(DEREX_PROJECT)
 
-CELERY_BROKER_TRANSPORT = os.environ.get("CELERY_BROKER_TRANSPORT", "amqp")
-CELERY_BROKER_HOSTNAME = os.environ.get("CELERY_BROKER_HOSTNAME", "rabbitmq")
-CELERY_BROKER_USER = os.environ.get("CELERY_BROKER_USER", "guest")
-CELERY_BROKER_PASSWORD = os.environ.get("CELERY_BROKER_PASSWORD", "guest")
+CELERY_BROKER_TRANSPORT = "amqp"
+CELERY_BROKER_HOSTNAME = "rabbitmq"
+CELERY_BROKER_USER = "guest"
+CELERY_BROKER_PASSWORD = "guest"
 BROKER_URL = "{0}://{1}:{2}@{3}/{4}".format(
     CELERY_BROKER_TRANSPORT,
     CELERY_BROKER_USER,
