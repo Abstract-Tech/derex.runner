@@ -106,7 +106,7 @@ def generate_local_docker_compose(project: Project) -> Path:
     if image_exists(project.image_name):
         final_image = project.image_name
     if not image_exists(project.requirements_image_name):
-        logger.warn(
+        logger.warning(
             f"Image {project.requirements_image_name} not found\n"
             "Run\nderex build requirements\n to build it"
         )
