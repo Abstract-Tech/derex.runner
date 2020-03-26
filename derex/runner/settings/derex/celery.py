@@ -15,10 +15,10 @@ BROKER_URL = "{0}://{1}:{2}@{3}/{4}".format(
     CELERY_BROKER_VHOST,
 )
 CELERY_MONGODB_BACKEND_SETTINGS = {
-    "database": MONGODB_DB,
+    "database": MONGODB_DB_NAME,
     "taskmeta_collection": "taskmeta_collection",
 }
-CELERY_RESULT_BACKEND = "mongodb://{MONGODB_HOST}/".format(**locals())
+CELERY_RESULT_BACKEND = "mongodb://{}/".format(MONGODB_HOST)
 CELERY_RESULT_DB_TABLENAMES = {"task": "celery_edx_task", "group": "celery_edx_group"}
 
 CELERY_IMPORTS = locals().get("CELERY_IMPORTS", [])
