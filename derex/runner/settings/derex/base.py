@@ -13,7 +13,7 @@ except ImportError:
     from ...common import *
 
 SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
-DEREX_PROJECT = os.environ.get("DEREX_PROJECT")
+DEREX_PROJECT = os.environ["DEREX_PROJECT"]
 
 _settings_modules = [
     "django",
