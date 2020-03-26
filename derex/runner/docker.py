@@ -76,13 +76,14 @@ def execute_mysql_query(query: str):
     """Create the given database in mysql.
     """
     container = client.containers.get("mysql")
-    res = container.exec_run(f'mysql -psecret -e "{query}"')
-    assert res.exit_code == 0, f"Error running {query}"
+    result = container.exec_run(f'mysql -psecret -e "{query}"')
+    assert result.exit_code == 0, f"Error running {query}"
+    return result
 
 
 def wait_for_mysql(max_seconds: int = 20):
     """With a freshly created container mysql might need a bit of time to prime
-    its files. This functions waits up to max_seconds seconds
+    its files. This functions waits up to max_seconds seconds.
     """
     container = client.containers.get("mysql")
     for i in range(max_seconds):
@@ -91,6 +92,34 @@ def wait_for_mysql(max_seconds: int = 20):
             break
         time.sleep(1)
         logger.warning("Waiting for mysql database to be ready")
+
+
+def wait_for_mongodb(max_seconds: int = 20):
+    """With a freshly created container mongo might need a bit of time to prime
+    its files. This functions waits up to max_seconds seconds.
+    """
+    container = client.containers.get("mongodb")
+    for i in range(max_seconds):
+        res = container.exec_run("mongo")
+        if res.exit_code == 0:
+            break
+        time.sleep(1)
+        logger.warning("Waiting for mongo database to be ready")
+
+
+def get_mongo_client():
+    from pymongo import MongoClient
+
+    if not check_services(["mongodb"]):
+        raise RuntimeError(
+            "MongoDB service not found.\nMaybe you forgot to run\nddc-services up -d"
+        )
+
+    wait_for_mongodb()
+    container = client.containers.get("mongodb")
+    mongo_address = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
+
+    return MongoClient(f"mongodb://{mongo_address}:27017/")
 
 
 def load_dump(relpath):
