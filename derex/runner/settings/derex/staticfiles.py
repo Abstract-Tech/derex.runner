@@ -2,15 +2,13 @@ from path import Path
 
 
 STATIC_ROOT_BASE = "/openedx/staticfiles"
-STATIC_ROOT = {  # type: ignore
+STATIC_ROOT = {
     "lms": Path(STATIC_ROOT_BASE),
     "cms": Path(STATIC_ROOT_BASE) / "studio",
 }[SERVICE_VARIANT]
 
-WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = (  # type: ignore
-    STATIC_ROOT / "webpack-stats.json"
-)
-COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))  # type: ignore  # noqa
+WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = STATIC_ROOT / "webpack-stats.json"
+COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))
 # STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 if "runserver" in sys.argv:
