@@ -113,7 +113,8 @@ stages:
           cd tests/fixtures/complete
           derex reset-mysql
           derex reset-rabbitmq
-          ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret complete_myedx -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+          DATABASE_NAME=$(ddc-project run --rm lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+          ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
         displayName: 'Test complete project fixtures'
 
       - script: |

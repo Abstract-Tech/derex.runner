@@ -76,14 +76,19 @@ class Project:
     # Can include a private docker name, like registry.example.com/onlinecourses/edx-ironwood
     image_prefix: str
 
-    # Name of the database this project uses
-    mysql_db_name: str
-
     # Path to a local docker-compose.yml file, if present
     local_compose: Optional[Path] = None
 
     # Enum containing possible settings modules
     _available_settings = None
+
+    @property
+    def mysql_db_name(self) -> str:
+        return self.config.get("mysql_db_name", f"{self.name}_openedx")
+
+    @property
+    def mongodb_db_name(self) -> str:
+        return self.config.get("mongodb_db_name", f"{self.name}_openedx")
 
     @property
     def runmode(self) -> ProjectRunMode:
@@ -238,7 +243,6 @@ class Project:
             self.plugins_dir = plugins_dir
 
         self.image_name = self.themes_image_name
-        self.mysql_db_name = self.config.get("mysql_db_name", f"{self.name}_edxapp")
 
     def _populate_settings(self):
         """If the project includes user defined settings, add ours to that directory
