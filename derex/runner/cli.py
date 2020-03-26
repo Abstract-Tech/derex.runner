@@ -356,3 +356,75 @@ def settings(project: Project, settings: Optional[Any]):
         click.echo(project.settings.name)
     else:
         project.settings = settings
+
+
+@derex.command("rename-mongodb")
+@ensure_project
+@click.argument("source_db_name", type=str, required=True)
+@click.option(
+    "--do-not-drop",
+    is_flag=True,
+    default=False,
+    help="Do not drop the source database after tables have been moved",
+)
+@click.pass_obj
+def rename_mongodb(project: Project, source_db_name: str, do_not_drop: bool = False):
+    """Rename an existing mongodb database to the current database name as defined in project config"""
+    from derex.runner.docker import get_mongo_client
+
+    client = get_mongo_client()
+    click.echo(f'Copying database "{source_db_name}" to "{project.mongodb_db_name}"')
+    client.admin.command("copydb", fromdb=source_db_name, todb=project.mongodb_db_name)
+    if not do_not_drop:
+        click.echo(f'Dropping database "{source_db_name}"')
+        client.drop_database(source_db_name)
+    return 0
+
+
+@derex.command("rename-mysql")
+@ensure_project
+@click.argument("source_db_name", type=str, required=True)
+@click.option(
+    "--do-not-drop",
+    is_flag=True,
+    default=False,
+    help="Do not drop the source database after tables have been moved",
+)
+@click.pass_obj
+def rename_mysql(project: Project, source_db_name: str, do_not_drop: bool = False):
+    """Rename an existing mysql database to the current database name as defined in project config"""
+    from derex.runner.docker import check_services
+    from derex.runner.docker import execute_mysql_query
+    from derex.runner.docker import wait_for_mysql
+
+    if not check_services(["mysql"]):
+        click.echo(
+            "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
+        )
+        return
+    wait_for_mysql()
+
+    tables_query = execute_mysql_query(f"USE {source_db_name}; SHOW TABLES;")
+    tables = (
+        tables_query.output.decode("utf-8")
+        .replace(
+            "Warning: Using a password on the command line interface can be "
+            "insecure.\n",
+            "",
+        )
+        .replace(f"Tables_in_{source_db_name}\n", "")
+        .split("\n")
+    )
+
+    execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
+    for table in tables:
+        if table:
+            click.echo(f"Moving {table}")
+            execute_mysql_query(
+                f"RENAME TABLE `{source_db_name}`.`{table}` TO "
+                f"`{project.mysql_db_name}`.`{table}`;"
+            )
+    if not do_not_drop:
+        click.echo(f'Dropping database "{source_db_name}"')
+        execute_mysql_query(f"DROP DATABASE {source_db_name}")
+    return 0

@@ -15,6 +15,7 @@ requirements = [
     "click_plugins",
     "docker-compose>=1.25.4",
     "importlib_metadata",
+    "pymongo",
     "pyyaml",
     "pluggy",
     "jinja2",
