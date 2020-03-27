@@ -18,17 +18,12 @@ runner = CliRunner(mix_stderr=False)
 
 
 @pytest.mark.slowtest
-def test_derex_build(workdir, sys_argv):
+def test_derex_compile_theme(workdir, sys_argv):
     from derex.runner.cli import derex
-    from derex.runner.ddc import ddc_project
 
     with workdir(COMPLETE_PROJ):
         result = runner.invoke(derex, ["compile-theme"])
         assert_result_ok(result)
-
-        with sys_argv(["ddc-project", "config"]):
-            ddc_project()
-        assert Project().name in result.output
         assert os.path.isdir(Project().root / ".derex")
 
 
