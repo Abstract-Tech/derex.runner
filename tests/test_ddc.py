@@ -31,28 +31,27 @@ def test_ddc_services(sys_argv, capsys):
     assert "adminer" in output
 
 
-def test_ddc_project(sys_argv, mocker, workdir, capsys):
+def test_ddc_project(sys_argv, mocker, workdir_copy, capsys):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.ddc import ddc_project
 
     # It should check for services to be up before trying to do anything
-    check_services = mocker.patch("derex.runner.ddc.check_services")
+    check_services = mocker.patch("derex.runner.ddc.check_services", return_value=False)
 
-    check_services.return_value = False
     for param in ["up", "start"]:
-        with workdir(MINIMAL_PROJ):
+        with workdir_copy(MINIMAL_PROJ):
             with sys_argv(["ddc-project", param, "--dry-run"]):
                 ddc_project()
         assert "ddc-services up -d" in capsys.readouterr().out
 
     check_services.return_value = True
     for param in ["up", "start"]:
-        with workdir(MINIMAL_PROJ):
+        with workdir_copy(MINIMAL_PROJ):
             with sys_argv(["ddc-project", param, "--dry-run"]):
                 ddc_project()
         assert "Would have run" in capsys.readouterr().out
 
-    with workdir(MINIMAL_PROJ):
+    with workdir_copy(MINIMAL_PROJ):
         with sys_argv(["ddc-project", "config"]):
             ddc_project()
     assert "worker" in capsys.readouterr().out
