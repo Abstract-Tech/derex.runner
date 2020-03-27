@@ -24,7 +24,8 @@ CELERY_RESULT_DB_TABLENAMES = {"task": "celery_edx_task", "group": "celery_edx_g
 CELERY_IMPORTS = locals().get("CELERY_IMPORTS", [])
 # XXX for some reason celery is not registering the bookmarks app
 CELERY_IMPORTS = list(maybe_list(CELERY_IMPORTS)) + [
-    "openedx.core.djangoapps.bookmarks.tasks"
+    "openedx.core.djangoapps.bookmarks.tasks",
+    "openedx.core.djangoapps.content.course_overviews.tasks",
 ]
 CELERYBEAT_SCHEDULE = {}
 
