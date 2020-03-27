@@ -79,6 +79,11 @@ class Project:
     # Path to a local docker-compose.yml file, if present
     local_compose: Optional[Path] = None
 
+    # Volumes to mount the requirements. In case this is not None the requirements
+    # directory will not be mounted directly, but this dictionary will be used.
+    # Keys are paths on the host system and values are path inside the container
+    requirements_volumes: Optional[Dict[str, str]] = None
+
     # Enum containing possible settings modules
     _available_settings = None
 
@@ -215,6 +220,15 @@ class Project:
             self.requirements_image_name = (
                 f"{self.image_prefix}-requirements:{img_hash[:6]}"
             )
+            requirements_volumes: Dict[str, str] = {}
+            # If the requirements directory contains any symlink we mount
+            # their targets individually instead of the whole requirements directory
+            for el in self.requirements_dir.iterdir():
+                if el.is_symlink():
+                    self.requirements_volumes = requirements_volumes
+                requirements_volumes[str(el.resolve())] = (
+                    "/openedx/derex.requirements/" + el.name
+                )
         else:
             self.requirements_image_name = self.base_image
 

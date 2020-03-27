@@ -7,6 +7,7 @@ import logging
 import os
 import pytest
 import sys
+import yaml
 
 
 MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
@@ -55,6 +56,30 @@ def test_ddc_project(sys_argv, mocker, workdir_copy, capsys):
         with sys_argv(["ddc-project", "config"]):
             ddc_project()
     assert "worker" in capsys.readouterr().out
+
+
+def test_ddc_project_symlink_mounting(sys_argv, mocker, workdir_copy, capsys):
+    """Make sure targets of symlinks in the requirements directory
+    are mounted in the Open edX containers.
+    """
+    from derex.runner.ddc import ddc_project
+
+    mocker.patch("derex.runner.ddc.check_services", return_value=True)
+    with workdir_copy(COMPLETE_PROJ) as project_path:
+        with sys_argv(["ddc-project", "config"]):
+            ddc_project()
+        config = yaml.load(capsys.readouterr().out)
+
+        symlink_path = [
+            el
+            for el in (Path(project_path) / "requirements").iterdir()
+            if el.is_symlink()
+        ][0]
+        symlink_target_path = symlink_path.resolve()
+
+        volumes = config["services"]["lms"]["volumes"]
+        # Make sure that the symlink target is mounted as a volume
+        assert any(el.startswith(str(symlink_target_path)) for el in volumes)
 
 
 @pytest.fixture(autouse=True)

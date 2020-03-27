@@ -17,9 +17,12 @@ x-common:
     - derex_{{ project.name }}_data:/openedx/data/
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/lms/envs/derex_project
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/cms/envs/derex_project
-    {%- if project.requirements_dir %}
+    {%- if project.requirements_dir and not project.requirements_volumes %}
     - {{ project.requirements_dir }}:/openedx/derex.requirements
     {%- endif -%}
+    {%- if project.requirements_volumes %}{%- for src, dest in project.requirements_volumes.items() %}
+    - {{ src }}:{{ dest }}
+    {%- endfor %}{%- endif %}
     {%- if project.fixtures_dir %}
     - {{ project.fixtures_dir }}:/openedx/fixtures
     {%- endif -%}
