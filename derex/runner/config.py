@@ -2,6 +2,7 @@ from derex.runner import hookimpl
 from derex.runner.project import Project
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
+from functools import partial
 from jinja2 import Template
 from pathlib import Path
 from typing import Dict
@@ -16,6 +17,15 @@ import os
 
 logger = logging.getLogger(__name__)
 
+d_r_path = partial(abspath_from_egg, "derex.runner")
+WSGI_PY_PATH = d_r_path("derex/runner/compose_files/wsgi.py")
+SERVICES_YML_PATH = d_r_path("derex/runner/compose_files/services.yml")
+ADMIN_YML_PATH = d_r_path("derex/runner/compose_files/admin.yml")
+LOCAL_YML_J2_PATH = d_r_path("derex/runner/templates/local.yml.j2")
+assert all(
+    (WSGI_PY_PATH, SERVICES_YML_PATH, ADMIN_YML_PATH, LOCAL_YML_J2_PATH)
+), "Some distribution files were not found"
+
 
 class BaseServices:
     @staticmethod
@@ -23,25 +33,9 @@ class BaseServices:
     def compose_options() -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.compose_options docstring.
         """
-        options = [
-            "--project-name",
-            "derex_services",
-            "-f",
-            str(
-                abspath_from_egg(
-                    "derex.runner", "derex/runner/compose_files/services.yml"
-                )
-            ),
-        ]
+        options = ["--project-name", "derex_services", "-f", str(SERVICES_YML_PATH)]
         if asbool(os.environ.get("DEREX_ADMIN_SERVICES", True)):
-            options += [
-                "-f",
-                str(
-                    abspath_from_egg(
-                        "derex.runner", "derex/runner/compose_files/admin.yml"
-                    )
-                ),
-            ]
+            options += ["-f", str(ADMIN_YML_PATH)]
         return {
             "options": options,
             "name": "base",
@@ -99,9 +93,7 @@ def generate_local_docker_compose(project: Project) -> Path:
     It should execute as fast as possible.
     """
     local_compose_path = project.private_filepath("docker-compose.yml")
-    template_path = abspath_from_egg(
-        "derex.runner", "derex/runner/templates/local.yml.j2"
-    )
+    template_path = LOCAL_YML_J2_PATH
     final_image = None
     if image_exists(project.image_name):
         final_image = project.image_name
@@ -111,7 +103,9 @@ def generate_local_docker_compose(project: Project) -> Path:
             "Run\nderex build requirements\n to build it"
         )
     tmpl = Template(template_path.read_text())
-    text = tmpl.render(project=project, final_image=final_image)
+    text = tmpl.render(
+        project=project, final_image=final_image, wsgi_py_path=WSGI_PY_PATH
+    )
     local_compose_path.write_text(text)
     return local_compose_path
 

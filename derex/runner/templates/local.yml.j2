@@ -28,7 +28,11 @@ x-common:
     {%- endif -%}
     {%- if project.themes_dir %}
     - {{ project.themes_dir }}:/openedx/themes
+    {%- endif -%}
+    {%- if project.runmode.value == "production" %}
+    - {{ wsgi_py_path }}:/openedx/edx-platform/wsgi.py
     {%- endif %}
+
   environment:
     &common-env
     DEREX_PROJECT: {{ project.name }}
