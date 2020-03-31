@@ -6,6 +6,7 @@
     project_configuration
     autocomplete
     contributing
+    Source <autoapi/index>
 
 Indices and tables
 ==================
