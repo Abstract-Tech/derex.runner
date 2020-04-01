@@ -114,12 +114,25 @@ def compile_theme(project):
 @derex.command(name="reset-mysql")
 @click.pass_obj
 @ensure_project
-def reset_mysql_cmd(project):
+@click.option(
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Allow resetting mysql database if runmode is production",
+)
+def reset_mysql_cmd(project, force):
     """Reset mysql database for the project"""
     from derex.runner.compose_utils import reset_mysql
     from derex.runner.docker import check_services
     from derex.runner.docker import execute_mysql_query
     from derex.runner.docker import wait_for_mysql
+
+    if project.runmode is not ProjectRunMode.debug and not force:
+        # Safety belt: we don't want people to run this in production
+        click.get_current_context().fail(
+            "The command reset-mysql can only be run in `debug` runmode.\n"
+            "Use --force to override"
+        )
 
     if not check_services(["mysql"]):
         click.echo(
@@ -128,7 +141,7 @@ def reset_mysql_cmd(project):
         return
     wait_for_mysql()
     execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
-    reset_mysql(project)
+    reset_mysql(DebugBaseImageProject())
     return 0
 
 

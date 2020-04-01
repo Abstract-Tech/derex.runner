@@ -5,7 +5,6 @@ from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
-from derex.runner.project import ProjectRunMode
 from derex.runner.utils import abspath_from_egg
 from tempfile import mkstemp
 from typing import Any
@@ -105,10 +104,6 @@ def exit_cm():
 def reset_mysql(project: Project, dry_run: bool = False):
     """Run script from derex/openedx image to reset the mysql db.
     """
-    if project.runmode is not ProjectRunMode.debug:
-        click.get_current_context().fail(
-            "The command reset-mysql can only be run in `debug` runmode"
-        )
     logger.warning("Resetting mysql database")
 
     restore_dump_path = abspath_from_egg(
