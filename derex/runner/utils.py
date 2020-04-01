@@ -25,14 +25,13 @@ def get_dir_hash(
         raise TypeError(f"{dirname} is not a directory.")
 
     hashvalues = []
-    for root, dirs, files in os.walk(dirname, topdown=True, followlinks=followlinks):
+    for root, dirs, files in sorted(
+        os.walk(dirname, topdown=True, followlinks=followlinks)
+    ):
         if ignore_hidden and re.search(r"/\.", root):
             continue
 
-        dirs.sort()
-        files.sort()
-
-        for filename in files:
+        for filename in sorted(files):
             if ignore_hidden and filename.startswith("."):
                 continue
 

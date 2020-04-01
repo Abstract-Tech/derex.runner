@@ -115,9 +115,13 @@ def build_image(
     tag_final: bool = False,
     extra_opts: Dict = {},
 ):
+    """Build a docker image. Prepares a build context (a tar stream)
+    based on the `paths` argument and includes the Dockerfile text passed
+    in `dockerfile_text`.
+    """
     dockerfile = io.BytesIO(dockerfile_text.encode())
     context = io.BytesIO()
-    context_tar = tarfile.open(fileobj=context, mode="w:gz")
+    context_tar = tarfile.open(fileobj=context, mode="w:gz", dereference=True)
     info = tarfile.TarInfo(name="Dockerfile")
     info.size = len(dockerfile_text)
     context_tar.addfile(info, fileobj=dockerfile)
