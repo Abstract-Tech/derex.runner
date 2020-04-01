@@ -63,6 +63,13 @@ services:
     networks:
       - derex
 
+  memcached:
+    image: memcached:1.6.3-alpine
+    container_name: memcached
+    networks:
+      - derex
+
+
 volumes:
   derex_mongodb:
     external: true
