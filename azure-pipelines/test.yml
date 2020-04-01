@@ -95,8 +95,7 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     variables:
-      name: CURL
-      value: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+      CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
     steps:
       - template: prepare.yml
       - template: load_images.yml
