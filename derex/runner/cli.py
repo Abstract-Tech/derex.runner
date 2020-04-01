@@ -50,11 +50,6 @@ def derex(ctx):
     # Optimize --help and bash completion by importing
     from derex.runner.project import Project
 
-    # Set up a StreamHandler
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.WARN)
-    logging.getLogger("derex").addHandler(handler)
-
     try:
         ctx.obj = Project()
     except SettingsModified as error:
