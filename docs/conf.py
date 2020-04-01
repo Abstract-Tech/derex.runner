@@ -166,4 +166,5 @@ nitpick_ignore = [
     ("py:class", "object"),
     ("py:class", "RuntimeError"),
     ("py:class", "enum.Enum"),
+    ("py:class", "logging.Formatter"),
 ]
