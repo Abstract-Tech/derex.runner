@@ -1,6 +1,3 @@
-import os
-
-
 EMAIL_HOST = "smtp"
 EMAIL_PORT = "25"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
