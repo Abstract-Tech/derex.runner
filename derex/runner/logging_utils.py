@@ -38,3 +38,14 @@ def setup_logging():
     root_logger.removeHandler(root_logger.handlers[0])
     root_logger.addHandler(ch)
     root_logger.setLevel(loglevel)
+
+
+def setup_logging_decorator(func):
+    """Decorator to run the setup_logging function before the decorated one.
+    """
+
+    def inner(*args, **kwargs):
+        setup_logging()
+        func(*args, **kwargs)
+
+    return inner
