@@ -141,18 +141,21 @@ stages:
 
       - script: cd tests/fixtures/complete; ddc-project logs cms lms
         condition: always()
-        displayName: 'Show CMS/LMS logs'
+        displayName: Show CMS/LMS logs
 
       - script: |
           $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
           $(CURL) http://localhost:4700/example_view
-        displayName: 'Curl the LMS'
+        displayName: Curl the LMS
 
       - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
-        displayName: 'Curl the CMS'
+        displayName: Curl the CMS
+
+      - script: cd tests/fixtures/complete && derex compile-theme
+        displayName: Compile theme
 
       - script: cd tests/fixtures/complete && derex build final
-        displayName: 'Build final image for project "complete"'
+        displayName: Build final image
 
       - script: |
           set -ex
@@ -168,7 +171,7 @@ stages:
           echo Analyzing image
           dive --ci complete/openedx-themes
         condition: always()
-        displayName: 'Test the complete image with dive'
+        displayName: Test the complete image with dive
         continueOnError: true  # Do not make the build fail because of this step, for now
         timeoutInMinutes: 40
 
