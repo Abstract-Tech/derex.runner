@@ -1,14 +1,16 @@
-// Lifted from the dark theme
+// Theme for derex testing
+// This theme is not meant to be used (it's not meant to be nice)
+// outside testing
 
-// Sample dark theme to demonstrate SASS overrides
-
-// Theme colors
-//
-// Note: define colors needed by your theme first
-
-// Make the theme white on black
+// Make the background color yellow: we want to see CSS working at a glance
 $primary: #00c;
 $inverse: #FF0;
+
+
+// Mention somthing that we demand to see in the final CSS of the LMS
+this_is_a_customized_theme {
+    font-size: 100%;
+}
 
 // Theme fonts
 $font-family-sans-serif: cursive;
