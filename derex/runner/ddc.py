@@ -6,7 +6,7 @@ They put a `docker.compose.yml` file in place based on user configuration.
 from derex.runner.compose_utils import run_compose
 from derex.runner.docker import check_services
 from derex.runner.docker import is_docker_working
-from derex.runner.logging import setup_logging
+from derex.runner.logging_utils import setup_logging
 from derex.runner.project import Project
 from typing import List
 from typing import Tuple
