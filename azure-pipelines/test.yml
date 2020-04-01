@@ -113,19 +113,20 @@ stages:
       - script: |
           set -ex
           cd tests/fixtures/complete
-          derex build requirements
-          derex build themes
           derex reset-mysql
           derex reset-rabbitmq
-          DATABASE_NAME=$(ddc-project run --rm lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+          # Run a command to get the current database name. First run it with all output enabled
+          # so that in case of errors in the pipeline we have info about what went wrong
+          # We use the flower container because it always uses the base image regardless
+          # of requirements and themes
+          ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
+          # ...and then the actual run
+          DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
           ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
         displayName: 'Test complete project fixtures'
 
-      - script: |
-          set -ex
-          cd tests/fixtures/complete
-          derex build final
-        displayName: 'Build image for project "complete"'
+      - script: cd tests/fixtures/complete && derex build requirements
+        displayName: 'Build requirements image for project "complete"'
 
       - script: cd tests/fixtures/complete; ddc-project up -d
         displayName: 'Start edX daemons'
@@ -138,8 +139,7 @@ stages:
           sleep 3  # Give the services a little time to start up
         displayName: Add studio.localhost to /etc/hosts
 
-      - script: |
-          cd tests/fixtures/complete; ddc-project logs cms lms
+      - script: cd tests/fixtures/complete; ddc-project logs cms lms
         condition: always()
         displayName: 'Show CMS/LMS logs'
 
@@ -169,9 +169,14 @@ stages:
         continueOnError: true  # Do not make the build fail because of this step, for now
         timeoutInMinutes: 40
 
+      - script: cd tests/fixtures/complete && derex build final
+        displayName: 'Build final image for project "complete"'
+
       - script: |
+          set -ex
+          cd tests/fixtures/complete
           derex runmode production
-          cd tests/fixtures/complete; derex build themes; ddc-project up -d lms cms
+          ddc-project up -d lms cms
           sleep 5  # Give it time to start up
         displayName: 'Start production image lms/cms'
 
