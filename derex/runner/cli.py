@@ -3,6 +3,7 @@
 """Console script for derex.runner."""
 from click_plugins import with_plugins
 from derex.runner import __version__
+from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
@@ -42,6 +43,7 @@ def ensure_project(func):
 @with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
 @click.group()
 @click.pass_context
+@setup_logging_decorator
 def derex(ctx):
     """Derex directs edX: commands to manage an Open edX installation
     """
@@ -107,8 +109,7 @@ def compile_theme(project):
             paver compile_sass --theme-dirs /openedx/themes --themes {themes}
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
-    run_compose(args, project=DebugBaseImageProject())
-    return
+    run_compose(args, project=DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command(name="reset-mysql")
@@ -163,7 +164,7 @@ def reset_rabbitmq(project):
         rabbitmqctl set_permissions -p {vhost} guest ".*" ".*" ".*"
         """,
     ]
-    run_compose(args)
+    run_compose(args, exit_afterwards=True)
     click.echo(f"Rabbitmq vhost {vhost} created")
     return 0
 
