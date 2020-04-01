@@ -6,7 +6,6 @@
     project_configuration
     autocomplete
     contributing
-    Source <derex.runner>
 
 Indices and tables
 ==================

@@ -18,22 +18,17 @@ runner = CliRunner(mix_stderr=False)
 
 
 @pytest.mark.slowtest
-def test_derex_build(workdir, sys_argv):
+def test_derex_compile_theme(workdir_copy, sys_argv):
     from derex.runner.cli import derex
-    from derex.runner.ddc import ddc_project
 
-    with workdir(COMPLETE_PROJ):
+    with workdir_copy(COMPLETE_PROJ):
         result = runner.invoke(derex, ["compile-theme"])
         assert_result_ok(result)
-
-        with sys_argv(["ddc-project", "config"]):
-            ddc_project()
-        assert Project().name in result.output
         assert os.path.isdir(Project().root / ".derex")
 
 
 @pytest.mark.slowtest
-def test_derex_reset_mysql(sys_argv, mocker, workdir):
+def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli import derex
     from derex.runner.ddc import ddc_services
@@ -46,7 +41,7 @@ def test_derex_reset_mysql(sys_argv, mocker, workdir):
 
     with sys_argv(["ddc-services", "up", "-d"]):
         ddc_services()
-    with workdir(MINIMAL_PROJ):
+    with workdir_copy(MINIMAL_PROJ):
         result = runner.invoke(derex, ["reset-mysql"])
     assert_result_ok(result)
     assert result.exit_code == 0

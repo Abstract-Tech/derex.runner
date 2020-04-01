@@ -18,7 +18,7 @@ docker[ssh]==4.2.0        # via docker-compose
 dockerpty==0.4.1          # via docker-compose
 docopt==0.6.2             # via docker-compose
 idna==2.9                 # via requests
-importlib-metadata==1.5.2  # via derex.runner (setup.py), jsonschema, pluggy
+importlib-metadata==1.6.0  # via derex.runner (setup.py), jsonschema, pluggy
 jinja2==2.11.1            # via derex.runner (setup.py)
 jsonschema==3.2.0         # via docker-compose
 markupsafe==1.1.1         # via jinja2

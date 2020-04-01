@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from derex.runner.docker import ensure_volumes_present
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
-from derex.runner.project import DebugProject
+from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.utils import abspath_from_egg
@@ -28,6 +28,7 @@ def run_compose(
     variant: str = "services",
     dry_run: bool = False,
     project: Optional["derex.runner.project.Project"] = None,
+    exit_afterwards: bool = False,
 ):
     """Run a docker-compose command passed in the `args` list.
     If `variant` is passed, load plugins for that variant.
@@ -38,8 +39,11 @@ def run_compose(
         sys.argv = get_compose_options(args=args, variant=variant, project=project)
         if not dry_run:
             click.echo(f'Running\n{" ".join(sys.argv)}', err=True)
-            with exit_cm():
+            if exit_afterwards:
                 main()
+            else:
+                with exit_cm():
+                    main()
         else:
             click.echo("Would have run:\n")
             click.echo(click.style(" ".join(sys.argv), fg="blue"))
@@ -151,7 +155,7 @@ def run_script(project, script_text: str, context: str = "lms") -> Any:
     ]
 
     try:
-        run_compose(args, project=DebugProject())
+        run_compose(args, project=DebugBaseImageProject())
     finally:
         result_json = open(result_path).read()
         try:

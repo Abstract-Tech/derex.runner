@@ -6,12 +6,12 @@ They put a `docker.compose.yml` file in place based on user configuration.
 from derex.runner.compose_utils import run_compose
 from derex.runner.docker import check_services
 from derex.runner.docker import is_docker_working
+from derex.runner.logging import setup_logging
 from derex.runner.project import Project
 from typing import List
 from typing import Tuple
 
 import click
-import logging
 import sys
 
 
@@ -43,8 +43,7 @@ def ddc_services():
     check_docker()
     setup_logging()
     args, dry_run = ddc_parse_args(sys.argv)
-    run_compose(args, dry_run=dry_run)
-    return 0
+    run_compose(args, dry_run=dry_run, exit_afterwards=True)
 
 
 def ddc_project():
@@ -68,14 +67,9 @@ def ddc_project():
             "Mysql/mongo/rabbitmq services not found.\nMaybe you forgot to run\nddc-services up -d"
         )
         return
-    run_compose(list(compose_args), project=project, dry_run=dry_run)
-
-
-def setup_logging():
-    logging.basicConfig()
-    for logger in ("urllib3.connectionpool", "compose", "docker"):
-        logging.getLogger(logger).setLevel(logging.WARN)
-    logging.getLogger("").setLevel(logging.INFO)
+    run_compose(
+        list(compose_args), project=project, dry_run=dry_run, exit_afterwards=True
+    )
 
 
 def check_docker():

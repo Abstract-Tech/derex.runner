@@ -30,8 +30,8 @@ def test_complete_project(workdir):
     # assert project.themes_image_name == "complete/openedx-themes:1f732a"
 
 
-def test_minimal_project(workdir):
-    with workdir(MINIMAL_PROJ):
+def test_minimal_project(workdir_copy):
+    with workdir_copy(MINIMAL_PROJ):
         project = Project()
 
     assert type(project.config) == dict

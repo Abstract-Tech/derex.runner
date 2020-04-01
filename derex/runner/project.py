@@ -345,9 +345,13 @@ def get_requirements_hash(path: Path) -> str:
     """Given a directory, return a hash of the contents of the text files it contains.
     """
     hasher = hashlib.sha256()
-    for file in path.iterdir():
+    logger.debug(
+        f"Calculating hash for requirements dir {path}; initial (empty) hash is {hasher.hexdigest()}"
+    )
+    for file in sorted(path.iterdir()):
         if file.is_file():
             hasher.update(file.read_bytes())
+        logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
     return hasher.hexdigest()
 
 
@@ -365,11 +369,20 @@ def find_project_root(path: Path) -> Path:
     )
 
 
-class DebugProject(Project):
-    """A project in debug mode, regardless of hte state saved on disk.
+class DebugBaseImageProject(Project):
+    """A project that is always in debug mode and always uses the base image,
+    irregardless of the presence of requirements.
     """
 
     runmode = ProjectRunMode.debug
+
+    @property  # type: ignore
+    def requirements_image_name(self):
+        return self.base_image
+
+    @requirements_image_name.setter
+    def requirements_image_name(self, value):
+        pass
 
 
 class OpenEdXVersions(Enum):

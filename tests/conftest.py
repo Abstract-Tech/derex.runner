@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import copytree
 from tempfile import TemporaryDirectory
 
 import contextlib
@@ -11,10 +12,35 @@ import sys
 
 
 @pytest.fixture
+def workdir_copy():
+    @contextlib.contextmanager
+    def workdir_decorator(path: Path):
+        """Creates a copy of the given directory's parent, changes working directory
+        to be the copy of the given one and returns to the previous working
+        directory on exit."""
+        prev_cwd = Path.cwd()
+        tmpdir = TemporaryDirectory("", "derex-test-")
+        copy_dest = Path(tmpdir.name) / path.parent.name
+        new_path = copy_dest / path.name
+
+        copytree(path.parent, str(copy_dest), symlinks=True)
+        os.chdir(new_path)
+        try:
+            yield new_path
+        finally:
+            os.chdir(prev_cwd)
+            tmpdir.cleanup()
+
+    return workdir_decorator
+
+
+@pytest.fixture
 def workdir():
     @contextlib.contextmanager
     def workdir_decorator(path: Path):
-        """Changes working directory and returns to previous on exit."""
+        """Creates a copy of the given directory's parent, changes working directory
+        to be the copy of the given one and returns to the previous working
+        directory on exit."""
         prev_cwd = Path.cwd()
         os.chdir(path)
         try:
@@ -49,7 +75,7 @@ def testproj(workdir):
     directory = TemporaryDirectory("-derex-project")
     with open(f"{directory.name}/{CONF_FILENAME}", "w") as fh:
         fh.write(f"project_name: testminimal\n")
-    result = workdir(directory.name)
+    result = workdir(Path(directory.name))
     # TemporaryDirectory will do its cleanup when it's garbage collected.
     # We attach it to the workdir context manager so that it will be garbage collected
     # together with it.

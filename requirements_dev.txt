@@ -6,6 +6,7 @@
 #
 alabaster==0.7.12         # via -r requirements_doc.txt, sphinx
 appdirs==1.4.3            # via black, virtualenv
+astroid==2.3.3            # via -r requirements_doc.txt, sphinx-autoapi
 attrs==19.3.0             # via -r requirements.txt, black, jsonschema, pytest
 babel==2.8.0              # via -r requirements_doc.txt, sphinx
 bcrypt==3.1.7             # via -r requirements.txt, paramiko
@@ -34,12 +35,13 @@ flake8==3.7.9             # via -r requirements_dev.in, pytest-flake8
 identify==1.4.13          # via pre-commit
 idna==2.9                 # via -r requirements.txt, -r requirements_doc.txt, requests
 imagesize==1.2.0          # via -r requirements_doc.txt, sphinx
-importlib-metadata==1.5.2  # via -r requirements.txt, jsonschema, keyring, pluggy, pre-commit, pytest, tox, twine, virtualenv
+importlib-metadata==1.6.0  # via -r requirements.txt, jsonschema, keyring, pluggy, pre-commit, pytest, tox, twine, virtualenv
 isort==4.3.21             # via -r requirements_dev.in
 jeepney==0.4.3            # via keyring, secretstorage
-jinja2==2.11.1            # via -r requirements.txt, -r requirements_doc.txt, sphinx
+jinja2==2.11.1            # via -r requirements.txt, -r requirements_doc.txt, sphinx, sphinx-autoapi
 jsonschema==3.2.0         # via -r requirements.txt, docker-compose
 keyring==21.2.0           # via twine
+lazy-object-proxy==1.4.3  # via -r requirements_doc.txt, astroid
 markupsafe==1.1.1         # via -r requirements.txt, -r requirements_doc.txt, jinja2
 mccabe==0.6.1             # via flake8
 more-itertools==8.2.0     # via pytest
@@ -68,15 +70,16 @@ pytest-mock==2.0.0        # via -r requirements_dev.in
 pytest-runner==5.2        # via -r requirements_dev.in
 pytest==5.4.1             # via -r requirements_dev.in, pytest-black, pytest-cov, pytest-flake8, pytest-mock
 pytz==2019.3              # via -r requirements_doc.txt, babel
-pyyaml==5.3.1             # via -r requirements.txt, -r requirements_dev.in, docker-compose, pre-commit
+pyyaml==5.3.1             # via -r requirements.txt, -r requirements_dev.in, -r requirements_doc.txt, docker-compose, pre-commit, sphinx-autoapi
 readme-renderer==25.0     # via twine
 requests-toolbelt==0.9.1  # via twine
 requests==2.23.0          # via -r requirements.txt, -r requirements_dev.in, -r requirements_doc.txt, docker, docker-compose, requests-toolbelt, sphinx, twine
 secretstorage==3.1.2      # via keyring
-six==1.14.0               # via -r requirements.txt, -r requirements_doc.txt, bcrypt, bleach, cryptography, docker, docker-compose, dockerpty, jsonschema, packaging, pip-tools, pynacl, pyrsistent, readme-renderer, tox, virtualenv, websocket-client
+six==1.14.0               # via -r requirements.txt, -r requirements_doc.txt, astroid, bcrypt, bleach, cryptography, docker, docker-compose, dockerpty, jsonschema, packaging, pip-tools, pynacl, pyrsistent, readme-renderer, tox, virtualenv, websocket-client
 snowballstemmer==2.0.0    # via -r requirements_doc.txt, sphinx
+sphinx-autoapi==1.2.1     # via -r requirements_doc.txt
 sphinx-press-theme==0.5.1  # via -r requirements_doc.txt
-sphinx==2.4.4             # via -r requirements_doc.txt, sphinx-press-theme
+sphinx==2.4.4             # via -r requirements_doc.txt, sphinx-autoapi, sphinx-press-theme
 sphinxcontrib-applehelp==1.0.2  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-devhelp==1.0.2  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-htmlhelp==1.0.3  # via -r requirements_doc.txt, sphinx
@@ -88,15 +91,17 @@ toml==0.10.0              # via black, pre-commit, tox
 tox==3.14.6               # via -r requirements_dev.in
 tqdm==4.43.0              # via twine
 twine==3.1.1              # via -r requirements_dev.in
-typed-ast==1.4.1          # via mypy
+typed-ast==1.4.1          # via -r requirements_doc.txt, astroid, mypy
 typing-extensions==3.7.4.1  # via mypy
+unidecode==1.1.1          # via -r requirements_doc.txt, sphinx-autoapi
 urllib3==1.25.8           # via -r requirements.txt, -r requirements_doc.txt, requests
-virtualenv==20.0.14       # via pre-commit, tox
+virtualenv==20.0.15       # via pre-commit, tox
 watchdog==0.10.2          # via -r requirements_dev.in
 wcwidth==0.1.9            # via pytest
 webencodings==0.5.1       # via bleach
 websocket-client==0.57.0  # via -r requirements.txt, docker, docker-compose
 wheel==0.34.2             # via -r requirements_dev.in
+wrapt==1.11.2             # via -r requirements_doc.txt, astroid
 zipp==3.1.0               # via -r requirements.txt, importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
