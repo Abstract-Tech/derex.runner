@@ -151,6 +151,9 @@ stages:
       - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
         displayName: 'Curl the CMS'
 
+      - script: cd tests/fixtures/complete && derex build final
+        displayName: 'Build final image for project "complete"'
+
       - script: |
           set -ex
           cd tests/fixtures/complete
@@ -168,9 +171,6 @@ stages:
         displayName: 'Test the complete image with dive'
         continueOnError: true  # Do not make the build fail because of this step, for now
         timeoutInMinutes: 40
-
-      - script: cd tests/fixtures/complete && derex build final
-        displayName: 'Build final image for project "complete"'
 
       - script: |
           set -ex
