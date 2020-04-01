@@ -198,8 +198,10 @@ stages:
       - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
         displayName: 'Curl the CMS (prod mode)'
 
-      - script: $(CURL) http://localhost:4700/static/css/lms-main-v1.css | grep this_is_a_customized_theme -q
-        continueOnError: true  # Do not make the build fail because of this step, for now
+      - script: |
+          set -ex
+          $(CURL) http://localhost:4700/|grep static/demo-theme/css/lms-main-v1.css
+          $(CURL) http://localhost:4700/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
         displayName: 'Curl the LMS CSS and make sure our theme CSS is in'
 
       - script: |
