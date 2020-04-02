@@ -81,7 +81,6 @@ services:
     ports:
       - 127.0.0.1:4700:4700
       - 127.0.0.1:4701:4701
-    container_name: {{ project.name }}_lms
 
   cms:
     <<: *common-conf
@@ -102,13 +101,11 @@ services:
     ports:
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801
-    container_name: {{ project.name }}_cms
 
   lms_worker:
     <<: *common-conf
     command:
       sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n lms.edx -Q lms.default'
-    container_name: {{ project.name }}_lms_worker
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
@@ -119,7 +116,6 @@ services:
     <<: *common-conf
     command:
       sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n cms.edx -Q cms.default'
-    container_name: {{ project.name }}_cms_worker
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
