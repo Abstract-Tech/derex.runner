@@ -66,7 +66,7 @@ pyrsistent==0.16.0        # via -r requirements.txt, jsonschema
 git+https://github.com/Abstract-Tech/pytest-black.git#egg=pytest-black  # via -r requirements_dev.in
 pytest-cov==2.8.1         # via -r requirements_dev.in
 git+https://github.com/Abstract-Tech/pytest-flake8.git#egg=pytest-flake8  # via -r requirements_dev.in
-pytest-mock==2.0.0        # via -r requirements_dev.in
+pytest-mock==3.0.0        # via -r requirements_dev.in
 pytest-runner==5.2        # via -r requirements_dev.in
 pytest==5.4.1             # via -r requirements_dev.in, pytest-black, pytest-cov, pytest-flake8, pytest-mock
 pytz==2019.3              # via -r requirements_doc.txt, babel
@@ -89,7 +89,7 @@ sphinxcontrib-serializinghtml==1.1.4  # via -r requirements_doc.txt, sphinx
 texttable==1.6.2          # via -r requirements.txt, docker-compose
 toml==0.10.0              # via black, pre-commit, tox
 tox==3.14.6               # via -r requirements_dev.in
-tqdm==4.43.0              # via twine
+tqdm==4.44.1              # via twine
 twine==3.1.1              # via -r requirements_dev.in
 typed-ast==1.4.1          # via -r requirements_doc.txt, astroid, mypy
 typing-extensions==3.7.4.1  # via mypy
