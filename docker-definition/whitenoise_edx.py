@@ -7,4 +7,4 @@ class WhitenoiseEdxStorage(CompressedManifestStaticFilesStorage, ProductionStora
         try:
             return super(WhitenoiseEdxStorage, self).stored_name(name)
         except ValueError:
-            return name
+            return ProductionStorage.stored_name(self, name)
