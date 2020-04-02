@@ -106,26 +106,26 @@ RUN wget -q https://github.com/sahib/rmlint/tarball/e56626d39134b7ac6317c19940c4
 FROM sourceonly as notranslations
 
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
-COPY requirements_additional.txt /openedx/edx-platform/requirements/edx/requirements_additional.txt
-COPY whitenoise_edx.py /openedx/edx-platform/whitenoise_edx.py
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install transifex-client==0.13.7 -c /openedx/edx-platform/requirements/edx/base.txt && \
-    pip install -r /openedx/edx-platform/requirements/edx/requirements_additional.txt -c /openedx/edx-platform/requirements/edx/development.txt
+    pip install "whitenoise<5" flower -c /openedx/edx-platform/requirements/edx/development.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
 
-COPY assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
+COPY whitenoise_edx.py assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 
 RUN mkdir -p /openedx/edx-platform/lms/envs/derex/ /openedx/edx-platform/cms/envs/derex/ && \
     touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py && \
     mv /usr/local/bin/assets.py /openedx/edx-platform/lms/envs/derex/ && \
+    mv /usr/local/bin/whitenoise_edx.py /openedx/edx-platform/whitenoise_edx.py && \
     cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py
 
 FROM notranslations as translations
 
-RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
+    pip install transifex-client -c /openedx/edx-platform/requirements/edx/development.txt && \
     /usr/local/bin/translations.sh
 
 FROM notranslations as nostatic

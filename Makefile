@@ -82,12 +82,12 @@ dist: clean ## builds source and wheel package
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
 
-requirements: requirements.txt requirements_doc.txt requirements_dev.txt docker-definition/requirements_additional.txt ## generate the requirements{,_dev,_doc}.txt files
+requirements: requirements.txt requirements_doc.txt requirements_dev.txt ## generate the requirements{,_dev,_doc}.txt files
 
 requirements-refresh: requirements-clean requirements
 
 requirements-clean:
-	rm requirements.txt requirements_doc.txt requirements_dev.txt docker-definition/requirements_additional.txt
+	rm requirements.txt requirements_doc.txt requirements_dev.txt
 
 requirements.txt: setup.py
 	pip-compile > requirements.txt
@@ -97,6 +97,3 @@ requirements_doc.txt: requirements_doc.in
 
 requirements_dev.txt: requirements_dev.in requirements_doc.in
 	pip-compile requirements_dev.in > requirements_dev.txt
-
-docker-definition/requirements_additional.txt: docker-definition/requirements_additional.in
-	pip-compile docker-definition/requirements_additional.in > docker-definition/requirements_additional.txt
