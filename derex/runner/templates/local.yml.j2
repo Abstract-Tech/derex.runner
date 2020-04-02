@@ -78,9 +78,11 @@ services:
       <<: *common-env
       SERVICE_VARIANT: lms
       DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
-    ports:
+    {% if project.runmode.value == "debug" -%}
+    ports:  # In debug runmode we expose ports on the host
       - 127.0.0.1:4700:4700
       - 127.0.0.1:4701:4701
+    {% endif %}
 
   cms:
     <<: *common-conf
@@ -98,9 +100,11 @@ services:
       <<: *common-env
       SERVICE_VARIANT: cms
       DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
-    ports:
+    {% if project.runmode.value == "debug" -%}
+    ports:  # In debug runmode we expose ports on the host
       - 127.0.0.1:4800:4800
       - 127.0.0.1:4801:4801
+    {% endif %}
 
   lms_worker:
     <<: *common-conf
