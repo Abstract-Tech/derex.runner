@@ -90,7 +90,8 @@ COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base
 RUN --mount=type=cache,target=/root/.cache/pip \
     cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
     pip install numpy -c /tmp/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt
+    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
+    pip wheel --wheel-dir=/wheelhouse gevent
 
 FROM wheels as rmlint
 RUN pip install scons && \
@@ -108,8 +109,8 @@ FROM sourceonly as notranslations
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install "whitenoise<5" flower -c /openedx/edx-platform/requirements/edx/development.txt
+RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
+    pip install "whitenoise<5" flower gevent --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
 
