@@ -106,9 +106,13 @@ RUN wget -q https://github.com/sahib/rmlint/tarball/e56626d39134b7ac6317c19940c4
 FROM sourceonly as notranslations
 
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
+COPY requirements_additional.txt /openedx/edx-platform/requirements/edx/requirements_additional.txt
+COPY whitenoise_edx.py /openedx/edx-platform/whitenoise_edx.py
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
-RUN --mount=type=cache,target=/root/.cache/pip pip install transifex-client==0.13.7 whitenoise==4.1.3 flower==0.9.3 tornado==5.1.1 backports_abc==0.5 -c /openedx/edx-platform/requirements/edx/base.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install transifex-client==0.13.7 -c /openedx/edx-platform/requirements/edx/base.txt && \
+    pip install -r /openedx/edx-platform/requirements/edx/requirements_additional.txt -c /openedx/edx-platform/requirements/edx/development.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
 
