@@ -1,0 +1,13 @@
+lms.localhost {
+    tls off
+    proxy / lms:4700 {
+        transparent
+    }
+}
+
+studio.localhost {
+    tls off
+    proxy / cms:4800 {
+        transparent
+    }
+}
