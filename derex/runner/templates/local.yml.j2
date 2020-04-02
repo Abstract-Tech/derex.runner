@@ -73,6 +73,8 @@ services:
         --bind=0.0.0.0:4700
         --max-requests=1000
         wsgi:application'
+    healthcheck:
+      test: ["CMD", "wget", "localhost:4700/heartbeat", "-q", "-O", "/dev/null"]
     {% endif -%}
     environment:
       <<: *common-env
@@ -95,6 +97,8 @@ services:
         --bind=0.0.0.0:4800
         --max-requests=1000
         wsgi:application'
+    healthcheck:
+      test: ["CMD", "wget", "localhost:4800/heartbeat", "-q", "-O", "/dev/null"]
     {% endif -%}
     environment:
       <<: *common-env
