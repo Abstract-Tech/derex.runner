@@ -10,6 +10,7 @@ STATIC_ROOT = {
 WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = STATIC_ROOT / "webpack-stats.json"
 COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))
 STATICFILES_STORAGE = "whitenoise_edx.WhitenoiseEdxStorage"
+WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 
 if "runserver" in sys.argv:
     REQUIRE_DEBUG = True
