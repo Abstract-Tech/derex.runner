@@ -3,6 +3,7 @@ version: "3.5"
 services:
   adminer:
     image: adminer:4.7.1
+    restart: always
     ports:
       - 127.0.0.1:4400:8080
     container_name: adminer
@@ -13,6 +14,7 @@ services:
 
   portainer:
     image: portainer/portainer:1.21.0
+    restart: always
     ports:
       - 127.0.0.1:9000:9000
     volumes:
