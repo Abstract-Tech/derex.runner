@@ -195,7 +195,7 @@ stages:
           $(CURL) http://lms.localhost/example_view
         displayName: 'Curl the LMS (prod mode)'
 
-      - script: $(CURL) http://cms.localhost/ || (sleep 10; $(CURL) http://cms.localhost/)
+      - script: $(CURL) http://studio.localhost/ || (sleep 10; $(CURL) http://studio.localhost/)
         displayName: 'Curl the CMS (prod mode)'
 
       - script: |
