@@ -3,4 +3,8 @@ from whitenoise.storage import CompressedManifestStaticFilesStorage
 
 
 class WhitenoiseEdxStorage(CompressedManifestStaticFilesStorage, ProductionStorage):
-    pass
+    def stored_name(self, name):
+        try:
+            return super(WhitenoiseEdxStorage, self).stored_name(name)
+        except ValueError:
+            return name
