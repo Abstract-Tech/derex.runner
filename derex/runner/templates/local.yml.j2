@@ -72,6 +72,9 @@ services:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
         --max-requests=1000
+        --worker-class gevent
+        --worker-tmp-dir /dev/shm
+        --log-file=-
         wsgi:application'
     {% endif -%}
     environment:

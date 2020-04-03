@@ -90,7 +90,8 @@ COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base
 RUN --mount=type=cache,target=/root/.cache/pip \
     cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
     pip install numpy -c /tmp/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt
+    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
+    pip wheel --wheel-dir=/wheelhouse gevent "whitenoise[brotli]<5"
 
 FROM wheels as rmlint
 RUN pip install scons && \
@@ -108,20 +109,24 @@ FROM sourceonly as notranslations
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
-RUN --mount=type=cache,target=/root/.cache/pip pip install transifex-client==0.13.7 whitenoise==4.1.3 flower==0.9.3 tornado==5.1.1 backports_abc==0.5 -c /openedx/edx-platform/requirements/edx/base.txt
+RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
+    pip install "whitenoise[brotli]<5" flower gevent --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
 
-COPY assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
+COPY whitenoise_edx.py assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 
 RUN mkdir -p /openedx/edx-platform/lms/envs/derex/ /openedx/edx-platform/cms/envs/derex/ && \
     touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py && \
     mv /usr/local/bin/assets.py /openedx/edx-platform/lms/envs/derex/ && \
+    mv /usr/local/bin/whitenoise_edx.py /openedx/edx-platform/whitenoise_edx.py && \
     cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py
 
 FROM notranslations as translations
 
-RUN --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
+    pip install transifex-client -c /openedx/edx-platform/requirements/edx/development.txt && \
     /usr/local/bin/translations.sh
 
 FROM notranslations as nostatic
@@ -176,4 +181,4 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
 
 ENV DJANGO_SETTINGS_MODULE=lms.envs.derex.migration
 ENV SERVICE_VARIANT=lms
-ENV DEREX_VERSION=0.0.2.dev1
+ENV DEREX_VERSION=0.0.2.dev2

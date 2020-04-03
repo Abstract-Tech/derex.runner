@@ -29,4 +29,7 @@ DATABASES = {"default": {}}  # type: ignore
 
 # enterprise.views tries to access settings.ECOMMERCE_PUBLIC_URL_ROOT,
 ECOMMERCE_PUBLIC_URL_ROOT = None
+
+STATICFILES_STORAGE = "whitenoise_edx.WhitenoiseEdxStorage"
+WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 derive_settings(__name__)
