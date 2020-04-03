@@ -135,9 +135,9 @@ stages:
         displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
 
       - script: |
-          echo 127.0.0.1 localhost studio.localhost | sudo tee -a /etc/hosts
+          echo 127.0.0.1 localhost studio.localhost lms.localhost | sudo tee -a /etc/hosts
           sleep 3  # Give the services a little time to start up
-        displayName: Add studio.localhost to /etc/hosts
+        displayName: Add studio.localhost and lms.localhost to /etc/hosts
 
       - script: cd tests/fixtures/complete; ddc-project logs cms lms
         condition: always()
@@ -179,7 +179,7 @@ stages:
           set -ex
           cd tests/fixtures/complete
           derex runmode production
-          ddc-project up -d lms cms
+          ddc-project up -d
           sleep 5  # Give it time to start up
         displayName: 'Start production image lms/cms'
 
@@ -191,17 +191,17 @@ stages:
         displayName: 'Show CMS/LMS logs (prod mode)'
 
       - script: |
-          $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
-          $(CURL) http://localhost:4700/example_view
+          $(CURL) http://lms.localhost/ || (sleep 10; $(CURL) http://lms.localhost/)
+          $(CURL) http://lms.localhost/example_view
         displayName: 'Curl the LMS (prod mode)'
 
-      - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
+      - script: $(CURL) http://studio.localhost/ || (sleep 10; $(CURL) http://studio.localhost/)
         displayName: 'Curl the CMS (prod mode)'
 
       - script: |
           set -ex
-          $(CURL) http://localhost:4700/|grep static/demo-theme/css/lms-main-v1.css
-          $(CURL) http://localhost:4700/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+          $(CURL) http://lms.localhost/|grep static/demo-theme/css/lms-main-v1.css
+          $(CURL) http://lms.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
         displayName: 'Curl the LMS CSS and make sure our theme CSS is in'
 
       - script: |
