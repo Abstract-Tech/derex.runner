@@ -3,7 +3,7 @@ version: "3.5"
 services:
   mongodb:
     image: mongo:3.2.21
-    restart: always
+    restart: unless-stopped
     container_name: mongodb
     command:
       mongod --smallfiles --nojournal
@@ -16,7 +16,7 @@ services:
 
   mysql:
     image: mysql:5.6.36
-    restart: always
+    restart: unless-stopped
     container_name: mysql
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
     environment:
@@ -28,7 +28,7 @@ services:
 
   elasticsearch:
     image: elasticsearch:1.5.2
-    restart: always
+    restart: unless-stopped
     container_name: elasticsearch
     environment:
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
@@ -45,7 +45,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.6.16-alpine
-    restart: always
+    restart: unless-stopped
     container_name: rabbitmq
     volumes:
       - derex_rabbitmq:/var/lib/rabbitmq
@@ -54,7 +54,7 @@ services:
 
   mailslurper:
     image: derex/mailslurper
-    restart: always
+    restart: unless-stopped
     container_name: smtp
     ports:
       - 127.0.0.1:4300:4300
@@ -68,7 +68,7 @@ services:
 
   memcached:
     image: memcached:1.6.3-alpine
-    restart: always
+    restart: unless-stopped
     container_name: memcached
     networks:
       - derex
