@@ -5,6 +5,7 @@ x-common:
   &common-conf
   {% if project.runmode.name == "production" -%}
   image: {{ project.image_name }}
+  restart: unless-stopped
   {% else -%}
   image: {{ project.requirements_image_name }}
   {% endif -%}
