@@ -154,10 +154,19 @@ def test_populate_settings(testproj):
         assert (project.settings_dir / "derex").is_dir(), str(
             sorted((project.settings_dir).iterdir())
         )
-        assert (project.settings_dir / "derex" / "base.py").is_file()
+        base_py = project.settings_dir / "derex" / "base.py"
+        assert base_py.is_file()
         assert (project.settings_dir / "derex" / "__init__.py").is_file()
 
-        assert not os.access(str(project.settings_dir / "derex" / "base.py"), os.W_OK)
+        assert os.access(str(base_py), os.W_OK)
+
+        # In case a settings file was already present, it should be overwritten,
+        # even if it lacks owner write permission.
+        base_py.write_text("# Changed")
+        base_py.chmod(0o444)
+        assert not os.access(str(base_py), os.W_OK)
+        project._populate_settings()
+        assert os.access(str(base_py), os.W_OK)
 
 
 def test_container_variables(testproj):
