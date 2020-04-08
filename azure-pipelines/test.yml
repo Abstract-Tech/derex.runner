@@ -91,7 +91,7 @@ stages:
 
 
   - job: TestComplete
-    timeoutInMinutes: 40
+    timeoutInMinutes: 60
     pool:
       vmImage: 'ubuntu-latest'
     variables:
