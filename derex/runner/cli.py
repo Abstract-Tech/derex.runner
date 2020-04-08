@@ -49,7 +49,10 @@ def derex(ctx):
     # Optimize --help and bash completion by importing
     from derex.runner.project import Project
 
-    ctx.obj = Project()
+    try:
+        ctx.obj = Project()
+    except ValueError:
+        pass
 
 
 @derex.command()
