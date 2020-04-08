@@ -73,6 +73,7 @@ services:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
         --max-requests=1000
+        --workers 3
         --worker-class gevent
         --worker-tmp-dir /dev/shm
         --log-file=-
@@ -100,6 +101,7 @@ services:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
         --max-requests=1000
+        --workers 3
         wsgi:application'
     healthcheck:
       test: ["CMD", "wget", "localhost:4800/heartbeat", "-q", "-O", "/dev/null"]
