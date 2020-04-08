@@ -72,6 +72,7 @@ services:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4700
         --max-requests=1000
+        --workers 3
         wsgi:application'
     {% endif -%}
     environment:
@@ -93,6 +94,7 @@ services:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
         --bind=0.0.0.0:4800
         --max-requests=1000
+        --workers 3
         wsgi:application'
     {% endif -%}
     environment:
