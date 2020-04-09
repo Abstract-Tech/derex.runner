@@ -35,7 +35,8 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     libxslt \
     mariadb-connector-c \
     sqlite \
-    xmlsec
+    xmlsec \
+    wget
 
 COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
