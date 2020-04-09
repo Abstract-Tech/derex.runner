@@ -13,10 +13,13 @@ steps:
       DOCKER_IMAGES_SLUG: $(DOCKER_IMAGES_SLUG)
       CONDITION: ne(variables.ImagesSentinelHit, 'true')
 
-  - script: |
-      echo '##vso[task.setvariable variable=needs_build]true'
+  - script: echo '##vso[task.setvariable variable=needs_build]true'
     condition: ne(variables.ImagesSentinelHit, 'true')
     displayName: 'Set needs_build pipeline variable'
+
+  - script: df -h; time sudo rm -rf /var/cache/apt/archives /opt/ghc; df -h
+    condition: and(succeeded(), ne(variables.needs_build, 'false'))
+    displayName: 'Remove Haskell compiler and cached apt archives to save disk space'
 
   - script: |
       if [ -z "$TRANSIFEX_USERNAME" ] || [ -z "$TRANSIFEX_PASSWORD" ]; then
