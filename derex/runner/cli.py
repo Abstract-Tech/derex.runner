@@ -8,7 +8,6 @@ from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
-from derex.runner.project import SettingsModified
 from derex.runner.utils import abspath_from_egg
 from distutils.spawn import find_executable
 from functools import wraps
@@ -52,10 +51,6 @@ def derex(ctx):
 
     try:
         ctx.obj = Project()
-    except SettingsModified as error:
-        print(
-            f"Derex settings file modified:\n{error.filename}\nDelete or rename the file, and we'll put back the stock version"
-        )
     except ValueError:
         pass
 
@@ -330,7 +325,7 @@ def get_available_settings():
     """Return settings available on the current project"""
     try:
         project = Project()
-    except (ValueError, SettingsModified):
+    except ValueError:
         return None
     return project.get_available_settings().__members__
 
