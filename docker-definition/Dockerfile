@@ -113,7 +113,10 @@ COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install "whitenoise[brotli]<5" flower gevent --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt
+    pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt && \
+    `# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option` \
+    `# It s not very clear why it was pinned in the first place` \
+    pip install gunicorn==19.10.0
 
 COPY whitenoise_edx.py assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 

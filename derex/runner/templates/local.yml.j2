@@ -71,8 +71,9 @@ services:
     {% else -%}
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
-        --bind=0.0.0.0:4700
-        --max-requests=1000
+        --bind 0.0.0.0:4700
+        --max-requests 1000
+        --max-requests-jitter 200
         --worker-class gevent
         --worker-tmp-dir /dev/shm
         --log-file=-
@@ -98,8 +99,13 @@ services:
     {% else -%}
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
-        --bind=0.0.0.0:4800
-        --max-requests=1000
+        --bind 0.0.0.0:4800
+        --max-requests 1000
+        --max-requests-jitter 200
+        --worker-class gevent
+        --worker-tmp-dir /dev/shm
+        --log-file=-
+        --timeout 300
         wsgi:application'
     healthcheck:
       test: ["CMD", "wget", "localhost:4800/heartbeat", "-q", "-O", "/dev/null"]
