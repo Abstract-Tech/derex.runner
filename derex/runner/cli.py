@@ -82,17 +82,10 @@ def debug(ctx):
 def reset_mailslurper(project):
     """Reset the mailslurper database.
     """
-    from derex.runner.docker import check_services
-    from derex.runner.docker import execute_mysql_query
+    from derex.runner.mysql import drop_database
     from derex.runner.docker import load_dump
-    from derex.runner.docker import wait_for_mysql
 
-    if not check_services(["mysql"]):
-        click.echo("Mysql not found.\nMaybe you forgot to run\nddc-services up -d")
-        return 1
-    wait_for_mysql()
-    click.echo("Dropping mailslurper database")
-    execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
+    drop_database("mailslurper")
     click.echo("Priming mailslurper database")
     load_dump("derex/runner/fixtures/mailslurper.sql")
     return 0
