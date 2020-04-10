@@ -22,6 +22,7 @@ requirements = [
     "jinja2",
     "terminal_table",
     "ansi_colours",
+    "mysqlclient",
 ]
 
 setup_requirements = ["setuptools"]

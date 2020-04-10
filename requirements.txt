@@ -24,6 +24,7 @@ importlib-metadata==1.6.0  # via derex.runner (setup.py), jsonschema, pluggy
 jinja2==2.11.2            # via derex.runner (setup.py)
 jsonschema==3.2.0         # via docker-compose
 markupsafe==1.1.1         # via jinja2
+mysqlclient==1.4.6        # via derex.runner (setup.py)
 paramiko==2.7.1           # via docker
 pluggy==0.13.1            # via derex.runner (setup.py)
 pycparser==2.20           # via cffi

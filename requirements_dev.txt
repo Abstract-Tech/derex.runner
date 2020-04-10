@@ -48,6 +48,7 @@ mccabe==0.6.1             # via flake8
 more-itertools==8.2.0     # via pytest
 mypy-extensions==0.4.3    # via mypy
 mypy==0.761               # via -r requirements_dev.in
+mysqlclient==1.4.6        # via -r requirements.txt
 nodeenv==1.3.5            # via pre-commit
 packaging==20.3           # via -r requirements_doc.txt, pytest, sphinx, tox
 paramiko==2.7.1           # via -r requirements.txt, docker
