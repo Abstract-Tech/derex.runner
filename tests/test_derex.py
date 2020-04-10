@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for `derex.runner.cli` module."""
 
+from .conftest import assert_result_ok
 from click.testing import CliRunner
 from derex.runner.project import Project
-from itertools import repeat
 from pathlib import Path
-from types import SimpleNamespace
 
 import os
 import pytest
-import traceback
 
 
 MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
@@ -92,12 +90,3 @@ def test_derex_runmode_wrong(testproj):
         result = runner.invoke(derex, ["runmode"])
         # Ensure presence of error message
         assert "not valid" in result.stderr
-
-
-def assert_result_ok(result):
-    """Makes sure the click script exited on purpose, and not by accident
-    because of an exception.
-    """
-    if not isinstance(result.exc_info[1], SystemExit):
-        tb_info = "\n".join(traceback.format_tb(result.exc_info[2]))
-        assert result.exit_code == 0, tb_info

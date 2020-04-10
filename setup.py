@@ -20,6 +20,8 @@ requirements = [
     "pyyaml",
     "pluggy",
     "jinja2",
+    "terminal_table",
+    "ansi_colours",
 ]
 
 setup_requirements = ["setuptools"]

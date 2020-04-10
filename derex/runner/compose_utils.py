@@ -4,8 +4,6 @@ from derex.runner.docker import ensure_volumes_present
 from derex.runner.plugins import Registry
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.project import DebugBaseImageProject
-from derex.runner.project import Project
-from derex.runner.utils import abspath_from_egg
 from tempfile import mkstemp
 from typing import Any
 from typing import List
@@ -99,32 +97,6 @@ def exit_cm():
         yield
     finally:
         sys.exit = orig
-
-
-def reset_mysql(project: Project, dry_run: bool = False):
-    """Run script from derex/openedx image to reset the mysql db.
-    """
-    logger.warning("Resetting mysql database")
-
-    restore_dump_path = abspath_from_egg(
-        "derex.runner", "derex/runner/restore_dump.py.source"
-    )
-    assert (
-        restore_dump_path
-    ), "Could not find restore_dump.py in derex.runner distribution"
-    run_compose(
-        [
-            "run",
-            "--rm",
-            "-v",
-            f"{restore_dump_path}:/restore_dump.py",
-            "lms",
-            "python",
-            "/restore_dump.py",
-        ],
-        project=project,
-        dry_run=dry_run,
-    )
 
 
 def run_script(project, script_text: str, context: str = "lms") -> Any:

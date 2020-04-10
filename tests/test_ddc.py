@@ -68,7 +68,7 @@ def test_ddc_project_symlink_mounting(sys_argv, mocker, workdir_copy, capsys):
     with workdir_copy(COMPLETE_PROJ) as project_path:
         with sys_argv(["ddc-project", "config"]):
             ddc_project()
-        config = yaml.load(capsys.readouterr().out)
+        config = yaml.load(capsys.readouterr().out, Loader=yaml.FullLoader)
 
         symlink_path = [
             el
