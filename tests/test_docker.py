@@ -39,4 +39,12 @@ def test_check_services(mocker):
 def test_wait_for_service(mocker):
     from derex.runner.docker import wait_for_service
 
+    container = mocker.MagicMock()
+    container.exec_run.return_value = mocker.MagicMock(exit_code=0)
+
+    client = mocker.patch("derex.runner.docker.client")
+    client.containers.get.return_value = container
+
     wait_for_service("mysql", 'mysql -psecret -e "SHOW DATABASES"', 1)
+    client.containers.get.assert_called_with("mysql")
+    container.exec_run.assert_called_with('mysql -psecret -e "SHOW DATABASES"')
