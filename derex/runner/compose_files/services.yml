@@ -33,11 +33,20 @@ services:
     environment:
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       - "cluster.name=openedx"
+      # For the memory lock to work, the container should be started with
+      # sufficient high a value for "Max locked memory".
+      # For docker on a systemctl distro (like Ubuntu) this can be achieved with
+      # echo -e "[Service]\nLimitMEMLOCK=infinity" | SYSTEMD_EDITOR=tee sudo -E systemctl edit docker.service
+      # sudo systemctl daemon-reload
+      # sudo systemctl restart docker
       - "bootstrap.memory_lock=true"
     ulimits:
       memlock:
         soft: -1
         hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - derex_elasticsearch:/usr/share/elasticsearch/data
     networks:
