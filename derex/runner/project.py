@@ -90,6 +90,10 @@ class Project:
     _available_settings = None
 
     @property
+    def s3_buckets(self) -> Dict[str, Dict]:
+        return {f"{self.name}-main": {}}
+
+    @property
     def mysql_db_name(self) -> str:
         return self.config.get("mysql_db_name", f"{self.name}_openedx")
 

@@ -139,6 +139,19 @@ def reset_mysql_cmd(project, force):
 @derex.command()
 @click.pass_obj
 @ensure_project
+def create_buckets(project):
+    """Create S3 buckets on Minio"""
+    from derex.runner.docker import create_buckets
+
+    bucket_names = project.s3_buckets.keys()
+    click.echo(f"Creating buckets {', '.join(bucket_names)}")
+    create_buckets(bucket_names)
+    click.echo("Buckets created")
+
+
+@derex.command()
+@click.pass_obj
+@ensure_project
 def reset_rabbitmq(project):
     """Create rabbitmq vhost"""
     from derex.runner.compose_utils import run_compose

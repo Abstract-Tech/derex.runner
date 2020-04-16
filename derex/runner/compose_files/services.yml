@@ -82,6 +82,24 @@ services:
     networks:
       - derex
 
+  minio:
+    image: minio/minio:RELEASE.2020-04-15T19-42-18Z
+    volumes:
+      - derex_minio:/data
+    ports:
+      - "4500:4500"
+    environment:
+      MINIO_ACCESS_KEY: minio_derex
+      MINIO_SECRET_KEY: derex_default_secret
+    command: server --address :4500 /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4500/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - derex
+
 
 volumes:
   derex_mongodb:
@@ -91,6 +109,8 @@ volumes:
   derex_elasticsearch:
     external: true
   derex_rabbitmq:
+    external: true
+  derex_minio:
     external: true
 
 networks:

@@ -25,6 +25,7 @@ VOLUMES = {
     "derex_mysql",
     "derex_rabbitmq",
     "derex_portainer_data",
+    "derex_minio",
 }
 
 
@@ -167,3 +168,20 @@ def pull_images(image_names: List[str]):
 class BuildError(RuntimeError):
     """An error occurred while building a docker image
     """
+
+
+def create_buckets(bucket_list: List[str]):
+    """Create the given buckets on minio.
+    """
+    bucket_names = " ".join(map(lambda x: f"minio/{x}", bucket_list))
+    command = (
+        "mc config host add minio http://minio:4500 minio_derex derex_default_secret --api s3v4"
+        "&& mc mb --ignore-existing " + bucket_names
+    )
+    client.containers.run(
+        image="minio/mc",
+        entrypoint="/bin/sh",
+        command=["-c", command],
+        network="derex",
+        remove=True,
+    )
