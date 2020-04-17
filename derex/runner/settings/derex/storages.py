@@ -16,30 +16,26 @@ USER_TASKS_ARTIFACT_STORAGE = DEFAULT_FILE_STORAGE
 
 
 # Bucket names: they need to be kept in sync with project.py
-AWS_STORAGE_BUCKET_NAME = DEREX_PROJECT + "-main"
-FILE_UPLOAD_STORAGE_BUCKET_NAME = DEREX_PROJECT + "-file-upload"
-COURSE_IMPORT_EXPORT_BUCKET = DEREX_PROJECT + "-course-import-export"
-GRADES_BUCKET_NAME = DEREX_PROJECT + "-grades-download"
-FINANCIAL_REPORTS_BUCKET_NAME = DEREX_PROJECT + "-financial-reports"
+AWS_STORAGE_BUCKET_NAME = DEREX_PROJECT
 
 FILE_UPLOAD_STORAGE_PREFIX = "submissions_attachments"
 
 GRADES_DOWNLOAD = {
     "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
     "STORAGE_KWARGS": {
-        "bucket": GRADES_BUCKET_NAME,
-        "ROOT_PATH": "/tmp/edx-s3/grades",
-        "STORAGE_TYPE": "localfs",
+        "bucket": AWS_STORAGE_BUCKET_NAME,
+        "ROOT_PATH": "/grades",
+        "STORAGE_TYPE": "s3",
     },
-    "STORAGE_TYPE": "",
-    "BUCKET": None,
-    "ROOT_PATH": None,
 }
 
 FINANCIAL_REPORTS = {
-    "BUCKET": FINANCIAL_REPORTS_BUCKET_NAME,
-    "ROOT_PATH": "/tmp/edx-s3/reports",
-    "STORAGE_TYPE": "localfs",
+    "BUCKET": AWS_STORAGE_BUCKET_NAME,
+    "STORAGE_KWARGS": {
+        "bucket": AWS_STORAGE_BUCKET_NAME,
+        "ROOT_PATH": "/reports",
+        "STORAGE_TYPE": "s3",
+    },
 }
 
 # This is needed for the Sysadmin dashboard "Git Logs" tab

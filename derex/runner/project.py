@@ -7,7 +7,6 @@ from enum import IntEnum
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -89,17 +88,6 @@ class Project:
 
     # Enum containing possible settings modules
     _available_settings = None
-
-    @property
-    def s3_buckets(self) -> List:
-        # Needs to be kept in sync with storages.py
-        return [
-            f"{self.name}-main",
-            f"{self.name}-file-upload",
-            f"{self.name}-course-import-export",
-            f"{self.name}-grades-download",
-            f"{self.name}-financial-reports",
-        ]
 
     @property
     def mysql_db_name(self) -> str:

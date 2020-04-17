@@ -143,9 +143,8 @@ def create_buckets(project):
     """Create S3 buckets on Minio"""
     from derex.runner.docker import create_buckets
 
-    bucket_names = project.s3_buckets.keys()
-    click.echo(f"Creating buckets {', '.join(bucket_names)}")
-    create_buckets(bucket_names)
+    click.echo(f"Creating bucket {project.name}")
+    create_buckets([project.name])
     click.echo("Buckets created")
 
 
