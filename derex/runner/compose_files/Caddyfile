@@ -6,3 +6,18 @@
 *.*.localhost:80 {
     reverse_proxy {http.request.host}.derex:80
 }
+
+# Mailsluprer needs an extra port and thus special treatment
+http://mailslurper.localhost:4301 {
+    reverse_proxy mailslurper.localhost.derex:4301
+}
+
+# It's harder than ideal to set Portainer's port to 80, so here it is:
+http://portainer.localhost:80 {
+    reverse_proxy portainer.localhost.derex:9000
+}
+
+# Use fastcgi for adminer
+http://adminer.localhost:80 {
+    reverse_proxy adminer.localhost.derex:8080
+}

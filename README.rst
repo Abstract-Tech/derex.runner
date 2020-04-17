@@ -14,14 +14,19 @@ Introduction
 ------------
 
 Derex simplifies running edX: it takes care of starting the needed services
-(mysql, mongodb, rabbitmq etc) and introduces the concept of edX _projects_.
+(mysql, mongodb, rabbitmq etc) and introduces the concept of edX *projects*.
 
 A project is a directory that defines what an edX instance should look like.
 It can specify additional requirements, custom themes and plugins.
 
-```derex.runner``` uses docker compose (it's bundled, you don't have to
+``derex.runner`` uses docker compose (it's bundled, you don't have to
 install it separately) to orchestrate the many necessary pieces.
 
+It provides two commands, ``ddc-services`` to manage services (mysql, mongodb, elasticsearch etc)
+and ``ddc-project`` to manage project-specific services (lms, cms, workers and maybe others if plugins are installed).
+
+They are wrappers to ``docker-compose``: ddc stands for derex docker compose.
+As such familiarity with docker compose is required to use derex.
 
 Requirements
 ------------
@@ -58,14 +63,20 @@ Run the following commands:
     ddc-project up -d  # Start LMS/CMS daemons and workers
     derex compile-theme  # Compile theme sass files
 
-Then head to one of the started services:
+Run derex to see running services:
 
-* http://localhost:4700 ``LMS``
-* http://localhost:4800 ``CMS``
-* http://localhost:5555 ``Flower`` (monitor celery workers)
-* http://localhost:4300 ``Mailslurper`` (debug emails sent by the platform)
-* http://localhost:4400 ``Adminer`` (mysql administration tool)
-* http://localhost:9000 ``Portainer`` (docker administration tool)
+.. code-block:: console
+
+    derex
+    ...
+    http://studio.minimal.localhost
+    http://mailslurper.localhost  # (debug emails sent by the platform)
+    http://minio.localhost
+    http://adminer.localhost  # (mysql administration tool)
+    http://flower.minimal.localhost  # (monitor celery workers)
+    http://portainer.localhost  # (mysql administration tool)
+    http://minimal.localhost
+
 
 You can login to the CMS and LMS using one of these users (the password is
 always ``secret``):

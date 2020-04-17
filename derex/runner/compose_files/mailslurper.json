@@ -1,6 +1,6 @@
 {
     "wwwAddress": "0.0.0.0",
-    "wwwPort": 4300,
+    "wwwPort": 80,
     "serviceAddress": "0.0.0.0",
     "servicePort": 4301,
     "smtpAddress": "0.0.0.0",

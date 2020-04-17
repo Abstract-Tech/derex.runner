@@ -65,15 +65,14 @@ services:
     image: derex/mailslurper
     restart: unless-stopped
     container_name: smtp
-    ports:
-      - 127.0.0.1:4300:4300
-      - 127.0.0.1:4301:4301
     volumes:
       - ./mailslurper.json:/config.json
     depends_on:
       - mysql
     networks:
-      - derex
+      derex:
+        aliases:
+          - mailslurper.localhost.derex
 
   memcached:
     image: memcached:1.6.3-alpine
@@ -103,7 +102,8 @@ services:
   httpserver:
     image: caddy/caddy
     ports:
-      - 80:80
+      - 127.0.0.1:80:80
+      - 127.0.0.1:4301:4301
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
     networks:
