@@ -1,0 +1,8 @@
+*.localhost:80 {
+    reverse_proxy {http.request.host}.derex:80
+}
+
+
+*.*.localhost:80 {
+    reverse_proxy {http.request.host}.derex:80
+}

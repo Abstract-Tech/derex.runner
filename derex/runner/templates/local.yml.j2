@@ -52,26 +52,28 @@ services:
       sh -c 'echo Obtaining broker configuration from edx. This is a bit slow;
              export FLOWER_OPTIONS=$$(echo "from django.conf import settings; print(\"--broker=\" + settings.BROKER_URL + \" --broker_api=http://\" + settings.CELERY_BROKER_USER + \":\" + settings.CELERY_BROKER_PASSWORD + \"@\" + settings.CELERY_BROKER_HOSTNAME + \":15672/api/\") " | ./manage.py lms shell);
              echo Done. Flower options are \"$$FLOWER_OPTIONS\";
-             exec flower --port=5555 $$FLOWER_OPTIONS'
+             exec flower --port=80 $$FLOWER_OPTIONS'
     environment:
       <<: *common-env
       SERVICE_VARIANT: lms
       DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
-    ports:
-      - 127.0.0.1:5555:5555
     container_name: {{ project.name }}_flower
     networks:
       - derex
+    networks:
+        derex:
+          aliases:
+            - flower.{{ project.name }}.localhost.derex
 
   lms:
     <<: *common-conf
     {% if project.runmode.value == "debug" -%}
     command:
-      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver --noreload 0:4700'
+      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver --noreload 0:80'
     {% else -%}
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
-        --bind 0.0.0.0:4700
+        --bind 0.0.0.0:80
         --max-requests 1000
         --max-requests-jitter 200
         --worker-class gevent
@@ -79,27 +81,26 @@ services:
         --log-file=-
         wsgi:application'
     healthcheck:
-      test: ["CMD", "wget", "localhost:4700/heartbeat", "-q", "-O", "/dev/null"]
+      test: ["CMD", "wget", "localhost:80/heartbeat", "-q", "-O", "/dev/null"]
     {% endif -%}
     environment:
       <<: *common-env
       SERVICE_VARIANT: lms
       DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
-    {% if project.runmode.value == "debug" -%}
-    ports:  # In debug runmode we expose ports on the host
-      - 127.0.0.1:4700:4700
-      - 127.0.0.1:4701:4701
-    {% endif %}
+    networks:
+        derex:
+          aliases:
+            - {{ project.name }}.localhost.derex
 
   cms:
     <<: *common-conf
     {% if project.runmode.value == "debug" -%}
     command:
-      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver --noreload 0:4800'
+      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver --noreload 0:80'
     {% else -%}
     command:
       sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
-        --bind 0.0.0.0:4800
+        --bind 0.0.0.0:80
         --max-requests 1000
         --max-requests-jitter 200
         --worker-class gevent
@@ -108,17 +109,18 @@ services:
         --timeout 300
         wsgi:application'
     healthcheck:
-      test: ["CMD", "wget", "localhost:4800/heartbeat", "-q", "-O", "/dev/null"]
+      test: ["CMD", "wget", "localhost:80/heartbeat", "-q", "-O", "/dev/null"]
     {% endif -%}
     environment:
       <<: *common-env
       SERVICE_VARIANT: cms
       DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
     {% if project.runmode.value == "debug" -%}
-    ports:  # In debug runmode we expose ports on the host
-      - 127.0.0.1:4800:4800
-      - 127.0.0.1:4801:4801
     {% endif %}
+    networks:
+        derex:
+          aliases:
+            - studio.{{ project.name }}.localhost.derex
 
   lms_worker:
     <<: *common-conf

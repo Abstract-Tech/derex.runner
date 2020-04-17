@@ -2,7 +2,6 @@ DEFAULT_FILE_STORAGE = "storages.backends.s3boto.S3BotoStorage"
 
 AWS_ACCESS_KEY_ID = "minio_derex"
 AWS_SECRET_ACCESS_KEY = "derex_default_secret"
-AWS_S3_ENDPOINT_URL = "http://minio:4500/"
 
 AWS_S3_CALLING_FORMAT = "boto.s3.connection.OrdinaryCallingFormat"
 AWS_S3_HOST = "minio"

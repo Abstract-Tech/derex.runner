@@ -144,11 +144,11 @@ stages:
         displayName: Show CMS/LMS logs
 
       - script: |
-          $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
-          $(CURL) http://localhost:4700/example_view
+          $(CURL) http://complete.localhost/ || (sleep 10; $(CURL) http://complete.localhost/)
+          $(CURL) http://complete.localhost/example_view
         displayName: Curl the LMS
 
-      - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
+      - script: $(CURL) http://studio.complete.localhost/ || (sleep 10; $(CURL) http://studio.complete.localhost/)
         displayName: Curl the CMS
 
       - script: cd tests/fixtures/complete && derex compile-theme
