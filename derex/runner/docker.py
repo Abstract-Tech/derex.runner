@@ -185,3 +185,21 @@ def create_buckets(bucket_list: List[str]):
         network="derex",
         remove=True,
     )
+
+
+def get_running_containers():
+    return {
+        container.name: client.api.inspect_container(container.name)
+        for container in client.networks.get("derex").containers
+    }
+
+
+def get_exposed_container_names():
+    result = []
+    for name, container in get_running_containers().items():
+        names = container["NetworkSettings"]["Networks"]["derex"]["Aliases"]
+        matching_names = filter(lambda el: el.endswith("localhost.derex"), names)
+        result.extend(
+            map(lambda el: "http://" + el.replace(".derex", ""), matching_names)
+        )
+    return result

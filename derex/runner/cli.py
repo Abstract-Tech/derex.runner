@@ -40,7 +40,7 @@ def ensure_project(func):
 
 
 @with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
-@click.group()
+@click.group(invoke_without_command=True)
 @click.pass_context
 @setup_logging_decorator
 def derex(ctx):
@@ -53,6 +53,16 @@ def derex(ctx):
         ctx.obj = Project()
     except ValueError:
         pass
+
+    if ctx.invoked_subcommand:
+        return
+
+    click.echo(derex.get_help(ctx))
+
+    from .docker import get_exposed_container_names
+
+    containers = "\n".join(get_exposed_container_names())
+    click.echo(f"\nThese containers are running:\n\n{containers}")
 
 
 @derex.command()
