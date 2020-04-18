@@ -186,17 +186,17 @@ stages:
         displayName: 'Show CMS/LMS logs (prod mode)'
 
       - script: |
-          $(CURL) http://lms.localhost/ || (sleep 10; $(CURL) http://lms.localhost/)
-          $(CURL) http://lms.localhost/example_view
+          $(CURL) http://complete.localhost/ || (sleep 10; $(CURL) http://complete.localhost/)
+          $(CURL) http://complete.localhost/example_view
         displayName: 'Curl the LMS (prod mode)'
 
-      - script: $(CURL) http://studio.localhost/ || (sleep 10; $(CURL) http://studio.localhost/)
+      - script: $(CURL) http://studio.complete.localhost/ || (sleep 10; $(CURL) http://studio.complete.localhost/)
         displayName: 'Curl the CMS (prod mode)'
 
       - script: |
           set -ex
-          $(CURL) http://lms.localhost/|grep static/demo-theme/css/lms-main-v1.css
-          $(CURL) http://lms.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+          $(CURL) http://complete.localhost/|grep static/demo-theme/css/lms-main-v1.css
+          $(CURL) http://complete.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
         displayName: 'Curl the LMS CSS and make sure our theme CSS is in'
 
       - script: |
