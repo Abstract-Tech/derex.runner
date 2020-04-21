@@ -198,8 +198,14 @@ def get_exposed_container_names():
     result = []
     for name, container in get_running_containers().items():
         names = container["NetworkSettings"]["Networks"]["derex"]["Aliases"]
-        matching_names = filter(lambda el: el.endswith("localhost.derex"), names)
-        result.extend(
-            map(lambda el: "http://" + el.replace(".derex", ""), matching_names)
-        )
+        matching_names = list(filter(lambda el: el.endswith("localhost.derex"), names))
+        if matching_names:
+            matching_names.append(
+                container["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
+            )
+            result.append(
+                "\t".join(
+                    map(lambda el: "http://" + el.replace(".derex", ""), matching_names)
+                )
+            )
     return result

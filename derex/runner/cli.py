@@ -62,7 +62,9 @@ def derex(ctx):
     from .docker import get_exposed_container_names
 
     containers = "\n".join(get_exposed_container_names())
-    click.echo(f"\nThese containers are running:\n\n{containers}")
+    click.echo(
+        f"\nThese containers are running and exposing an HTTP server on port 80:\n\n{containers}"
+    )
 
 
 @derex.command()
