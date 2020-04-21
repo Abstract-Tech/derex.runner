@@ -209,3 +209,27 @@ def get_exposed_container_names():
                 )
             )
     return result
+
+
+def run_trace_minio():
+    """Unfortunately this is not working.
+    It's supposed to output a torrent of info about each and
+    every request that goes into minio.
+    """
+    script = """
+    mc config host add local http://minio:80 minio_derex derex_default_secret --api s3v4;
+    mc admin obd local;
+    #mc admin trace -v local;
+    """.replace(
+        "\n", ""
+    )
+    for line in client.containers.run(
+        image="minio/mc",
+        entrypoint="/bin/sh",
+        command=["-c", script],
+        network="derex",
+        auto_remove=True,
+        stderr=True,
+        stream=True,
+    ):
+        print(line.decode("utf-8", errors="replace"), end="")

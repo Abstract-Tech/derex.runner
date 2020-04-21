@@ -67,6 +67,13 @@ def derex(ctx):
     )
 
 
+@derex.group()
+@click.pass_context
+def debug(ctx):
+    """Debugging utilities
+    """
+
+
 @derex.command()
 @click.pass_obj
 def reset_mailslurper(project):
@@ -375,3 +382,10 @@ def settings(project: Project, settings: Optional[Any]):
         click.echo(project.settings.name)
     else:
         project.settings = settings
+
+
+@debug.command()
+def trace_minio():
+    from derex.runner.docker import run_trace_minio
+
+    run_trace_minio()
