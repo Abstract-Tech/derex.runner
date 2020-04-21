@@ -91,6 +91,7 @@ services:
         derex:
           aliases:
             - {{ project.name }}.localhost.derex
+            - preview.{{ project.name }}.localhost.derex
 
   cms:
     <<: *common-conf
