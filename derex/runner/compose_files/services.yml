@@ -89,6 +89,7 @@ services:
       MINIO_ACCESS_KEY: minio_derex
       MINIO_SECRET_KEY: derex_default_secret
     command: server --address :80 /data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/minio/health/live"]
       interval: 30s
