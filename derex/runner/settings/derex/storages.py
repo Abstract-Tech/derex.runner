@@ -88,13 +88,13 @@ VIDEO_IMAGE_SETTINGS.update(
         },
     }
 )
+
 PROFILE_IMAGE_BACKEND.update(
     {
-        "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
-        "STORAGE_KWARGS": {
-            "bucket": AWS_STORAGE_BUCKET_NAME,
-            "ROOT_PATH": "/profile-images",
-            "STORAGE_TYPE": "s3",
+        "class": DEFAULT_FILE_STORAGE,
+        "options": {
+            "location": "/profile_images",
+            "base_url": "not-used-but-need-to-define",
         },
     }
 )
