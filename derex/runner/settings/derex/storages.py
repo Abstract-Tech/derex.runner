@@ -39,3 +39,15 @@ FINANCIAL_REPORTS = {
 
 # This is needed for the Sysadmin dashboard "Git Logs" tab
 GIT_REPO_DIR = os.path.join(MEDIA_ROOT, "course_repos")
+
+# Media
+
+MEDIA_ROOT = "/openedx/media"
+VIDEO_TRANSCRIPTS_SETTINGS["STORAGE_KWARGS"]["location"] = MEDIA_ROOT
+VIDEO_IMAGE_SETTINGS["STORAGE_KWARGS"]["location"] = MEDIA_ROOT
+PROFILE_IMAGE_BACKEND["options"].update(
+    {
+        "base_url": os.path.join(MEDIA_URL, "profile-images/"),
+        "location": os.path.join(MEDIA_ROOT, "profile-images/"),
+    }
+)
