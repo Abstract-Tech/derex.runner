@@ -42,12 +42,38 @@ GIT_REPO_DIR = os.path.join(MEDIA_ROOT, "course_repos")
 
 # Media
 
-MEDIA_ROOT = "/openedx/media"
-VIDEO_TRANSCRIPTS_SETTINGS["STORAGE_KWARGS"]["location"] = MEDIA_ROOT
-VIDEO_IMAGE_SETTINGS["STORAGE_KWARGS"]["location"] = MEDIA_ROOT
-PROFILE_IMAGE_BACKEND["options"].update(
+MEDIA_ROOT = "http://minio.localhost/{}/openedx/media".format(AWS_STORAGE_BUCKET_NAME)
+VIDEO_TRANSCRIPTS_SETTINGS.update(
     {
-        "base_url": os.path.join(MEDIA_URL, "profile-images/"),
-        "location": os.path.join(MEDIA_ROOT, "profile-images/"),
+        "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+        "STORAGE_KWARGS": {
+            "bucket": AWS_STORAGE_BUCKET_NAME,
+            "ROOT_PATH": "/video-transcripts",
+            "STORAGE_TYPE": "s3",
+        },
     }
 )
+VIDEO_IMAGE_SETTINGS.update(
+    {
+        "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+        "STORAGE_KWARGS": {
+            "bucket": AWS_STORAGE_BUCKET_NAME,
+            "ROOT_PATH": "/video-images",
+            "STORAGE_TYPE": "s3",
+        },
+    }
+)
+PROFILE_IMAGE_BACKEND.update(
+    {
+        "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+        "STORAGE_KWARGS": {
+            "bucket": AWS_STORAGE_BUCKET_NAME,
+            "ROOT_PATH": "/profile-images",
+            "STORAGE_TYPE": "s3",
+        },
+    }
+)
+
+if DEBUG:
+    """Here we should make sure that the above settings don't break lms.urls
+    """
