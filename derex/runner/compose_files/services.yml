@@ -104,6 +104,7 @@ services:
     image: caddy/caddy
     ports:
       - 127.0.0.1:80:80
+      - 127.0.0.1:81:81
       - 127.0.0.1:4301:4301
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile

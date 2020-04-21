@@ -2,6 +2,12 @@ http:// {
     reverse_proxy {http.request.host}.derex:80
 }
 
+# We proxy an extra port to use for debugging
+:81 {
+    reverse_proxy {http.request.host}.derex:81
+}
+
+
 # Mailsluprer needs an extra port and thus special treatment
 http://mailslurper.localhost:4301 {
     reverse_proxy mailslurper.localhost.derex:4301
