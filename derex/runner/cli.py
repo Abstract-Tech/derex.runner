@@ -385,7 +385,7 @@ def settings(project: Project, settings: Optional[Any]):
 
 
 @debug.command()
-def trace_minio():
-    from derex.runner.docker import run_trace_minio
+def minio_shell():
+    from derex.runner.docker import run_minio_shell
 
-    run_trace_minio()
+    run_minio_shell()

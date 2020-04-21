@@ -12,6 +12,7 @@ import docker
 import io
 import json
 import logging
+import os
 import re
 import tarfile
 import time
@@ -211,25 +212,9 @@ def get_exposed_container_names():
     return result
 
 
-def run_trace_minio():
-    """Unfortunately this is not working.
-    It's supposed to output a torrent of info about each and
-    every request that goes into minio.
+def run_minio_shell():
+    """Invoke a minio shell
     """
-    script = """
-    mc config host add local http://minio:80 minio_derex derex_default_secret --api s3v4;
-    mc admin obd local;
-    #mc admin trace -v local;
-    """.replace(
-        "\n", ""
+    os.system(
+        "docker run -ti --rm --network derex --entrypoint /bin/sh minio/mc -c 'mc config host add local http://minio:80 minio_derex derex_default_secret --api s3v4; sh'"
     )
-    for line in client.containers.run(
-        image="minio/mc",
-        entrypoint="/bin/sh",
-        command=["-c", script],
-        network="derex",
-        auto_remove=True,
-        stderr=True,
-        stream=True,
-    ):
-        print(line.decode("utf-8", errors="replace"), end="")
