@@ -99,6 +99,7 @@ services:
       derex:
         aliases:
           - minio.localhost.derex
+          - minio.localhost
 
   httpserver:
     image: caddy/caddy
