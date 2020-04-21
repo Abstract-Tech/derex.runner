@@ -149,7 +149,7 @@ def reset_mysql_cmd(project, force):
 @derex.command()
 @click.pass_obj
 @ensure_project
-def create_buckets(project):
+def create_bucket(project):
     """Create S3 buckets on Minio"""
     from derex.runner.docker import create_buckets
 

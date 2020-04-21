@@ -115,6 +115,7 @@ stages:
           cd tests/fixtures/complete
           derex reset-mysql
           derex reset-rabbitmq
+          derex create-bucket
           # Run a command to get the current database name. First run it with all output enabled
           # so that in case of errors in the pipeline we have info about what went wrong
           # We use the flower container because it always uses the base image regardless
@@ -237,6 +238,7 @@ stages:
           ddc-project config
           derex reset-mysql
           derex reset-rabbitmq
+          derex create-bucket
         displayName: 'Prime Mysql DB'
 
       - script: |
