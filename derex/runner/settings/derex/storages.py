@@ -5,7 +5,7 @@ AWS_SECRET_ACCESS_KEY = "derex_default_secret"
 
 AWS_S3_CALLING_FORMAT = "boto.s3.connection.OrdinaryCallingFormat"
 AWS_S3_HOST = "minio"
-AWS_S3_PORT = 4500
+AWS_S3_PORT = 80
 AWS_S3_USE_SSL = False
 AWS_QUERYSTRING_AUTH = False
 S3_USE_SIGV4 = True

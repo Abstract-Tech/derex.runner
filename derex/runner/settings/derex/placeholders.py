@@ -19,6 +19,5 @@ FACEBOOK_APP_ID = None
 # >>> from lms.envs import common
 # >>> common.CREDENTIALS_PUBLIC_SERVICE_URL, common.CREDENTIALS_INTERNAL_SERVICE_URL
 # ('http://localhost:8008', 'http://localhost:8008')
-
 CREDENTIALS_INTERNAL_SERVICE_URL = None
 CREDENTIALS_PUBLIC_SERVICE_URL = None
