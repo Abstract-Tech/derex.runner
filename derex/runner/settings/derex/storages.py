@@ -71,6 +71,8 @@ VIDEO_TRANSCRIPTS_SETTINGS.update(
             "bucket": AWS_STORAGE_BUCKET_NAME,
             "ROOT_PATH": "/video-transcripts",
             "STORAGE_TYPE": "s3",
+            "base_url": "not-used-but-need-to-define",
+            "location": "not-used-but-need-to-define",
         },
     }
 )
@@ -81,6 +83,8 @@ VIDEO_IMAGE_SETTINGS.update(
             "bucket": AWS_STORAGE_BUCKET_NAME,
             "ROOT_PATH": "/video-images",
             "STORAGE_TYPE": "s3",
+            "base_url": "not-used-but-need-to-define",
+            "location": "not-used-but-need-to-define",
         },
     }
 )
