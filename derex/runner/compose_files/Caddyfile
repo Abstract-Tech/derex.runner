@@ -1,5 +1,9 @@
-:80 :81 {
-    reverse_proxy {http.request.host}.derex:{http.request.port}
+:80 {
+    reverse_proxy {http.request.host}.derex:80
+}
+
+:81 {
+    reverse_proxy {http.request.host}.derex:81
 }
 
 # Mailsluprer needs an extra port and thus special treatment
