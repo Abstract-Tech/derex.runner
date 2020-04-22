@@ -163,7 +163,7 @@ def create_bucket(project):
     from derex.runner.docker import run_minio_mc
 
     click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
-    command = f"mc mb --ignore-existing {project.name}"
+    command = f"mc mb --ignore-existing local/{project.name}"
     command += f"&& mc policy set download local/{project.name}/profile-images"
     run_minio_mc(command)
 
