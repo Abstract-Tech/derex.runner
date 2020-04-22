@@ -8,7 +8,7 @@ AWS_S3_CALLING_FORMAT = "boto.s3.connection.OrdinaryCallingFormat"
 AWS_S3_HOST = "minio.localhost"
 AWS_S3_PORT = 80
 AWS_S3_USE_SSL = False
-AWS_QUERYSTRING_AUTH = False
+AWS_QUERYSTRING_AUTH = True
 S3_USE_SIGV4 = True
 ORA2_FILEUPLOAD_BACKEND = "s3"
 
@@ -95,6 +95,7 @@ PROFILE_IMAGE_BACKEND.update(
         "options": {
             "location": "/profile-images",
             "base_url": "not-used-but-need-to-define",
+            "querystring_auth": False,
         },
         "STORAGE_KWARGS": {
             "bucket": AWS_STORAGE_BUCKET_NAME,
