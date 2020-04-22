@@ -177,7 +177,7 @@ def run_minio_mc(command_string: str):
     """
     command = (
         "mc config host add local http://minio:80 minio_derex derex_default_secret --api s3v4"
-        f"&& {command_string}"
+        f" && {command_string}"
     )
     client.containers.run(
         image="minio/mc",
