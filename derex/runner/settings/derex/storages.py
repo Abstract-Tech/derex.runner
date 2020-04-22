@@ -93,8 +93,13 @@ PROFILE_IMAGE_BACKEND.update(
     {
         "class": DEFAULT_FILE_STORAGE,
         "options": {
-            "location": "/profile_images",
+            "location": "/profile-images",
             "base_url": "not-used-but-need-to-define",
+        },
+        "STORAGE_KWARGS": {
+            "bucket": AWS_STORAGE_BUCKET_NAME,
+            "ROOT_PATH": "/profile-images",
+            "STORAGE_TYPE": "s3",
         },
     }
 )

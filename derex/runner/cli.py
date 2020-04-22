@@ -160,11 +160,12 @@ def reset_mysql_cmd(project, force):
 @ensure_project
 def create_bucket(project):
     """Create S3 buckets on Minio"""
-    from derex.runner.docker import create_buckets
+    from derex.runner.docker import run_minio_mc
 
-    click.echo(f"Creating bucket {project.name}")
-    create_buckets([project.name])
-    click.echo("Buckets created")
+    click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
+    command = f"mc mb --ignore-existing {project.name}"
+    command += f"&& mc policy set download local/{project.name}/profile-images"
+    run_minio_mc(command)
 
 
 @derex.command()

@@ -171,13 +171,13 @@ class BuildError(RuntimeError):
     """
 
 
-def create_buckets(bucket_list: List[str]):
-    """Create the given buckets on minio.
+def run_minio_mc(command_string: str):
+    """Run the given string as shell commands that invoke mc.
+    The local minio server will be available as `local`.
     """
-    bucket_names = " ".join(map(lambda x: f"minio/{x}", bucket_list))
     command = (
-        "mc config host add minio http://minio:80 minio_derex derex_default_secret --api s3v4"
-        "&& mc mb --ignore-existing " + bucket_names
+        "mc config host add local http://minio:80 minio_derex derex_default_secret --api s3v4"
+        f"&& {command_string}"
     )
     client.containers.run(
         image="minio/mc",
