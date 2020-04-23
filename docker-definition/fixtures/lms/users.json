@@ -1,7 +1,7 @@
 [
   {
     "model": "auth.user",
-    "pk": 1,
+    "pk": 100,
     "fields": {
       "password": "pbkdf2_sha256$36000$Rsbs2MAwwD4X$BWVn4zJOt9kO5u2ihgVeIQMnjrtpDzpclX8F2r1pbTw=",
       "last_login": null,
@@ -19,16 +19,16 @@
   },
   {
     "model": "student.userprofile",
-    "pk": 1,
+    "pk": 100,
     "fields": {
-      "user": 1,
+      "user": 100,
       "name": "Student User",
       "year_of_birth": 1920
     }
   },
   {
     "model": "auth.user",
-    "pk": 2,
+    "pk": 101,
     "fields": {
       "password": "pbkdf2_sha256$36000$VAx8S2zQhKks$MtTu2pjY0CQegB+Q5O3DkN8ncw6Hk8O21KGJNY5+ADU=",
       "last_login": null,
@@ -46,16 +46,16 @@
   },
   {
     "model": "student.userprofile",
-    "pk": 2,
+    "pk": 101,
     "fields": {
-      "user": 2,
+      "user": 101,
       "name": "Staff User",
       "year_of_birth": 1920
     }
   },
   {
     "model": "auth.user",
-    "pk": 3,
+    "pk": 102,
     "fields": {
       "password": "pbkdf2_sha256$36000$TGGr1rmjd1eG$kjM3FkV/Y/LLFzzbps0HFWIq7gYW5h3z7Bx3+TixIJA=",
       "last_login": null,
@@ -73,9 +73,9 @@
   },
   {
     "model": "student.userprofile",
-    "pk": 3,
+    "pk": 102,
     "fields": {
-      "user": 3,
+      "user": 102,
       "name": "Admin User",
       "year_of_birth": 1920
     }
