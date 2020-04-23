@@ -18,6 +18,15 @@
   }
 },
 {
+    "model": "student.userprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "name": "Ecommerce Worker",
+      "year_of_birth": 1920,
+    }
+  },
+{
   "model": "auth.user",
   "pk": 2,
   "fields": {
