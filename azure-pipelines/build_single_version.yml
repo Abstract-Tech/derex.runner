@@ -5,8 +5,8 @@ steps:
     inputs:
       key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
       path: $(SENTINEL_CACHE_PATH)
-      cacheHitVar: 'ImagesSentinelHit'
-    displayName: 'Docker images sentinel cache'
+      cacheHitVar: "ImagesSentinelHit"
+    displayName: "Docker images sentinel cache"
 
   - template: load_images.yml
     parameters:
@@ -15,11 +15,11 @@ steps:
 
   - script: echo '##vso[task.setvariable variable=needs_build]true'
     condition: ne(variables.ImagesSentinelHit, 'true')
-    displayName: 'Set needs_build pipeline variable'
+    displayName: "Set needs_build pipeline variable"
 
   - script: df -h; time sudo rm -rf /var/cache/apt/archives /opt/ghc; df -h
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
-    displayName: 'Remove Haskell compiler and cached apt archives to save disk space'
+    displayName: "Remove Haskell compiler and cached apt archives to save disk space"
 
   - script: |
       if [ -z "$TRANSIFEX_USERNAME" ] || [ -z "$TRANSIFEX_PASSWORD" ]; then
@@ -29,7 +29,7 @@ steps:
       printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $HOME/.transifexrc
       ls -l $HOME/.transifexrc
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
-    displayName: 'Prepare Transifex credentials'
+    displayName: "Prepare Transifex credentials"
     env:
       TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
       TRANSIFEX_PASSWORD: $(TRANSIFEX_PASSWORD)
@@ -52,7 +52,7 @@ steps:
       # it only in a build of the same commit, after tests are passed
       git rev-parse --verify HEAD > $(SENTINEL_CACHE_PATH)/built_version
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
-    displayName: 'Setup docker images cache'
+    displayName: "Setup docker images cache"
 
   - script: |
       set -ex
@@ -88,7 +88,7 @@ steps:
       derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target}" --target=translations $(DOCKER_IMAGES_SLUG)
       docker images
       docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
-    continueOnError: true  # Do not make the build fail because of translation issues
+    continueOnError: true # Do not make the build fail because of translation issues
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Check translations
 
