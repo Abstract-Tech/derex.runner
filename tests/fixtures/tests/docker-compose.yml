@@ -8,8 +8,8 @@ services:
     environment:
       ENABLE_TELEMETRY: "false"
     ports:
-      - '80:80'
-      - '443:443'
+      - "80:80"
+      - "443:443"
     volumes:
       - ../Caddyfile:/etc/Caddyfile:ro
     links:

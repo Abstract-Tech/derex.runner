@@ -11,10 +11,10 @@ steps:
     inputs:
       key: BASE_SEED=$(CACHE_KEY_BASE) | ${{ parameters.DOCKER_IMAGES_SLUG }} | $(CACHE_KEY_IMAGES)
       path: $(IMAGE_CACHE_PATH)
-      cacheHitVar: 'ImagesHit'
+      cacheHitVar: "ImagesHit"
       restoreKeys: BASE_SEED=$(CACHE_KEY_BASE) | ${{ parameters.DOCKER_IMAGES_SLUG }}
     condition: ${{ parameters.CONDITION }}
-    displayName: 'Docker images cache'
+    displayName: "Docker images cache"
 
   - script: |
       [ -d $(IMAGE_CACHE_PATH) ] || exit 0
@@ -24,4 +24,4 @@ steps:
       cat $(IMAGE_CACHE_PATH)/edx-${{ parameters.DOCKER_IMAGES_SLUG }}.tar.xz | unxz | docker load
       docker images
     condition: ${{ parameters.CONDITION }}
-    displayName: 'Load ${{ parameters.DOCKER_IMAGES_SLUG }} images'
+    displayName: "Load ${{ parameters.DOCKER_IMAGES_SLUG }} images"

@@ -3,14 +3,14 @@ steps:
     inputs:
       key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
       path: $(SENTINEL_CACHE_PATH)
-      cacheHitVar: 'ImagesSentinelHit'
-    displayName: 'Docker images sentinel cache'
+      cacheHitVar: "ImagesSentinelHit"
+    displayName: "Docker images sentinel cache"
 
   - script: docker manifest inspect derex/edx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') || echo '##vso[task.setvariable variable=needs_build]true'
-    displayName: 'Set needs_build pipeline variable'
+    displayName: "Set needs_build pipeline variable"
 
   - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-    displayName: 'Log into docker registry'
+    displayName: "Log into docker registry"
     condition: ne(variables.needs_build, 'false')
     env:
       DOCKER_USERNAME: $(DOCKER_USERNAME)
@@ -23,8 +23,8 @@ steps:
 
   - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
     condition: ne(variables.needs_build, 'false')
-    displayName: 'Push $(DOCKER_IMAGES_SLUG) dev image'
+    displayName: "Push $(DOCKER_IMAGES_SLUG) dev image"
 
   - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
     condition: ne(variables.needs_build, 'false')
-    displayName: 'Push $(DOCKER_IMAGES_SLUG) nostatic image'
+    displayName: "Push $(DOCKER_IMAGES_SLUG) nostatic image"
