@@ -19,3 +19,8 @@ http://portainer.localhost:80 {
 http://adminer.localhost:80 {
     reverse_proxy adminer.localhost.derex:8080
 }
+
+# Used by health check
+:8080 {
+    respond /health-check 200
+}

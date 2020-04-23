@@ -108,6 +108,19 @@ services:
       - 127.0.0.1:4301:4301
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "-",
+          "http://localhost:8080/minio/health/live",
+        ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     networks:
       - derex
 
