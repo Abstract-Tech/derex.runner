@@ -1,10 +1,10 @@
 schedules:
-- cron: "30 06 * * *"
-  displayName: Daily build
-  branches:
-    include:
-      - master
-  always: true
+  - cron: "30 06 * * *"
+    displayName: Daily build
+    branches:
+      include:
+        - master
+    always: true
 
 stages:
   - template: azure-pipelines/build.yml
@@ -13,15 +13,15 @@ stages:
 
 variables:
   - name: DOCKER_BUILDKIT
-    value: '1'
+    value: "1"
   - name: DOCKER_CLI_EXPERIMENTAL
     value: enabled
   - name: DOCKER_COMMAND
     value: docker buildx build docker-definition
-  - name: CACHE_KEY_BASE  # Increment this value to reset the images cache
+  - name: CACHE_KEY_BASE # Increment this value to reset the images cache
     value: 21
   - name: CACHE_KEY_FILES
-    value: $(System.DefaultWorkingDirectory)/docker-definition/*
+    value: $(System.DefaultWorkingDirectory)/docker-definition/**/*
   - name: CACHE_KEY_IMAGES
     value: BASE_SEED=$(CACHE_KEY_BASE) | $(CACHE_KEY_FILES)
   - name: CACHE_KEY_IMAGES_FALLBACK

@@ -1,35 +1,33 @@
 stages:
-
   - stage: Push
     # Check if pushing is needed only on `master` and `build` branches
     condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/build') ))
     variables:
-    - group: Docker credentials
+      - group: Docker credentials
     jobs:
+      - job: hawthorn
+        pool:
+          vmImage: "ubuntu-18.04"
+        variables:
+          - name: DOCKER_IMAGES_SLUG
+            value: hawthorn
+        steps:
+          - template: push_single_version.yml
 
-    - job: hawthorn
-      pool:
-        vmImage: 'ubuntu-18.04'
-      variables:
-        - name: DOCKER_IMAGES_SLUG
-          value: hawthorn
-      steps:
-        - template: push_single_version.yml
+      - job: ironwood
+        pool:
+          vmImage: "ubuntu-18.04"
+        variables:
+          - name: DOCKER_IMAGES_SLUG
+            value: ironwood
+        steps:
+          - template: push_single_version.yml
 
-    - job: ironwood
-      pool:
-        vmImage: 'ubuntu-18.04'
-      variables:
-        - name: DOCKER_IMAGES_SLUG
-          value: ironwood
-      steps:
-        - template: push_single_version.yml
-
-    - job: juniper
-      pool:
-        vmImage: 'ubuntu-18.04'
-      variables:
-        - name: DOCKER_IMAGES_SLUG
-          value: hawthorn
-      steps:
-        - template: push_single_version.yml
+      - job: juniper
+        pool:
+          vmImage: "ubuntu-18.04"
+        variables:
+          - name: DOCKER_IMAGES_SLUG
+            value: hawthorn
+        steps:
+          - template: push_single_version.yml

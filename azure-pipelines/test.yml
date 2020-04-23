@@ -1,273 +1,270 @@
 stages:
-- stage: Test
-  variables:
-    PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black --flake8
-  jobs:
-  - job: RunPytests
-    timeoutInMinutes: 40
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      - template: prepare.yml
-
-      - script: |
-          set -ex
-          set -o pipefail
-          cd tests
-          pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
-        displayName: 'Run python tests'
-
-      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
-        artifact: fasttests_coverage
-
-
-  - job: RunSlowPytests
-    timeoutInMinutes: 40
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      - template: prepare.yml
-      - template: load_images.yml
-
-      - script: ddc-services pull
-        displayName: 'Pull edX services images'
-
-      - script: |
-          set -ex
-          export DEREX_ADMIN_SERVICES=False
-          ddc-services up -d
-          derex reset-mailslurper
-        displayName: 'Start service daemons'
-
-      - script: |
-          set -ex
-          set -o pipefail
-          cd tests
-          pytest -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
-        displayName: 'Run python tests'
-
-      - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
-        artifact: slowtests_coverage
-
-  - job: CombineCoverage
-    dependsOn:
-      - RunPytests
-      - RunSlowPytests
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      - template: prepare.yml
-
-      - download: current
-
-      - task: Cache@2
-        inputs:
-          key: npmcache2
-          path: $(Pipeline.Workspace)/.cache/npm
-        displayName: Cache npm packages
-
-      - script: |
-          set -ex
-          cp $(Pipeline.Workspace)/slowtests_coverage/.coverage tests/.coverage.slow
-          cp $(Pipeline.Workspace)/fasttests_coverage/.coverage tests/.coverage.fast
-          cd tests
-          coverage combine
-          coverage html
-          coverage xml
-          cd ..
-          # We installed the package with pip, and coverage reports the full absolute path.
-          # We cut to derex/runner/etc/etc
-          DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
-          echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
-          sudo npm config set cache $(Pipeline.Workspace)/.cache/npm --global
-          npm install juice
-          # Azure pipelines strips style sheets but leaves styles in place.
-          # juice can embed the styles in the HTML for us and present a much better
-          # view in the coverage results tab.
-          for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-          echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;]"
-        displayName: Fix coverage result and publish it
-        condition: succeededOrFailed()
-
-
-  - job: TestComplete
-    timeoutInMinutes: 60
-    pool:
-      vmImage: 'ubuntu-latest'
+  - stage: Test
     variables:
-      CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
-    steps:
-      - template: prepare.yml
-      - template: load_images.yml
-
-      - script: ddc-services pull
-        displayName: 'Pull edX services images'
-
-      - script: |
-          set -ex
-          export DEREX_ADMIN_SERVICES=False
-          ddc-services up -d
-          derex reset-mailslurper
-        displayName: 'Start service daemons'
-
-      - script: |
-          set -ex
-          cd tests/fixtures/complete
-          derex reset-mysql
-          derex reset-rabbitmq
-          # Run a command to get the current database name. First run it with all output enabled
-          # so that in case of errors in the pipeline we have info about what went wrong
-          # We use the flower container because it always uses the base image regardless
-          # of requirements and themes
-          ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
-          # ...and then the actual run
-          DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
-          ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
-        displayName: 'Test complete project fixtures'
-
-      - script: cd tests/fixtures/complete && derex build requirements
-        displayName: 'Build requirements image for project "complete"'
-
-      - script: cd tests/fixtures/complete; ddc-project up -d
-        displayName: 'Start edX daemons'
-
-      - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
-        displayName: 'Start nginx to expose LMS/CMS on the same domain/port'
-
-      - script: |
-          echo 127.0.0.1 localhost studio.localhost lms.localhost | sudo tee -a /etc/hosts
-          sleep 3  # Give the services a little time to start up
-        displayName: Add studio.localhost and lms.localhost to /etc/hosts
-
-      - script: cd tests/fixtures/complete; ddc-project logs cms lms
-        condition: always()
-        displayName: Show CMS/LMS logs
-
-      - script: |
-          $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
-          $(CURL) http://localhost:4700/example_view
-        displayName: Curl the LMS
-
-      - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
-        displayName: Curl the CMS
-
-      - script: cd tests/fixtures/complete && derex compile-theme
-        displayName: Compile theme
-
-      - script: cd tests/fixtures/complete && derex build final
-        displayName: Build final image
-
-      - script: |
-          set -ex
-          cd tests/fixtures/complete
-          docker images
-          # This should not be needed, but for some reason Azure does not tag the image
-          docker tag $(docker images -q|head -n1) complete/openedx-themes
-          docker images
-
-          echo Installing dive
-          wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
-          DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
-          echo Analyzing image
-          dive --ci complete/openedx-themes
-        condition: always()
-        displayName: Test the complete image with dive
-        continueOnError: true  # Do not make the build fail because of this step, for now
+      PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black --flake8
+    jobs:
+      - job: RunPytests
         timeoutInMinutes: 40
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - template: prepare.yml
 
-      - script: |
-          set -ex
-          cd tests/fixtures/complete
-          derex runmode production
-          ddc-project up -d
-          sleep 5  # Give it time to start up
-        displayName: 'Start production image lms/cms'
+          - script: |
+              set -ex
+              set -o pipefail
+              cd tests
+              pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+            displayName: "Run python tests"
 
-      - script: |
-          cd tests/fixtures/complete
-          ddc-project config
-          ddc-project logs cms lms
-        condition: always()
-        displayName: 'Show CMS/LMS logs (prod mode)'
+          - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
+            artifact: fasttests_coverage
 
-      - script: |
-          $(CURL) http://lms.localhost/ || (sleep 10; $(CURL) http://lms.localhost/)
-          $(CURL) http://lms.localhost/example_view
-        displayName: 'Curl the LMS (prod mode)'
+      - job: RunSlowPytests
+        timeoutInMinutes: 40
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
 
-      - script: $(CURL) http://studio.localhost/ || (sleep 10; $(CURL) http://studio.localhost/)
-        displayName: 'Curl the CMS (prod mode)'
+          - script: ddc-services pull
+            displayName: "Pull edX services images"
 
-      - script: |
-          set -ex
-          $(CURL) http://lms.localhost/|grep static/demo-theme/css/lms-main-v1.css
-          $(CURL) http://lms.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
-        displayName: 'Curl the LMS CSS and make sure our theme CSS is in'
+          - script: |
+              set -ex
+              export DEREX_ADMIN_SERVICES=False
+              ddc-services up -d
+              derex reset-mailslurper
+            displayName: "Start service daemons"
 
-      - script: |
-          ddc-services logs
-          cd tests/fixtures/complete; ddc-project logs
-        condition: always()
-        displayName: 'Show logs'
+          - script: |
+              set -ex
+              set -o pipefail
+              cd tests
+              pytest -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+            displayName: "Run python tests"
 
-      - script: |
-          cd tests/fixtures/complete; ddc-project config
-        condition: always()
-        displayName: 'Show ddc-project config'
+          - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
+            artifact: slowtests_coverage
 
+      - job: CombineCoverage
+        dependsOn:
+          - RunPytests
+          - RunSlowPytests
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - template: prepare.yml
 
-  - job: TestMinimal
-    timeoutInMinutes: 40
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      - template: prepare.yml
-      - template: load_images.yml
+          - download: current
 
-      - script: ddc-services pull
-        displayName: 'Pull edX services images'
+          - task: Cache@2
+            inputs:
+              key: npmcache2
+              path: $(Pipeline.Workspace)/.cache/npm
+            displayName: Cache npm packages
 
-      - script: |
-          set -ex
-          export DEREX_ADMIN_SERVICES=False
-          ddc-services up -d
-          derex reset-mailslurper
-        displayName: 'Start service daemons'
+          - script: |
+              set -ex
+              cp $(Pipeline.Workspace)/slowtests_coverage/.coverage tests/.coverage.slow
+              cp $(Pipeline.Workspace)/fasttests_coverage/.coverage tests/.coverage.fast
+              cd tests
+              coverage combine
+              coverage html
+              coverage xml
+              cd ..
+              # We installed the package with pip, and coverage reports the full absolute path.
+              # We cut to derex/runner/etc/etc
+              DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
+              echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
+              sudo npm config set cache $(Pipeline.Workspace)/.cache/npm --global
+              npm install juice
+              # Azure pipelines strips style sheets but leaves styles in place.
+              # juice can embed the styles in the HTML for us and present a much better
+              # view in the coverage results tab.
+              for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+              echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;]"
+            displayName: Fix coverage result and publish it
+            condition: succeededOrFailed()
 
-      - script: |
-          set -ex
-          cd tests/fixtures/minimal
-          docker images
-          docker run --rm derex/edx-ironwood-dev ls -l
-          ddc-project config
-          derex reset-mysql
-          derex reset-rabbitmq
-        displayName: 'Prime Mysql DB'
+      - job: TestComplete
+        timeoutInMinutes: 60
+        pool:
+          vmImage: "ubuntu-latest"
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
 
-      - script: |
-          set -x
-          cd tests/fixtures/minimal
-          ddc-project up -d lms_worker cms_worker flower
-          while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
-          while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
-          curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@lms.edx
-          curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@cms.edx
-        displayName: 'Check flower'
+          - script: ddc-services pull
+            displayName: "Pull edX services images"
 
-  - job: CheckDocs
-    timeoutInMinutes: 5
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      - template: prepare.yml
-      - script: make docs
-        displayName: 'Compile docs'
+          - script: |
+              set -ex
+              export DEREX_ADMIN_SERVICES=False
+              ddc-services up -d
+              derex reset-mailslurper
+            displayName: "Start service daemons"
 
-  - job: CheckPreCommit
-    timeoutInMinutes: 5
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      - template: prepare.yml
-      - script: pre-commit run -a
-        displayName: 'Check pre commit hooks'
+          - script: |
+              set -ex
+              cd tests/fixtures/complete
+              derex reset-mysql
+              derex reset-rabbitmq
+              # Run a command to get the current database name. First run it with all output enabled
+              # so that in case of errors in the pipeline we have info about what went wrong
+              # We use the flower container because it always uses the base image regardless
+              # of requirements and themes
+              ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
+              # ...and then the actual run
+              DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+              ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+            displayName: "Test complete project fixtures"
+
+          - script: cd tests/fixtures/complete && derex build requirements
+            displayName: 'Build requirements image for project "complete"'
+
+          - script: cd tests/fixtures/complete; ddc-project up -d
+            displayName: "Start edX daemons"
+
+          - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
+            displayName: "Start nginx to expose LMS/CMS on the same domain/port"
+
+          - script: |
+              echo 127.0.0.1 localhost studio.localhost lms.localhost | sudo tee -a /etc/hosts
+              sleep 3  # Give the services a little time to start up
+            displayName: Add studio.localhost and lms.localhost to /etc/hosts
+
+          - script: cd tests/fixtures/complete; ddc-project logs cms lms
+            condition: always()
+            displayName: Show CMS/LMS logs
+
+          - script: |
+              $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
+              $(CURL) http://localhost:4700/example_view
+            displayName: Curl the LMS
+
+          - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
+            displayName: Curl the CMS
+
+          - script: cd tests/fixtures/complete && derex compile-theme
+            displayName: Compile theme
+
+          - script: cd tests/fixtures/complete && derex build final
+            displayName: Build final image
+
+          - script: |
+              set -ex
+              cd tests/fixtures/complete
+              docker images
+              # This should not be needed, but for some reason Azure does not tag the image
+              docker tag $(docker images -q|head -n1) complete/openedx-themes
+              docker images
+
+              echo Installing dive
+              wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
+              DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
+              echo Analyzing image
+              dive --ci complete/openedx-themes
+            condition: always()
+            displayName: Test the complete image with dive
+            continueOnError: true # Do not make the build fail because of this step, for now
+            timeoutInMinutes: 40
+
+          - script: |
+              set -ex
+              cd tests/fixtures/complete
+              derex runmode production
+              ddc-project up -d
+              sleep 5  # Give it time to start up
+            displayName: "Start production image lms/cms"
+
+          - script: |
+              cd tests/fixtures/complete
+              ddc-project config
+              ddc-project logs cms lms
+            condition: always()
+            displayName: "Show CMS/LMS logs (prod mode)"
+
+          - script: |
+              $(CURL) http://lms.localhost/ || (sleep 10; $(CURL) http://lms.localhost/)
+              $(CURL) http://lms.localhost/example_view
+            displayName: "Curl the LMS (prod mode)"
+
+          - script: $(CURL) http://studio.localhost/ || (sleep 10; $(CURL) http://studio.localhost/)
+            displayName: "Curl the CMS (prod mode)"
+
+          - script: |
+              set -ex
+              $(CURL) http://lms.localhost/|grep static/demo-theme/css/lms-main-v1.css
+              $(CURL) http://lms.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+            displayName: "Curl the LMS CSS and make sure our theme CSS is in"
+
+          - script: |
+              ddc-services logs
+              cd tests/fixtures/complete; ddc-project logs
+            condition: always()
+            displayName: "Show logs"
+
+          - script: |
+              cd tests/fixtures/complete; ddc-project config
+            condition: always()
+            displayName: "Show ddc-project config"
+
+      - job: TestMinimal
+        timeoutInMinutes: 40
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
+
+          - script: ddc-services pull
+            displayName: "Pull edX services images"
+
+          - script: |
+              set -ex
+              export DEREX_ADMIN_SERVICES=False
+              ddc-services up -d
+              derex reset-mailslurper
+            displayName: "Start service daemons"
+
+          - script: |
+              set -ex
+              cd tests/fixtures/minimal
+              docker images
+              docker run --rm derex/edx-ironwood-dev ls -l
+              ddc-project config
+              derex reset-mysql
+              derex reset-rabbitmq
+            displayName: "Prime Mysql DB"
+
+          - script: |
+              set -x
+              cd tests/fixtures/minimal
+              ddc-project up -d lms_worker cms_worker flower
+              while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
+              while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
+              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@lms.edx
+              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@cms.edx
+            displayName: "Check flower"
+
+      - job: CheckDocs
+        timeoutInMinutes: 5
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - template: prepare.yml
+          - script: make docs
+            displayName: "Compile docs"
+
+      - job: CheckPreCommit
+        timeoutInMinutes: 5
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - template: prepare.yml
+          - script: pre-commit run -a
+            displayName: "Check pre commit hooks"
