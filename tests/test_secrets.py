@@ -1,10 +1,7 @@
-from collections import Counter
-
-import math
 import pytest
 
 
-CUSTOM_SECRET = "0123456789"
+CUSTOM_SECRET = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 
 def test_master_secret(mocker):
@@ -42,21 +39,33 @@ def test_master_secret_default_filename_not_readable(mocker):
 
 def test_master_secret_custom_filename(tmp_path, monkeypatch):
     """If the file exists but is not readable we should log an error.
+    If the file contains a bad secret (too short, too long or not enough entropy)
+    an exception is raised.
     """
     from derex.runner.secrets import get_master_secret
+    from derex.runner.secrets import DerexSecretError
 
     secret_path = tmp_path / "main_secret"
     secret_path.write_text("\n" + CUSTOM_SECRET + "\n")
     monkeypatch.setenv("DEREX_MAIN_SECRET_PATH", str(secret_path))
     assert get_master_secret() == CUSTOM_SECRET
 
-    secret_path.write_text("a" * 1024)
-    with pytest.raises(AssertionError):
-        get_master_secret()
+    secret_path.write_text("a" * 5000)
+    with pytest.raises(DerexSecretError):
+        get_master_secret()  # Too long
+
+    secret_path.write_text("a")
+    with pytest.raises(DerexSecretError):
+        get_master_secret()  # Too short
+
+    secret_path.write_text("a" * 20)
+    with pytest.raises(DerexSecretError):
+        get_master_secret()  # Not enough entropy
 
 
 def test_derived_secret():
     from derex.runner.secrets import get_secret
+    from derex.runner.secrets import compute_entropy
 
     foo_secret = get_secret("foo")
     # The same name should always yield the same secrets
@@ -66,14 +75,4 @@ def test_derived_secret():
     assert foo_secret != get_secret("bar")
 
     # Secrets must have enough entropy
-    assert entropy(foo_secret) * len(foo_secret) > 256
-
-    # If we customize the
-
-
-def entropy(s):
-    """Get entropy of string s.
-    Thanks Rosetta code! https://rosettacode.org/wiki/Entropy#Python:_More_succinct_version
-    """
-    p, lns = Counter(s), float(len(s))
-    return -sum(count / lns * math.log(count / lns, 2) for count in p.values())
+    assert compute_entropy(foo_secret) > 256
