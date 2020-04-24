@@ -1,6 +1,7 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from pathlib import Path
 from requests.exceptions import RequestException
@@ -171,23 +172,6 @@ class BuildError(RuntimeError):
     """
 
 
-def run_minio_mc(command_string: str):
-    """Run the given string as shell commands that invoke mc.
-    The local minio server will be available as `local`.
-    """
-    command = (
-        "mc config host add local http://minio:80 minio_derex derex_default_secret --api s3v4"
-        f" && {command_string}"
-    )
-    client.containers.run(
-        image="minio/mc",
-        entrypoint="/bin/sh",
-        command=["-c", command],
-        network="derex",
-        remove=True,
-    )
-
-
 def get_running_containers():
     return {
         container.name: client.api.inspect_container(container.name)
@@ -212,9 +196,11 @@ def get_exposed_container_names():
     return result
 
 
-def run_minio_shell():
+def run_minio_shell(command="sh"):
     """Invoke a minio shell
     """
+    minio_key = get_secret("minio")
     os.system(
-        "docker run -ti --rm --network derex --entrypoint /bin/sh minio/mc -c 'mc config host add local http://minio:80 minio_derex derex_default_secret --api s3v4; sh'"
+        "docker run -ti --rm --network derex --entrypoint /bin/sh minio/mc -c '"
+        f'mc config host add local http://minio:80 minio_derex "{minio_key}" --api s3v4 ; set -ex; {command}\''
     )
