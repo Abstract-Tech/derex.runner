@@ -2,6 +2,7 @@
 """
 from base64 import b64encode
 from collections import Counter
+from enum import Enum
 from hashlib import scrypt
 from pathlib import Path
 
@@ -17,6 +18,10 @@ DEREX_MAIN_SECRET_MAX_SIZE = 1024
 DEREX_MAIN_SECRET_MIN_SIZE = 8
 DEREX_MAIN_SECRET_MIN_ENTROPY = 128
 DEREX_MAIN_SECRET_PATH = "/etc/derex/main_secret"
+
+
+class DerexSecrets(Enum):
+    minio = "minio"
 
 
 def get_master_secret() -> str:
@@ -60,12 +65,12 @@ def get_master_secret() -> str:
     return "Default secret"
 
 
-def get_secret(name: str) -> str:
+def get_secret(secret: DerexSecrets) -> str:
     """Derive a secret using the master secret and the provided name.
     """
     master_secret = get_master_secret()
     binary_secret = scrypt(
-        master_secret.encode("utf-8"), salt=name.encode("utf-8"), n=2, r=8, p=1
+        master_secret.encode("utf-8"), salt=secret.name.encode("utf-8"), n=2, r=8, p=1
     )
     # Pad the binary string so that its length is a multiple of 3
     # This will make sure its base64 representation is equals-free

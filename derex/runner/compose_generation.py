@@ -11,6 +11,7 @@ from derex.runner import hookimpl
 from derex.runner.local_appdir import DEREX_DIR
 from derex.runner.local_appdir import ensure_dir
 from derex.runner.project import Project
+from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
@@ -150,7 +151,7 @@ def generate_services_file() -> str:
     )
     ensure_dir(local_path)
     tmpl = Template(SERVICES_YML_PATH.read_text())
-    minio_secret_key = get_secret("minio")
+    minio_secret_key = get_secret(DerexSecrets.minio)
     text = tmpl.render(MINIO_SECRET_KEY=minio_secret_key)
     local_path.write_text(text)
     return str(local_path)

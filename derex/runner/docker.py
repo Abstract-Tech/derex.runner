@@ -1,6 +1,7 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from pathlib import Path
@@ -199,7 +200,7 @@ def get_exposed_container_names():
 def run_minio_shell(command="sh"):
     """Invoke a minio shell
     """
-    minio_key = get_secret("minio")
+    minio_key = get_secret(DerexSecrets.minio)
     os.system(
         "docker run -ti --rm --network derex --entrypoint /bin/sh minio/mc -c '"
         f'mc config host add local http://minio:80 minio_derex "{minio_key}" --api s3v4 ; set -ex; {command}\''

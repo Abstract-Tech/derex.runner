@@ -1,3 +1,5 @@
+from enum import Enum
+
 import pytest
 
 
@@ -67,12 +69,16 @@ def test_derived_secret():
     from derex.runner.secrets import get_secret
     from derex.runner.secrets import compute_entropy
 
-    foo_secret = get_secret("foo")
+    class FooSecrets(Enum):
+        foo = "foo"
+        bar = "bar"
+
+    foo_secret = get_secret(FooSecrets.foo)
     # The same name should always yield the same secrets
-    assert get_secret("foo") == foo_secret
+    assert get_secret(FooSecrets.foo) == foo_secret
 
     # Two names should have different secrets
-    assert foo_secret != get_secret("bar")
+    assert foo_secret != get_secret(FooSecrets.bar)
 
     # Secrets must have enough entropy
     assert compute_entropy(foo_secret) > 256
