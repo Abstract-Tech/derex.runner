@@ -412,7 +412,7 @@ def update_minio(old_key: str):
     # We need to make sure the current credentials are not working...
     script += ' && expect -c "spawn /usr/bin/minio server /data; expect "Endpoint" { close; exit 1 }"'
     # ..but the old ones are
-    script += f' && if MINIO_SECRET_KEY="{old_key}" expect -c \'spawn /usr/bin/minio server /data; expect "Endpoint" {{ close; exit 1 }}\'; then exit 0; fi'
+    script += f' && if MINIO_SECRET_KEY="{old_key}" expect -c \'spawn /usr/bin/minio server /data; expect "Endpoint" {{ close; exit 1 }}\'; then exit 1; fi'
     script += f' && export MINIO_ACCESS_KEY_OLD="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY_OLD="{old_key}"'
     expected_string = "Rotation complete, please make sure to unset MINIO_ACCESS_KEY_OLD and MINIO_SECRET_KEY_OLD envs"
     script += f" && expect -c 'spawn /usr/bin/minio server /data; expect \"{expected_string}\" {{ close; exit 0 }}'"
