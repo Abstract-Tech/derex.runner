@@ -1,3 +1,12 @@
+"""This file holds functions that generate docker-compose configuration
+files from templates, interpolating variables according to the derex
+project configuration.
+
+They are invoked thanks to the `@hookimpl` call to the pluggy plugin system.
+
+The functions have to be reachable under the common name `local_compose_options`
+so a class is put in place to hold each of them.
+"""
 from derex.runner import hookimpl
 from derex.runner.project import Project
 from derex.runner.utils import abspath_from_egg
