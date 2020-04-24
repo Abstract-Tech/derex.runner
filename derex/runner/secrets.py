@@ -96,6 +96,6 @@ def compute_entropy(s: str) -> float:
 MASTER_SECRET = _get_master_secret()
 if MASTER_SECRET is None:
     MASTER_SECRET = "Default secret"
-    HAS_MASTER_SECRET = True
-else:
     HAS_MASTER_SECRET = False
+else:
+    HAS_MASTER_SECRET = True

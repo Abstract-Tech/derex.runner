@@ -8,6 +8,7 @@ from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
+from derex.runner.secrets import HAS_MASTER_SECRET
 from derex.runner.utils import abspath_from_egg
 from distutils.spawn import find_executable
 from functools import wraps
@@ -346,6 +347,9 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode]):
                 f"The current project runmode is already {runmode.name}", err=True
             )
         else:
+            if runmode is ProjectRunMode.production and not HAS_MASTER_SECRET:
+                click.echo("Set a master secret before switching to production")
+                return
             previous_runmode = project.runmode
             project.runmode = runmode
             click.echo(
