@@ -390,3 +390,41 @@ def minio_shell():
     from derex.runner.docker import run_minio_shell
 
     run_minio_shell()
+
+
+@derex.command()
+@click.option(
+    "--old-key",
+    # This is the key that the current default master secret generates
+    default="ICDTE0ZnlbIR7r6/qE81nkF7Kshc2gXYv6fJR4I/HKPeTbxEeB3nxC85Ne6C844hEaaC2+KHBRIOzGou9leulZ7t",
+    help="The old key to use for the update",
+)
+def update_minio(old_key: str):
+    """Run minio to re-key data with the new secret. The output is very confusing, but it works.
+    If you read a red warning and "Rotation complete" at the end, it means rekeying has worked.
+    If your read your current SecretKey, it means the current credentials are correct and you don't need
+    to update your keys.
+    """
+    from derex.runner.compose_utils import run_compose
+
+    # We need to stop minio after it's done re-keying. To this end, we use the expect package
+    script = "apk add expect --no-cache "
+    # We need to make sure the current credentials are not working...
+    script += ' && expect -c "spawn /usr/bin/minio server /data; expect "Endpoint" { close; exit 1 }"'
+    # ..but the old ones are
+    script += f' && if MINIO_SECRET_KEY="{old_key}" expect -c \'spawn /usr/bin/minio server /data; expect "Endpoint" {{ close; exit 1 }}\'; then exit 0; fi'
+    script += f' && export MINIO_ACCESS_KEY_OLD="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY_OLD="{old_key}"'
+    expected_string = "Rotation complete, please make sure to unset MINIO_ACCESS_KEY_OLD and MINIO_SECRET_KEY_OLD envs"
+    script += f" && expect -c 'spawn /usr/bin/minio server /data; expect \"{expected_string}\" {{ close; exit 0 }}'"
+    args = [
+        "run",
+        "--rm",
+        "--entrypoint",
+        "/bin/sh",
+        "-T",
+        "minio",
+        "-c",
+        script,
+    ]
+    run_compose(args, exit_afterwards=True)
+    click.echo(f"Minio server rekeying finished")
