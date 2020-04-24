@@ -8,9 +8,13 @@ The functions have to be reachable under the common name `local_compose_options`
 so a class is put in place to hold each of them.
 """
 from derex.runner import hookimpl
+from derex.runner.local_appdir import DEREX_DIR
+from derex.runner.local_appdir import ensure_dir
 from derex.runner.project import Project
+from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
+from distutils import dir_util
 from functools import partial
 from jinja2 import Template
 from pathlib import Path
@@ -42,7 +46,7 @@ class BaseServices:
     def compose_options() -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.compose_options docstring.
         """
-        options = ["--project-name", "derex_services", "-f", str(SERVICES_YML_PATH)]
+        options = ["--project-name", "derex_services", "-f", generate_services_file()]
         if asbool(os.environ.get("DEREX_ADMIN_SERVICES", True)):
             options += ["-f", str(ADMIN_YML_PATH)]
         return {
@@ -131,3 +135,22 @@ def image_exists(needle: str) -> bool:
         if needle in image["RepoTags"]:
             return True
     return False
+
+
+def generate_services_file() -> str:
+    """Generate the global docker-compose config file that will drive
+    ddc-services and return its path.
+    """
+    local_path = DEREX_DIR / "services" / SERVICES_YML_PATH.name
+    dir_util.copy_tree(
+        str(SERVICES_YML_PATH.parent),
+        str(local_path.parent),
+        update=1,  # Do not copy files more than once
+        verbose=1,
+    )
+    ensure_dir(local_path)
+    tmpl = Template(SERVICES_YML_PATH.read_text())
+    minio_secret_key = get_secret("minio")
+    text = tmpl.render(MINIO_SECRET_KEY=minio_secret_key)
+    local_path.write_text(text)
+    return str(local_path)

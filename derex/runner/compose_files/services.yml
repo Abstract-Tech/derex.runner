@@ -86,7 +86,7 @@ services:
       - derex_minio:/data
     environment:
       MINIO_ACCESS_KEY: minio_derex
-      MINIO_SECRET_KEY: derex_default_secret
+      MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"
     command: server --address :80 /data
     restart: unless-stopped
     healthcheck:

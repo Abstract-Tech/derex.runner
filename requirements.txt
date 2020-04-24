@@ -4,6 +4,7 @@
 #
 #    pip-compile
 #
+appdirs==1.4.3            # via derex.runner (setup.py)
 attrs==19.3.0             # via jsonschema
 bcrypt==3.1.7             # via paramiko
 cached-property==1.5.1    # via docker-compose
@@ -12,7 +13,7 @@ cffi==1.14.0              # via bcrypt, cryptography, pynacl
 chardet==3.0.4            # via requests
 click-plugins==1.1.1      # via derex.runner (setup.py)
 click==7.1.1              # via click-plugins, derex.runner (setup.py)
-cryptography==2.9         # via paramiko
+cryptography==2.9.2       # via paramiko
 docker-compose==1.25.5    # via derex.runner (setup.py)
 docker[ssh]==4.2.0        # via docker-compose
 dockerpty==0.4.1          # via docker-compose
