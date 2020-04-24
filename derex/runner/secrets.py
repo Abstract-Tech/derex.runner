@@ -5,6 +5,8 @@ from collections import Counter
 from enum import Enum
 from hashlib import scrypt
 from pathlib import Path
+from typing import Any
+from typing import Optional
 
 import logging
 import math
@@ -24,7 +26,12 @@ class DerexSecrets(Enum):
     minio = "minio"
 
 
-def get_master_secret() -> str:
+def get_var(name: str, vartype: type) -> Any:
+    varname = f"DEREX_MAIN_SECRET_{name.upper()}"
+    return vartype(os.environ.get(varname, globals()[varname]))
+
+
+def _get_master_secret() -> Optional[str]:
     """Derex uses a master secret to derive all other secrets.
     This functions finds the master secret on the current machine,
     and if it can't find it it will return a default one.
@@ -32,16 +39,10 @@ def get_master_secret() -> str:
     The default location is `/etc/derex/main_secret`, but can be customized
     via the environment variable DEREX_MAIN_SECRET_PATH.
     """
-    filepath = Path(os.environ.get("DEREX_MAIN_SECRET_PATH", DEREX_MAIN_SECRET_PATH))
-    max_size = int(
-        os.environ.get("DEREX_MAIN_SECRET_MAX_SIZE", DEREX_MAIN_SECRET_MAX_SIZE)
-    )
-    min_size = int(
-        os.environ.get("DEREX_MAIN_SECRET_MAX_SIZE", DEREX_MAIN_SECRET_MIN_SIZE)
-    )
-    min_entropy = int(
-        os.environ.get("DEREX_MAIN_SECRET_MAX_SIZE", DEREX_MAIN_SECRET_MIN_ENTROPY)
-    )
+    filepath = get_var("path", Path)
+    max_size = get_var("max_size", int)
+    min_size = get_var("min_size", int)
+    min_entropy = get_var("min_entropy", int)
 
     if os.access(filepath, os.R_OK):
         master_secret = filepath.read_text().strip()
@@ -61,16 +62,14 @@ def get_master_secret() -> str:
 
     if filepath.exists():
         logger.error(f"File filepath is not readable; using default master secret")
-
-    return "Default secret"
+    return None
 
 
 def get_secret(secret: DerexSecrets) -> str:
     """Derive a secret using the master secret and the provided name.
     """
-    master_secret = get_master_secret()
     binary_secret = scrypt(
-        master_secret.encode("utf-8"), salt=secret.name.encode("utf-8"), n=2, r=8, p=1
+        MASTER_SECRET.encode("utf-8"), salt=secret.name.encode("utf-8"), n=2, r=8, p=1  # type: ignore
     )
     # Pad the binary string so that its length is a multiple of 3
     # This will make sure its base64 representation is equals-free
@@ -92,3 +91,11 @@ def compute_entropy(s: str) -> float:
         count / lns * math.log(count / lns, 2) for count in p.values()
     )
     return per_char_entropy * len(s)
+
+
+MASTER_SECRET = _get_master_secret()
+if MASTER_SECRET is None:
+    MASTER_SECRET = "Default secret"
+    HAS_MASTER_SECRET = True
+else:
+    HAS_MASTER_SECRET = False
