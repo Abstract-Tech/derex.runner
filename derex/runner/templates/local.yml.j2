@@ -40,6 +40,7 @@ x-common:
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
     MONGODB_DB_NAME: {{ project.mongodb_db_name }}
+    DEREX_MINIO_SECRET: {{ project.secret("minio") }}
     {%- for key, value in project.get_container_env().items() %}
     {{ key }}: {{ value | tojson }}
     {%- endfor %}
