@@ -1,5 +1,5 @@
 from collections import namedtuple
-from derex.runner import config
+from derex.runner import compose_generation
 from derex.runner import plugin_spec
 from pprint import pformat
 
@@ -10,10 +10,10 @@ def setup_plugin_manager():
     plugin_manager = pluggy.PluginManager("derex.runner")
     plugin_manager.add_hookspecs(plugin_spec)
     plugin_manager.load_setuptools_entrypoints("derex.runner")
-    plugin_manager.register(config.LocalOpenEdX)
-    plugin_manager.register(config.BaseServices)
-    plugin_manager.register(config.LocalUser)
-    plugin_manager.register(config.LocalRunmodeOpenEdX)
+    plugin_manager.register(compose_generation.LocalOpenEdX)
+    plugin_manager.register(compose_generation.BaseServices)
+    plugin_manager.register(compose_generation.LocalUser)
+    plugin_manager.register(compose_generation.LocalRunmodeOpenEdX)
     return plugin_manager
 
 

@@ -6,10 +6,10 @@ MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 
 
 def test_get_final_image(mocker):
-    from derex.runner.config import image_exists
+    from derex.runner.compose_generation import image_exists
 
     mocker.patch(
-        "derex.runner.config.docker.APIClient",
+        "derex.runner.compose_generation.docker.APIClient",
         return_value=mocker.Mock(
             images=mocker.Mock(return_value=DOCKER_DAEMON_IMAGES_RESPONSE)
         ),
