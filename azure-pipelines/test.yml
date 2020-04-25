@@ -172,7 +172,7 @@ stages:
           - script: |
               set -ex
               cd tests/fixtures/complete
-              derex runmode production
+              derex runmode production --force
               ddc-project up -d
               sleep 5  # Give it time to start up
             displayName: "Start production image lms/cms"

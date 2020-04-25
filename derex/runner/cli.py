@@ -335,9 +335,15 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
     required=False,
     callback=lambda _, __, value: value and ProjectRunMode[value],
 )
+@click.option(
+    "--force/-f",
+    required=False,
+    default=False,
+    help="Allows switching to production mode without a main secret defined",
+)
 @click.pass_obj
 @ensure_project
-def runmode(project: Project, runmode: Optional[ProjectRunMode]):
+def runmode(project: Project, runmode: Optional[ProjectRunMode], force):
     """Get/set project runmode (debug/production)"""
     if runmode is None:
         click.echo(project.runmode.name)
@@ -346,15 +352,19 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode]):
             click.echo(
                 f"The current project runmode is already {runmode.name}", err=True
             )
-        else:
-            if runmode is ProjectRunMode.production and not HAS_MASTER_SECRET:
-                click.echo("Set a master secret before switching to production")
-                return
-            previous_runmode = project.runmode
-            project.runmode = runmode
-            click.echo(
-                f"Switched runmode: {previous_runmode.name} → {runmode.name}", err=True
-            )
+            return
+        if not force:
+            if runmode is ProjectRunMode.production:
+                if not HAS_MASTER_SECRET:
+                    click.echo(
+                        red("Set a master secret before switching to production")
+                    )
+                    return
+        previous_runmode = project.runmode
+        project.runmode = runmode
+        click.echo(
+            f"Switched runmode: {previous_runmode.name} → {runmode.name}", err=True
+        )
 
 
 def get_available_settings():
@@ -432,3 +442,7 @@ def update_minio(old_key: str):
     ]
     run_compose(args, exit_afterwards=True)
     click.echo(f"Minio server rekeying finished")
+
+
+def red(string: str) -> str:
+    return click.style(string, fg="red")
