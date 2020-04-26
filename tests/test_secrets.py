@@ -9,6 +9,7 @@ CUSTOM_SECRET = "0123456789abcdefghijklmnopqrstuvwxyz"
 def test_master_secret(mocker):
     from derex.runner.secrets import _get_master_secret
 
+    mocker.patch("derex.runner.secrets.os.access", return_value=False)
     assert _get_master_secret() is None
 
 

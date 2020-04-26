@@ -357,9 +357,13 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode], force):
             if runmode is ProjectRunMode.production:
                 if not HAS_MASTER_SECRET:
                     click.echo(
-                        red("Set a master secret before switching to production")
+                        red("Set a master secret before switching to production"),
+                        err=True,
                     )
-                    return
+                    sys.exit(1)
+                    return 1
+                    # We need https://github.com/Santandersecurityresearch/DrHeader/pull/102
+                    # for the return 1 to work, but it's not released yet
         previous_runmode = project.runmode
         project.runmode = runmode
         click.echo(
