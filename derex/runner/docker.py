@@ -1,6 +1,8 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+from derex.runner.secrets import DerexSecrets
+from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from pathlib import Path
 from requests.exceptions import RequestException
@@ -12,6 +14,7 @@ import docker
 import io
 import json
 import logging
+import os
 import re
 import tarfile
 import time
@@ -25,6 +28,7 @@ VOLUMES = {
     "derex_mysql",
     "derex_rabbitmq",
     "derex_portainer_data",
+    "derex_minio",
 }
 
 
@@ -167,3 +171,37 @@ def pull_images(image_names: List[str]):
 class BuildError(RuntimeError):
     """An error occurred while building a docker image
     """
+
+
+def get_running_containers():
+    return {
+        container.name: client.api.inspect_container(container.name)
+        for container in client.networks.get("derex").containers
+    }
+
+
+def get_exposed_container_names():
+    result = []
+    for name, container in get_running_containers().items():
+        names = container["NetworkSettings"]["Networks"]["derex"]["Aliases"]
+        matching_names = list(filter(lambda el: el.endswith("localhost.derex"), names))
+        if matching_names:
+            matching_names.append(
+                container["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
+            )
+            result.append(
+                "\t".join(
+                    map(lambda el: "http://" + el.replace(".derex", ""), matching_names)
+                )
+            )
+    return result
+
+
+def run_minio_shell(command="sh"):
+    """Invoke a minio shell
+    """
+    minio_key = get_secret(DerexSecrets.minio)
+    os.system(
+        "docker run -ti --rm --network derex --entrypoint /bin/sh minio/mc -c '"
+        f'mc config host add local http://minio:80 minio_derex "{minio_key}" --api s3v4 ; set -ex; {command}\''
+    )

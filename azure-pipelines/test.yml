@@ -113,6 +113,7 @@ stages:
               cd tests/fixtures/complete
               derex reset-mysql
               derex reset-rabbitmq
+              derex create-bucket
               # Run a command to get the current database name. First run it with all output enabled
               # so that in case of errors in the pipeline we have info about what went wrong
               # We use the flower container because it always uses the base image regardless
@@ -126,27 +127,22 @@ stages:
           - script: cd tests/fixtures/complete && derex build requirements
             displayName: 'Build requirements image for project "complete"'
 
-          - script: cd tests/fixtures/complete; ddc-project up -d
+          - script: cd tests/fixtures/complete; ddc-project up -d; sleep 3
             displayName: "Start edX daemons"
 
-          - script: docker run --network derex -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf -p 80:80 -d --rm nginx:1.17.0-alpine
-            displayName: "Start nginx to expose LMS/CMS on the same domain/port"
-
-          - script: |
-              echo 127.0.0.1 localhost studio.localhost lms.localhost | sudo tee -a /etc/hosts
-              sleep 3  # Give the services a little time to start up
-            displayName: Add studio.localhost and lms.localhost to /etc/hosts
+          - script: echo 127.0.0.1 localhost studio.complete.localhost complete.localhost | sudo tee -a /etc/hosts
+            displayName: Add studio.complete.localhost and complete.localhost to /etc/hosts
 
           - script: cd tests/fixtures/complete; ddc-project logs cms lms
             condition: always()
             displayName: Show CMS/LMS logs
 
           - script: |
-              $(CURL) http://localhost:4700/ || (sleep 10; $(CURL) http://localhost:4700/)
-              $(CURL) http://localhost:4700/example_view
+              $(CURL) http://complete.localhost/ || (sleep 10; $(CURL) http://complete.localhost/)
+              $(CURL) http://complete.localhost/example_view
             displayName: Curl the LMS
 
-          - script: $(CURL) http://localhost:4800/ || (sleep 10; $(CURL) http://localhost:4800/)
+          - script: $(CURL) http://studio.complete.localhost/ || (sleep 10; $(CURL) http://studio.complete.localhost/)
             displayName: Curl the CMS
 
           - script: cd tests/fixtures/complete && derex compile-theme
@@ -176,7 +172,7 @@ stages:
           - script: |
               set -ex
               cd tests/fixtures/complete
-              derex runmode production
+              derex runmode production --force
               ddc-project up -d
               sleep 5  # Give it time to start up
             displayName: "Start production image lms/cms"
@@ -189,17 +185,17 @@ stages:
             displayName: "Show CMS/LMS logs (prod mode)"
 
           - script: |
-              $(CURL) http://lms.localhost/ || (sleep 10; $(CURL) http://lms.localhost/)
-              $(CURL) http://lms.localhost/example_view
+              $(CURL) http://complete.localhost/ || (sleep 10; $(CURL) http://complete.localhost/)
+              $(CURL) http://complete.localhost/example_view
             displayName: "Curl the LMS (prod mode)"
 
-          - script: $(CURL) http://studio.localhost/ || (sleep 10; $(CURL) http://studio.localhost/)
+          - script: $(CURL) http://studio.complete.localhost/ || (sleep 10; $(CURL) http://studio.complete.localhost/)
             displayName: "Curl the CMS (prod mode)"
 
           - script: |
               set -ex
-              $(CURL) http://lms.localhost/|grep static/demo-theme/css/lms-main-v1.css
-              $(CURL) http://lms.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+              $(CURL) http://complete.localhost/|grep static/demo-theme/css/lms-main-v1.css
+              $(CURL) http://complete.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
             displayName: "Curl the LMS CSS and make sure our theme CSS is in"
 
           - script: |
@@ -239,16 +235,18 @@ stages:
               ddc-project config
               derex reset-mysql
               derex reset-rabbitmq
+              derex create-bucket
             displayName: "Prime Mysql DB"
 
           - script: |
               set -x
               cd tests/fixtures/minimal
+              echo 127.0.0.1 localhost flower.minimal.localhost | sudo tee -a /etc/hosts
               ddc-project up -d lms_worker cms_worker flower
               while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
               while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
-              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@lms.edx
-              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://localhost:5555/dashboard?json=1|grep celery@cms.edx
+              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@lms.edx
+              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@cms.edx
             displayName: "Check flower"
 
       - job: CheckDocs

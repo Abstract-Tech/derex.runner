@@ -8,6 +8,7 @@ from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
+from derex.runner.secrets import HAS_MASTER_SECRET
 from derex.runner.utils import abspath_from_egg
 from distutils.spawn import find_executable
 from functools import wraps
@@ -40,7 +41,7 @@ def ensure_project(func):
 
 
 @with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
-@click.group()
+@click.group(invoke_without_command=True)
 @click.pass_context
 @setup_logging_decorator
 def derex(ctx):
@@ -53,6 +54,25 @@ def derex(ctx):
         ctx.obj = Project()
     except ValueError:
         pass
+
+    if ctx.invoked_subcommand:
+        return
+
+    click.echo(derex.get_help(ctx))
+
+    from .docker import get_exposed_container_names
+
+    containers = "\n".join(get_exposed_container_names())
+    click.echo(
+        f"\nThese containers are running and exposing an HTTP server on port 80:\n\n{containers}"
+    )
+
+
+@derex.group()
+@click.pass_context
+def debug(ctx):
+    """Debugging utilities
+    """
 
 
 @derex.command()
@@ -134,6 +154,19 @@ def reset_mysql_cmd(project, force):
     execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
     reset_mysql(DebugBaseImageProject())
     return 0
+
+
+@derex.command()
+@click.pass_obj
+@ensure_project
+def create_bucket(project):
+    """Create S3 buckets on Minio"""
+    from derex.runner.docker import run_minio_shell
+
+    click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
+    command = f"mc mb --ignore-existing local/{project.name}; "
+    command += f"mc policy set download local/{project.name}/profile-images"
+    run_minio_shell(command)
 
 
 @derex.command()
@@ -302,9 +335,15 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
     required=False,
     callback=lambda _, __, value: value and ProjectRunMode[value],
 )
+@click.option(
+    "--force/-f",
+    required=False,
+    default=False,
+    help="Allows switching to production mode without a main secret defined",
+)
 @click.pass_obj
 @ensure_project
-def runmode(project: Project, runmode: Optional[ProjectRunMode]):
+def runmode(project: Project, runmode: Optional[ProjectRunMode], force):
     """Get/set project runmode (debug/production)"""
     if runmode is None:
         click.echo(project.runmode.name)
@@ -313,12 +352,23 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode]):
             click.echo(
                 f"The current project runmode is already {runmode.name}", err=True
             )
-        else:
-            previous_runmode = project.runmode
-            project.runmode = runmode
-            click.echo(
-                f"Switched runmode: {previous_runmode.name} → {runmode.name}", err=True
-            )
+            return
+        if not force:
+            if runmode is ProjectRunMode.production:
+                if not HAS_MASTER_SECRET:
+                    click.echo(
+                        red("Set a master secret before switching to production"),
+                        err=True,
+                    )
+                    sys.exit(1)
+                    return 1
+                    # We need https://github.com/Santandersecurityresearch/DrHeader/pull/102
+                    # for the return 1 to work, but it's not released yet
+        previous_runmode = project.runmode
+        project.runmode = runmode
+        click.echo(
+            f"Switched runmode: {previous_runmode.name} → {runmode.name}", err=True
+        )
 
 
 def get_available_settings():
@@ -351,3 +401,52 @@ def settings(project: Project, settings: Optional[Any]):
         click.echo(project.settings.name)
     else:
         project.settings = settings
+
+
+@debug.command()
+def minio_shell():
+    from derex.runner.docker import run_minio_shell
+
+    run_minio_shell()
+
+
+@derex.command()
+@click.option(
+    "--old-key",
+    # This is the key that the current default master secret generates
+    default="ICDTE0ZnlbIR7r6/qE81nkF7Kshc2gXYv6fJR4I/HKPeTbxEeB3nxC85Ne6C844hEaaC2+KHBRIOzGou9leulZ7t",
+    help="The old key to use for the update",
+)
+def update_minio(old_key: str):
+    """Run minio to re-key data with the new secret. The output is very confusing, but it works.
+    If you read a red warning and "Rotation complete" at the end, it means rekeying has worked.
+    If your read your current SecretKey, it means the current credentials are correct and you don't need
+    to update your keys.
+    """
+    from derex.runner.compose_utils import run_compose
+
+    # We need to stop minio after it's done re-keying. To this end, we use the expect package
+    script = "apk add expect --no-cache "
+    # We need to make sure the current credentials are not working...
+    script += ' && expect -c "spawn /usr/bin/minio server /data; expect "Endpoint" { close; exit 1 }"'
+    # ..but the old ones are
+    script += f' && if MINIO_SECRET_KEY="{old_key}" expect -c \'spawn /usr/bin/minio server /data; expect "Endpoint" {{ close; exit 1 }}\'; then exit 1; fi'
+    script += f' && export MINIO_ACCESS_KEY_OLD="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY_OLD="{old_key}"'
+    expected_string = "Rotation complete, please make sure to unset MINIO_ACCESS_KEY_OLD and MINIO_SECRET_KEY_OLD envs"
+    script += f" && expect -c 'spawn /usr/bin/minio server /data; expect \"{expected_string}\" {{ close; exit 0 }}'"
+    args = [
+        "run",
+        "--rm",
+        "--entrypoint",
+        "/bin/sh",
+        "-T",
+        "minio",
+        "-c",
+        script,
+    ]
+    run_compose(args, exit_afterwards=True)
+    click.echo(f"Minio server rekeying finished")
+
+
+def red(string: str) -> str:
+    return click.style(string, fg="red")

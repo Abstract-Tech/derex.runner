@@ -11,6 +11,7 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
 requirements = [
+    "appdirs",
     "Click>=6.0",
     "click_plugins",
     "docker-compose>=1.25.4",

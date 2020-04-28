@@ -1,15 +1,17 @@
 PLATFORM_NAME = "TestEdX"
 
-LMS_BASE = "lms.localhost:4700"
-CMS_BASE = "studio.localhost:4800"
+LMS_BASE = DEREX_PROJECT + ".localhost"
+CMS_BASE = "studio." + DEREX_PROJECT + ".localhost"
 
 LMS_ROOT_URL = "//{}".format(LMS_BASE)
 SITE_NAME = {"lms": LMS_BASE, "cms": CMS_BASE}[SERVICE_VARIANT]
 
-PREVIEW_LMS_BASE = "preview.localhost:4700"
+PREVIEW_LMS_BASE = "preview.{}".format(LMS_BASE)
 FEATURES["PREVIEW_LMS_BASE"] = PREVIEW_LMS_BASE
 PREVIEW_DOMAIN = FEATURES["PREVIEW_LMS_BASE"].split(":")[0]
 HOSTNAME_MODULESTORE_DEFAULT_MAPPINGS = {PREVIEW_DOMAIN: "draft-preferred"}
+
+SESSION_COOKIE_DOMAIN = LMS_BASE
 
 if SERVICE_VARIANT == "cms":
     LOGIN_URL = "/signin"

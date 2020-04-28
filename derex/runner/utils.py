@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 from typing import List
 from typing import Optional
 from typing import Union
@@ -18,7 +19,7 @@ def get_dir_hash(
     ignore_hidden: bool = False,
     followlinks: bool = False,
     excluded_extensions: List = [],
-):
+) -> str:
     """Given a directory return an hash based on its contents
     """
     if not os.path.isdir(dirname):
@@ -63,7 +64,7 @@ def get_dir_hash(
 truthy = frozenset(("t", "true", "y", "yes", "on", "1"))
 
 
-def asbool(s):
+def asbool(s: Any) -> bool:
     """ Return the boolean value ``True`` if the case-lowered value of string
     input ``s`` is a `truthy string`. If ``s`` is already one of the
     boolean values ``True`` or ``False``, return it.

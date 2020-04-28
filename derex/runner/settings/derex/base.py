@@ -22,7 +22,6 @@ _settings_modules = [
     "caches",
     "logging",
     "staticfiles",
-    "media",
     "storages",
     "celery",
     "email",

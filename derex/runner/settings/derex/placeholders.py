@@ -11,3 +11,13 @@ XQUEUE_INTERFACE = {"url": None, "django_auth": None}
 
 # Certifacates need this
 FACEBOOK_APP_ID = None
+
+# The common.py file includes the statements
+# CREDENTIALS_INTERNAL_SERVICE_URL = None
+# CREDENTIALS_PUBLIC_SERVICE_URL = None
+# But for some reason if we import the code the values are different:
+# >>> from lms.envs import common
+# >>> common.CREDENTIALS_PUBLIC_SERVICE_URL, common.CREDENTIALS_INTERNAL_SERVICE_URL
+# ('http://localhost:8008', 'http://localhost:8008')
+CREDENTIALS_INTERNAL_SERVICE_URL = None
+CREDENTIALS_PUBLIC_SERVICE_URL = None

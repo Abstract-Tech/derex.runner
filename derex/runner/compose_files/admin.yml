@@ -2,27 +2,27 @@
 version: "3.5"
 services:
   adminer:
-    image: adminer:4.7.1
+    image: adminer:4.7.6
     restart: unless-stopped
-    ports:
-      - 127.0.0.1:4400:8080
     container_name: adminer
     depends_on:
       - mysql
     networks:
-      - derex
+      derex:
+        aliases:
+          - adminer.localhost.derex
 
   portainer:
     image: portainer/portainer:1.21.0
     restart: unless-stopped
-    ports:
-      - 127.0.0.1:9000:9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - derex_portainer_data:/data portainer/portainer
     container_name: portainer
     networks:
-      - derex
+      derex:
+        aliases:
+          - portainer.localhost.derex
 
 volumes:
   derex_portainer_data:

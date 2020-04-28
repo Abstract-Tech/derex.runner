@@ -1,4 +1,6 @@
 from derex.runner import __version__
+from derex.runner.secrets import DerexSecrets
+from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
@@ -367,6 +369,9 @@ class Project:
             else:
                 result[f"DEREX_{variable.upper()}"] = value
         return result
+
+    def secret(self, name: str) -> str:
+        return get_secret(DerexSecrets[name])
 
 
 def get_requirements_hash(path: Path) -> str:
