@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.4.0
+    rev: v2.5.0
     hooks:
       - id: trailing-whitespace
         exclude: .bumpversion.cfg
@@ -13,7 +13,7 @@ repos:
         exclude: derex/runner/settings/derex/*
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.740
+    rev: v0.770
     hooks:
       - id: mypy
         args:
@@ -31,6 +31,6 @@ repos:
       - id: isort
 
   - repo: https://github.com/prettier/prettier
-    rev: "2.0.1" # Use the sha or tag you want to point at
+    rev: 2.0.5 # Use the sha or tag you want to point at
     hooks:
       - id: prettier
