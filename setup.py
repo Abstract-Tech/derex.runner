@@ -16,18 +16,17 @@ requirements = [
     "click_plugins",
     "docker-compose>=1.25.4",
     "importlib_metadata",
-    "pymongo",
-    "pyyaml",
-    "pluggy",
     "jinja2",
-    "terminal_table",
-    "ansi_colours",
-    "mysqlclient",
+    "pluggy",
+    "pymongo",
+    "pymysql",
+    "pyyaml",
+    "tabulate",
 ]
 
 setup_requirements = ["setuptools"]
 
-test_requirements = ["pytest", "pytest-mock"]
+test_requirements = ["pytest", "pytest-mock>=v3.1.0"]
 
 extras_requirements = {
     "test": test_requirements,

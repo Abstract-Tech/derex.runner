@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """Console script for derex.runner."""
-from ansi_colours import AnsiColours as Colour
 from click_plugins import with_plugins
 from derex.runner import __version__
+from derex.runner.cli_modules.mongodb import mongodb
+from derex.runner.cli_modules.mysql import mysql
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import OpenEdXVersions
@@ -13,7 +14,6 @@ from derex.runner.secrets import HAS_MASTER_SECRET
 from derex.runner.utils import abspath_from_egg
 from distutils.spawn import find_executable
 from functools import wraps
-from terminal_table import Table
 from typing import Any
 from typing import Optional
 
@@ -364,120 +364,6 @@ def settings(project: Project, settings: Optional[Any]):
         project.settings = settings
 
 
-@derex.group(invoke_without_command=True)
-@click.pass_context
-def mongodb(context: click.core.Context):
-    """Commands to operate on the mongodb database"""
-    if context.invoked_subcommand is None:
-        click.echo(mysql.get_help(context))
-        if isinstance(context.obj, Project):
-            from derex.runner.mongodb import list_databases
-
-            project = context.obj
-            database = [
-                (database["name"], database["sizeOnDisk"], database["empty"])
-                for database in list_databases()
-                if database["name"] == project.mongodb_db_name
-            ]
-            if database:
-                table = Table.create(
-                    database,
-                    ("Name", "Size (bytes)", "Empty"),
-                    header_colour=Colour.cyan,
-                    column_colours=(Colour.green,),
-                )
-                click.echo(f'\nCurrent MongoDB database for project "{project.name}"\n')
-                click.echo(table)
-            else:
-                click.echo('No MongoDB database found for project "{project.name}"')
-
-
-@mongodb.command(name="drop")
-@click.pass_obj
-@click.argument("db_name", type=str, required=False)
-def drop_mongodb(project: Optional[Project], db_name: str):
-    """Drop a mongodb database"""
-    if not any([project, db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="db_name",
-            param_type="str",
-            message="Either specify a destination database name or run in a derex project.",
-        )
-    if not db_name and project:
-        db_name = project.mongodb_db_name
-
-    if click.confirm(
-        f'Dropping database "{db_name}". Are you sure you want to continue?'
-    ):
-        from derex.runner.mongodb import drop_database
-
-        drop_database(db_name)
-    return 0
-
-
-@mongodb.command(name="list")
-@click.pass_obj
-@click.argument("db_name", type=str, required=False)
-def list_mongodb(project: Optional[Project], db_name: str):
-    """List all mongodb databases"""
-    from derex.runner.mongodb import list_databases
-
-    databases = [
-        (database["name"], database["sizeOnDisk"], database["empty"])
-        for database in list_databases()
-    ]
-    table = Table.create(
-        databases,
-        ("Name", "Size (bytes)", "Empty"),
-        header_colour=Colour.cyan,
-        column_colours=(Colour.green,),
-    )
-    click.echo(f"\n{table}\n")
-    return 0
-
-
-@mongodb.command("copy")
-@click.argument("source_db_name", type=str, required=True)
-@click.argument("destination_db_name", type=str)
-@click.option(
-    "--drop", is_flag=True, default=False, help="Drop the source database",
-)
-@click.pass_obj
-def copy_mongodb(
-    project: Optional[Project],
-    source_db_name: str,
-    destination_db_name: Optional[str],
-    drop: bool,
-):
-    """
-    Copy an existing mongodb database. If no destination database is given defaults
-    to the project mongodb database name.
-    """
-    if not any([project, destination_db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="destination_db_name",
-            param_type="str",
-            message="Either specify a destination database name or run in a derex project.",
-        )
-    if not destination_db_name and project:
-        destination_db_name = project.mongodb_db_name
-
-    if click.confirm(
-        f'Copying database "{source_db_name}" to "{destination_db_name}."'
-        "Are you sure you want to continue?"
-    ):
-        from derex.runner.mongodb import copy_database
-
-        copy_database(source_db_name, destination_db_name)
-        if drop and click.confirm(
-            f'Are you sure you want to drop database "{source_db_name}" ?'
-        ):
-            from derex.runner.mongodb import drop_database
-
-            drop_database(source_db_name)
-    return 0
-
-
 @debug.command()
 def minio_shell():
     from derex.runner.docker import run_minio_shell
@@ -527,128 +413,6 @@ def red(string: str) -> str:
     return click.style(string, fg="red")
 
 
-@derex.group(invoke_without_command=True)
-@click.pass_context
-def mysql(context: click.core.Context):
-    """Commands to operate on the mysql database"""
-    if context.invoked_subcommand is None:
-        click.echo(mysql.get_help(context))
-
-        if isinstance(context.obj, Project):
-            project = context.obj
-            import MySQLdb as mysqlclient
-            from derex.runner.mysql import get_mysql_client
-
-            try:
-                mysql_client = get_mysql_client(database=project.mysql_db_name)
-                n_tables = mysql_client.execute("show tables")
-                table = Table.create(
-                    [(project.mysql_db_name, n_tables)],
-                    ("Name", "Tables"),
-                    header_colour=Colour.cyan,
-                    column_colours=(Colour.green,),
-                )
-                click.echo(f'\nCurrent MySQL databases for project "{project.name}"\n')
-                click.echo(table)
-            except mysqlclient._exceptions.OperationalError:
-                click.echo('No MySQL database found for project "{project.name}"')
-
-
-@mysql.command(name="list")
-@click.pass_obj
-@click.argument("db_name", type=str, required=False)
-def list_mysql(project: Optional[Project], db_name: str):
-    """List all mysql databases"""
-    from derex.runner.mysql import list_databases
-
-    click.echo("\n".join(list_databases()))
-    return 0
-
-
-@mysql.command(name="create")
-@click.pass_obj
-@click.argument("db_name", type=str, required=False)
-def create_mysql(project: Optional[Project], db_name: str):
-    """Create a mysql database"""
-    if not any([project, db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="db_name",
-            param_type="str",
-            message="Either specify a database name or run in a derex project.",
-        )
-    if not db_name and project:
-        db_name = project.mysql_db_name
-
-    from derex.runner.mysql import create_database
-
-    create_database(db_name)
-    return 0
-
-
-@mysql.command(name="drop")
-@click.pass_obj
-@click.argument("db_name", type=str, required=False)
-def drop_mysql(project: Optional[Project], db_name: str):
-    """Drop a mysql database"""
-    if not any([project, db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="db_name",
-            param_type="str",
-            message="Either specify a database name or run in a derex project.",
-        )
-    if not db_name and project:
-        db_name = project.mysql_db_name
-
-    if click.confirm(
-        f'Dropping database "{db_name}". Are you sure you want to continue?'
-    ):
-        from derex.runner.mysql import drop_database
-
-        drop_database(db_name)
-    return 0
-
-
-@mysql.command("copy")
-@click.argument("source_db_name", type=str, required=True)
-@click.argument("destination_db_name", type=str)
-@click.option(
-    "--drop", is_flag=True, default=False, help="Drop the source database",
-)
-@click.pass_obj
-def copy_mysql(
-    project: Optional[Project],
-    source_db_name: str,
-    destination_db_name: Optional[str],
-    drop: bool = False,
-):
-    """
-    Copy an existing mysql database. If no destination database is given it defaults
-    to the project mysql database name.
-    """
-    if not any([project, destination_db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="destination_db_name",
-            param_type="str",
-            message="Either specify a destination database name or run in a derex project.",
-        )
-
-    if not destination_db_name and project:
-        destination_db_name = project.mysql_db_name
-
-    if click.confirm(
-        f'Copying database "{source_db_name}" to "{destination_db_name}."'
-        "Are you sure you want to continue?"
-    ):
-        from derex.runner.mysql import copy_database, drop_database
-
-        copy_database(source_db_name, destination_db_name)
-        if drop and click.confirm(
-            f'Are you sure you want to drop database "{source_db_name}" ?'
-        ):
-            drop_database(source_db_name)
-    return 0
-
-
 @mysql.command(name="reset")
 @click.pass_obj
 @ensure_project
@@ -671,3 +435,7 @@ def reset_mysql(project, force):
 
     reset_mysql_openedx(DebugBaseImageProject())
     return 0
+
+
+derex.add_command(mysql)
+derex.add_command(mongodb)

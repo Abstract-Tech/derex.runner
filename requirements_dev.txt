@@ -5,7 +5,6 @@
 #    pip-compile requirements_dev.in
 #
 alabaster==0.7.12         # via -r requirements_doc.txt, sphinx
-ansi-colours==1.0.0       # via -r requirements.txt, terminal-table
 appdirs==1.4.3            # via -r requirements.txt, black, virtualenv
 astroid==2.4.0            # via -r requirements_doc.txt, sphinx-autoapi
 attrs==19.3.0             # via -r requirements.txt, black, jsonschema, pytest
@@ -48,7 +47,6 @@ mccabe==0.6.1             # via flake8
 more-itertools==8.2.0     # via pytest
 mypy-extensions==0.4.3    # via mypy
 mypy==0.761               # via -r requirements_dev.in
-mysqlclient==1.4.6        # via -r requirements.txt
 nodeenv==1.3.5            # via pre-commit
 packaging==20.3           # via -r requirements_doc.txt, pytest, sphinx, tox
 paramiko==2.7.1           # via -r requirements.txt, docker
@@ -63,6 +61,7 @@ pycparser==2.20           # via -r requirements.txt, cffi
 pyflakes==2.1.1           # via flake8
 pygments==2.6.1           # via -r requirements_doc.txt, readme-renderer, sphinx
 pymongo==3.10.1           # via -r requirements.txt
+pymysql==0.9.3            # via -r requirements.txt
 pynacl==1.3.0             # via -r requirements.txt, paramiko
 pyparsing==2.4.7          # via -r requirements_doc.txt, packaging
 pyrsistent==0.16.0        # via -r requirements.txt, jsonschema
@@ -89,7 +88,7 @@ sphinxcontrib-htmlhelp==1.0.3  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-jsmath==1.0.1  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-qthelp==1.0.3  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via -r requirements_doc.txt, sphinx
-terminal-table==1.0.8     # via -r requirements.txt
+tabulate==0.8.7           # via -r requirements.txt
 texttable==1.6.2          # via -r requirements.txt, docker-compose
 toml==0.10.0              # via black, pre-commit, tox
 tox==3.14.6               # via -r requirements_dev.in

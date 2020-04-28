@@ -52,11 +52,11 @@ def workdir():
     return workdir_decorator
 
 
-@pytest.fixture
-def sys_argv(mocker):
+@pytest.fixture(scope=("session"))
+def sys_argv(session_mocker):
     @contextlib.contextmanager
     def my_cm(eargs):
-        with mocker.mock_module.patch.object(sys, "argv", eargs):
+        with session_mocker.mock_module.patch.object(sys, "argv", eargs):
             try:
                 yield
             except SystemExit as exc:
@@ -82,23 +82,6 @@ def testproj(workdir):
     # together with it.
     result._tmpdir = directory
     return result
-
-
-@pytest.fixture
-def start_services(sys_argv):
-    """Start services such as mysql and mongodb.
-    """
-    from derex.runner.ddc import ddc_services
-
-    with sys_argv(["ddc-services", "up", "-d"]):
-        ddc_services()
-
-    yield
-
-    # This teardown code will cause an error since
-    # the derex newtwork can't be removed
-    # with sys_argv(["ddc-services", "down"]):
-    #         ddc_services()
 
 
 def assert_result_ok(result):
