@@ -42,7 +42,7 @@ def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
     with sys_argv(["ddc-services", "up", "-d"]):
         ddc_services()
     with workdir_copy(MINIMAL_PROJ):
-        result = runner.invoke(derex, ["reset-mysql"])
+        result = runner.invoke(derex, ["mysql", "reset"])
     assert_result_ok(result)
     assert result.exit_code == 0
 

@@ -197,7 +197,7 @@ def reset_mysql_cmd(context, force):
     if project.runmode is not ProjectRunMode.debug and not force:
         # Safety belt: we don't want people to run this in production
         context.fail(
-            "The command reset-mysql can only be run in `debug` runmode.\n"
+            "The command mysql reset can only be run in `debug` runmode.\n"
             "Use --force to override"
         )
 
