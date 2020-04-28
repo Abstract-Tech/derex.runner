@@ -4,7 +4,9 @@
 from .conftest import assert_result_ok
 from click.testing import CliRunner
 from derex.runner.project import Project
+from itertools import repeat
 from pathlib import Path
+from types import SimpleNamespace
 
 import os
 import pytest
@@ -60,15 +62,17 @@ def test_derex_runmode(testproj, mocker):
         assert result.exit_code == 2, result.output
         assert "Usage:" in result.stderr
 
+        mocker.patch("derex.runner.cli.HAS_MASTER_SECRET", new=False)
         result = runner.invoke(derex, ["runmode", "production"])
         assert result.exit_code == 1, result.output
         assert "Set a master secret" in result.stderr_bytes.decode("utf8")
 
-        mocker.patch("derex.runner.cli.HAS_MASTER_SECRET")
+        mocker.patch("derex.runner.cli.HAS_MASTER_SECRET", new=True)
         result = runner.invoke(derex, ["runmode", "production"])
         assert result.exit_code == 0, result.output
         assert "debug → production" in result.stderr_bytes.decode("utf8")
 
+        mocker.patch("derex.runner.cli.HAS_MASTER_SECRET", new=True)
         result = runner.invoke(derex, ["runmode", "production"])
         assert result.exit_code == 0, result.output
         assert "already production" in result.stderr_bytes.decode("utf8")
