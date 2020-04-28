@@ -1,7 +1,9 @@
 from derex.runner.docker import check_services
 from derex.runner.docker import client as docker_client
 from derex.runner.docker import wait_for_service
+from functools import wraps
 from pymongo import MongoClient
+from typing import cast
 from typing import List
 
 import logging
@@ -18,31 +20,51 @@ def wait_for_mongodb(max_seconds: int = 20):
 
 
 if not check_services(["mongodb"]):
-    raise RuntimeError(
-        "MongoDB service not found.\nMaybe you forgot to run\nddc-services up -d"
-    )
-wait_for_mongodb()
-container = docker_client.containers.get("mongodb")
-mongo_address = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
-mongodb_client = MongoClient(f"mongodb://{mongo_address}:27017/")
+    MONGODB_CLIENT = None
+else:
+    wait_for_mongodb()
+    container = docker_client.containers.get("mongodb")
+    mongo_address = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
+    MONGODB_CLIENT = MongoClient(f"mongodb://{mongo_address}:27017/")
 
 
+def ensure_mongodb(func):
+    """Decorator to raise an exception before running a function in case the mongodb
+    server is not available.
+    """
+
+    @wraps(func)
+    def inner(*args, **kwargs):
+        if MONGODB_CLIENT is None:
+            raise RuntimeError(
+                "MongoDB service not found.\nMaybe you forgot to run\nddc-services up -d"
+            )
+        return func(*args, **kwargs)
+
+    return inner
+
+
+@ensure_mongodb
 def list_databases() -> List[dict]:
     """List all existing databases"""
     logger.info("Listing MongoDB databases...")
-    databases = [database for database in mongodb_client.list_databases()]
+    databases = [
+        database for database in cast(MongoClient, MONGODB_CLIENT).list_databases()
+    ]
     return databases
 
 
+@ensure_mongodb
 def drop_database(database_name: str):
     """Drop the selected database"""
     logger.info(f'Dropping database "{database_name}"...')
-    mongodb_client.drop_database(database_name)
+    cast(MongoClient, MONGODB_CLIENT).drop_database(database_name)
 
 
+@ensure_mongodb
 def copy_database(source_db_name: str, destination_db_name: str):
     """Copy an existing database"""
     logger.info(f'Copying database "{source_db_name}" to "{destination_db_name}...')
-    mongodb_client.admin.command(
+    cast(MongoClient, MONGODB_CLIENT).admin.command(
         "copydb", fromdb=source_db_name, todb=destination_db_name
     )
