@@ -124,6 +124,12 @@ services:
     <<: *common-conf
     command:
       sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n lms.edx -Q lms.default'
+    healthcheck:
+      test: celery inspect ping -A lms.celery:APP -d celery@lms.edx
+      interval: 15m
+      timeout: 15s
+      retries: 3
+      start_period: 30s
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
@@ -134,6 +140,12 @@ services:
     <<: *common-conf
     command:
       sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n cms.edx -Q cms.default'
+    healthcheck:
+      test: celery inspect ping -A cms.celery:APP -d celery@cms.edx
+      interval: 15m
+      timeout: 15s
+      retries: 3
+      start_period: 30s
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
