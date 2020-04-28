@@ -22,6 +22,7 @@ extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "autoapi.extension"]
 templates_path = ["html_templates"]
 autoapi_type = "python"
 autoapi_dirs = ["../derex"]
+autoapi_ignore = ["*settings/derex/*"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:

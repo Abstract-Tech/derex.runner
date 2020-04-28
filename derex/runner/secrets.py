@@ -93,9 +93,20 @@ def compute_entropy(s: str) -> float:
     return per_char_entropy * len(s)
 
 
-MASTER_SECRET = _get_master_secret()
-if MASTER_SECRET is None:
-    MASTER_SECRET = "Default secret"
+_MASTER_SECRET = _get_master_secret()
+if _MASTER_SECRET is None:
+    _MASTER_SECRET = "Default secret"
     HAS_MASTER_SECRET = False
 else:
     HAS_MASTER_SECRET = True
+
+MASTER_SECRET = _MASTER_SECRET
+"The main secret derex uses to derive all other secrets"
+
+__all__ = [
+    "MASTER_SECRET",
+    "compute_entropy",
+    "DerexSecretError",
+    "DerexSecrets",
+    "get_secret",
+]
