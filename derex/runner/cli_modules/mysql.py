@@ -182,7 +182,7 @@ def copy_database_cmd(
     "--force",
     is_flag=True,
     default=False,
-    help="Allow resetting mysql database if runmode is production",
+    help="Do not ask for confirmation and allow resetting mysql database if runmode is production",
 )
 def reset_mysql_cmd(context, force):
     """Reset MySQL database for the current project"""
@@ -201,10 +201,12 @@ def reset_mysql_cmd(context, force):
             "Use --force to override"
         )
 
-    if click.confirm(
-        "Are you sure you want to delete all data on MySQL database "
-        f'"{project.mysql_db_name}" and restore it to the project '
-        f'"{project.name}" default state ?'
-    ):
-        reset_mysql_openedx(DebugBaseImageProject())
+    if not force:
+        if not click.confirm(
+            "Are you sure you want to delete all data on MySQL database "
+            f'"{project.mysql_db_name}" and restore it to the project '
+            f'"{project.name}" default state ?'
+        ):
+            return 1
+    reset_mysql_openedx(DebugBaseImageProject())
     return 0
