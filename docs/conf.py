@@ -90,7 +90,6 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 html_logo = "assets/logo.svg"
-html_favicon = "assets/favicon.ico"
 
 html_css_files = [
     "css/custom.css",
