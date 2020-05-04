@@ -259,30 +259,6 @@ def red(string: str) -> str:
     return click.style(string, fg="red")
 
 
-@mysql.command(name="reset")
-@click.pass_obj
-@ensure_project
-@click.option(
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Allow resetting mysql database if runmode is production",
-)
-def reset_mysql(project, force):
-    """Reset mysql database for the project"""
-    from derex.runner.mysql import reset_mysql_openedx
-
-    if project.runmode is not ProjectRunMode.debug and not force:
-        # Safety belt: we don't want people to run this in production
-        click.get_current_context().fail(
-            "The command reset-mysql can only be run in `debug` runmode.\n"
-            "Use --force to override"
-        )
-
-    reset_mysql_openedx(DebugBaseImageProject())
-    return 0
-
-
 derex.add_command(mysql)
 derex.add_command(mongodb)
 derex.add_command(build)
