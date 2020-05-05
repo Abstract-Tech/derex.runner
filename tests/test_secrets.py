@@ -1,4 +1,5 @@
 from enum import Enum
+from importlib import reload
 
 import pytest
 
@@ -69,10 +70,6 @@ def test_derived_secret():
     from derex.runner.secrets import get_secret
     from derex.runner.secrets import compute_entropy
 
-    class FooSecrets(Enum):
-        foo = "foo"
-        bar = "bar"
-
     foo_secret = get_secret(FooSecrets.foo)
     # The same name should always yield the same secrets
     assert get_secret(FooSecrets.foo) == foo_secret
@@ -82,3 +79,38 @@ def test_derived_secret():
 
     # Secrets must have enough entropy
     assert compute_entropy(foo_secret) > 256
+
+
+def test_derived_secret_no_scrypt_available(no_scrypt):
+    import derex.runner.secrets
+
+    reload(derex.runner.secrets)
+
+    derex.runner.secrets.get_secret(FooSecrets.foo)
+
+
+def test_derived_secret_no_scrypt_same_result_as_with_scrypt():
+    from derex.runner.secrets import scrypt_hash_stdlib
+    from derex.runner.secrets import scrypt_hash_addon
+
+    TEST_CASES = [
+        ("aaa", "bbb"),
+        ("The master secret", "the service"),
+    ]
+    for a, b in TEST_CASES:
+        assert scrypt_hash_addon(a, b) == scrypt_hash_stdlib(a, b)
+
+
+@pytest.fixture
+def no_scrypt():
+    import hashlib
+
+    original_scrypt = hashlib.scrypt
+    del hashlib.scrypt
+    yield
+    hashlib.scrypt = original_scrypt
+
+
+class FooSecrets(Enum):
+    foo = "foo"
+    bar = "bar"
