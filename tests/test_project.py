@@ -197,9 +197,7 @@ def test_container_variables(testproj):
 def test_project_name_constraints(testproj):
     with testproj as projdir:
         conf_file = Path(projdir) / "derex.config.yaml"
-        config = {
-            "project_name": ";invalid;",
-        }
+        config = {"project_name": ";invalid;"}
         conf_file.write_text(yaml.dump(config))
         create_settings_file(Path(projdir), "production")
         with pytest.raises(ValueError):
