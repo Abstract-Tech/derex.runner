@@ -1,8 +1,5 @@
 from .conftest import assert_result_ok
 from click.testing import CliRunner
-from derex.runner.cli_modules.mysql import copy_database_cmd
-from derex.runner.cli_modules.mysql import create_database_cmd
-from derex.runner.cli_modules.mysql import drop_database_cmd
 from derex.runner.mysql import get_mysql_client
 from derex.runner.mysql import show_databases
 from itertools import repeat
@@ -48,6 +45,9 @@ def cleanup_mysql(start_mysql):
 
 def test_derex_mysql(start_mysql):
     """Test the `derex mysql copy` cli command """
+    from derex.runner.cli.mysql import copy_database_cmd
+    from derex.runner.cli.mysql import create_database_cmd
+    from derex.runner.cli.mysql import drop_database_cmd
 
     test_db_name = f"derex_test_db_{uuid.uuid4().hex[:20]}"
     test_db_copy_name = f"derex_test_db_copy_{uuid.uuid4().hex[:20]}"
@@ -76,7 +76,7 @@ def test_derex_mysql(start_mysql):
 
 def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
     """Test the open edx ironwood docker compose shortcut."""
-    from derex.runner.cli_modules.mysql import reset_mysql_cmd
+    from derex.runner.cli.mysql import reset_mysql_cmd
     from derex.runner.ddc import ddc_services
 
     mocker.patch("derex.runner.ddc.check_services", return_value=True)

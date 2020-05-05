@@ -1,7 +1,6 @@
 from click.testing import CliRunner
-from derex.runner.cli_modules.mongodb import copy_mongodb
-from derex.runner.cli_modules.mongodb import drop_mongodb
 from derex.runner.ddc import ddc_services
+from importlib import reload
 
 import pytest
 import uuid
@@ -36,8 +35,9 @@ def cleanup_mongodb(start_mongodb):
 
 def test_derex_mongodb(start_mongodb):
     from derex.runner.mongodb import list_databases
+    from derex.runner.cli.mongodb import copy_mongodb
+    from derex.runner.cli.mongodb import drop_mongodb
     import derex.runner.mongodb
-    from importlib import reload
 
     reload(derex.runner.mongodb)
     MONGODB_CLIENT = derex.runner.mongodb.MONGODB_CLIENT

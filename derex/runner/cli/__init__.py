@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """Console script for derex.runner."""
+from .build import build
+from .mongodb import mongodb
+from .mysql import mysql
+from .utils import ensure_project
 from click_plugins import with_plugins
-from derex.runner.cli_modules.build import build
-from derex.runner.cli_modules.mongodb import mongodb
-from derex.runner.cli_modules.mysql import mysql
-from derex.runner.cli_modules.utils import ensure_project
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
