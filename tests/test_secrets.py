@@ -105,10 +105,7 @@ def test_derived_secret_no_scrypt_same_result_as_with_scrypt():
     from derex.runner.secrets import scrypt_hash_stdlib
     from derex.runner.secrets import scrypt_hash_addon
 
-    TEST_CASES = [
-        ("aaa", "bbb"),
-        ("The master secret", "the service"),
-    ]
+    TEST_CASES = [("aaa", "bbb"), ("The master secret", "the service")]
     for a, b in TEST_CASES:
         assert scrypt_hash_addon(a, b) == scrypt_hash_stdlib(a, b)
 
