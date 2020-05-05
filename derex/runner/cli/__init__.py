@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """Console script for derex.runner."""
 from .build import build
 from .mongodb import mongodb
@@ -262,3 +261,6 @@ def red(string: str) -> str:
 derex.add_command(mysql)
 derex.add_command(mongodb)
 derex.add_command(build)
+
+
+__all__ = ["derex"]
