@@ -25,7 +25,11 @@ def scrypt_hash_stdlib(main_secret: str, name: str) -> bytes:
     from hashlib import scrypt
 
     return scrypt(
-        main_secret.encode("utf-8"), salt=name.encode("utf-8"), n=2, r=8, p=1  # type: ignore
+        main_secret.encode("utf-8"),
+        salt=name.encode("utf-8"),
+        n=2,
+        r=8,
+        p=1,  # type: ignore
     )
 
 
