@@ -13,6 +13,7 @@ stages:
           - script: |
               set -ex
               set -o pipefail
+              pip3 --cache-dir $(Pipeline.Workspace)/.cache/pip install scrypt
               cd tests
               pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
             displayName: "Run python tests"
