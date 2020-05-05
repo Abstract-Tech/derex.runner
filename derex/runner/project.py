@@ -16,6 +16,7 @@ import difflib
 import hashlib
 import json
 import os
+import re
 import stat
 import yaml
 
@@ -208,6 +209,10 @@ class Project:
         )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
+        if not re.search("^[0-9a-zA-Z-]+$", self.config["project_name"]):
+            raise ValueError(
+                f"A project_name can only contain letters, numbers and dashes"
+            )
         self.name = self.config["project_name"]
         self.image_prefix = self.config.get("image_prefix", f"{self.name}/openedx")
         local_compose = self.root / "docker-compose.yml"
