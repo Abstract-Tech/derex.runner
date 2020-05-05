@@ -89,6 +89,18 @@ def test_derived_secret_no_scrypt_available(no_scrypt):
     derex.runner.secrets.get_secret(FooSecrets.foo)
 
 
+try:
+    from hashlib import scrypt
+    from scrypt import scrypt  # type:ignore  # noqa
+
+    only_one_scrypt_implementations = False
+except ImportError:
+    only_one_scrypt_implementations = True
+
+
+@pytest.mark.skipif(
+    only_one_scrypt_implementations, reason="We don't have both openssl>=1.1 and scrypt"
+)
 def test_derived_secret_no_scrypt_same_result_as_with_scrypt():
     from derex.runner.secrets import scrypt_hash_stdlib
     from derex.runner.secrets import scrypt_hash_addon
