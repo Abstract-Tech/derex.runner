@@ -1,7 +1,6 @@
 from openedx.core.lib.derived import derive_settings
 from path import Path
 
-import inspect
 import os
 import sys
 

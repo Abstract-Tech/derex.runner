@@ -111,7 +111,7 @@ stages:
           - script: |
               set -ex
               cd tests/fixtures/complete
-              derex reset-mysql
+              derex mysql reset --force
               derex reset-rabbitmq
               derex create-bucket
               # Run a command to get the current database name. First run it with all output enabled
@@ -233,7 +233,7 @@ stages:
               docker images
               docker run --rm derex/edx-ironwood-dev ls -l
               ddc-project config
-              derex reset-mysql
+              derex mysql reset --force
               derex reset-rabbitmq
               derex create-bucket
             displayName: "Prime Mysql DB"

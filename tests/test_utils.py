@@ -16,7 +16,6 @@ def test_abspath_from_egg():
     import derex.runner.utils
 
     assert derex.runner.utils.abspath_from_egg("derex.runner", "derex/runner/utils.py")
-
     assert derex.runner.utils.abspath_from_egg(
         "derex.runner", "derex/runner/templates/local.yml.j2"
     )

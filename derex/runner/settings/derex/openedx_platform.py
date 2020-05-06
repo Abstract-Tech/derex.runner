@@ -1,7 +1,7 @@
 PLATFORM_NAME = "TestEdX"
 
 LMS_BASE = DEREX_PROJECT + ".localhost"
-CMS_BASE = "studio." + DEREX_PROJECT + ".localhost"
+CMS_BASE = "studio." + LMS_BASE
 
 LMS_ROOT_URL = "//{}".format(LMS_BASE)
 SITE_NAME = {"lms": LMS_BASE, "cms": CMS_BASE}[SERVICE_VARIANT]

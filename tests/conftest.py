@@ -6,6 +6,7 @@ import contextlib
 import os
 import pytest
 import sys
+import traceback
 
 
 # Do not trust the value of __file__ in this module: on Azure it's wrong
@@ -51,11 +52,11 @@ def workdir():
     return workdir_decorator
 
 
-@pytest.fixture
-def sys_argv(mocker):
+@pytest.fixture(scope=("session"))
+def sys_argv(session_mocker):
     @contextlib.contextmanager
     def my_cm(eargs):
-        with mocker.mock_module.patch.object(sys, "argv", eargs):
+        with session_mocker.mock_module.patch.object(sys, "argv", eargs):
             try:
                 yield
             except SystemExit as exc:
@@ -81,3 +82,12 @@ def testproj(workdir):
     # together with it.
     result._tmpdir = directory
     return result
+
+
+def assert_result_ok(result):
+    """Makes sure the click script exited on purpose, and not by accident
+    because of an exception.
+    """
+    if not isinstance(result.exc_info[1], SystemExit):
+        tb_info = "\n".join(traceback.format_tb(result.exc_info[2]))
+        assert result.exit_code == 0, tb_info

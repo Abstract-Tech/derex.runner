@@ -28,17 +28,23 @@ def test_check_services(mocker):
     client = mocker.patch("derex.runner.docker.client")
 
     client.containers.get.return_value.status = "running"
-    assert check_services()
+    assert check_services(["mysql"])
 
     client.containers.get.side_effect = docker.errors.NotFound(
         "Mysql container not found"
     )
-    assert not check_services()
+    assert not check_services(["mysql"])
 
 
-def test_wait_for_mysql(mocker):
-    from derex.runner.docker import wait_for_mysql
+def test_wait_for_service(mocker):
+    from derex.runner.docker import wait_for_service
+
+    container = mocker.MagicMock()
+    container.exec_run.return_value = mocker.MagicMock(exit_code=0)
 
     client = mocker.patch("derex.runner.docker.client")
-    wait_for_mysql(0)
-    client.containers.get.assert_called_once_with("mysql")
+    client.containers.get.return_value = container
+
+    wait_for_service("mysql", 'mysql -psecret -e "SHOW DATABASES"', 1)
+    client.containers.get.assert_called_with("mysql")
+    container.exec_run.assert_called_with('mysql -psecret -e "SHOW DATABASES"')

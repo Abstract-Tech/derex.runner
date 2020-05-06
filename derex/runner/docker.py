@@ -59,7 +59,7 @@ def ensure_volumes_present():
         client.volumes.create(volume)
 
 
-def check_services(services: Iterable[str] = ("mysql")) -> bool:
+def check_services(services: Iterable[str]) -> bool:
     """Check if the services needed for running Open edX are running.
     """
     result = True
@@ -72,31 +72,23 @@ def check_services(services: Iterable[str] = ("mysql")) -> bool:
         return False
 
 
-def execute_mysql_query(query: str):
-    """Create the given database in mysql.
+def wait_for_service(service: str, check_command: str, max_seconds: int = 20):
+    """With a freshly created container services might need a bit of time to start.
+    This functions waits up to max_seconds seconds.
     """
-    container = client.containers.get("mysql")
-    res = container.exec_run(f'mysql -psecret -e "{query}"')
-    assert res.exit_code == 0, f"Error running {query}"
-
-
-def wait_for_mysql(max_seconds: int = 20):
-    """With a freshly created container mysql might need a bit of time to prime
-    its files. This functions waits up to max_seconds seconds
-    """
-    container = client.containers.get("mysql")
+    container = client.containers.get(service)
     for i in range(max_seconds):
-        res = container.exec_run('mysql -psecret -e "SHOW DATABASES"')
+        res = container.exec_run(check_command)
         if res.exit_code == 0:
-            break
+            return 0
         time.sleep(1)
-        logger.warning("Waiting for mysql database to be ready")
+        logger.warning(f"Waiting for {service} to be ready")
+    raise TimeoutError(f"Can't connect to {service} service")
 
 
 def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
-
     dump_path = abspath_from_egg("derex.runner", relpath)
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")

@@ -16,12 +16,16 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "autoapi.extension"]
+extensions = ["sphinx.ext.viewcode", "autoapi.extension"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["html_templates"]
 autoapi_type = "python"
-autoapi_dirs = ["../derex"]
+autoapi_dirs = ["../derex/runner"]
+autoapi_ignore = ["*settings/derex/*", "*compose_files/*"]
+autoapi_python_class_content = "both"
+autoapi_root = "derex_runner"
+
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -86,7 +90,6 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 html_logo = "assets/logo.svg"
-html_favicon = "assets/favicon.ico"
 
 html_css_files = [
     "css/custom.css",
@@ -161,8 +164,23 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "type"),
     ("py:class", "object"),
+    # The following are needed to prevent errors like
+    # WARNING: py:class reference target not found: Path
+    # from showing up.
+    # We don't fully understand how this works, but we'd like to keep
+    # the warning-as-failures behaviour, so we "fix" them here.
     ("py:class", "RuntimeError"),
     ("py:class", "ValueError"),
     ("py:class", "enum.Enum"),
     ("py:class", "logging.Formatter"),
+    ("py:class", "Project"),
+    ("py:class", "ProjectRunMode"),
+    ("py:class", "click.core.Context"),
+    ("py:class", "DerexSecrets"),
+    ("py:class", "Optional['derex.runner.project.Project']"),
+    ("py:class", "Path"),
+    ("py:class", "ProjectRunMode"),
+    ("py:class", "pymysql.cursors.Cursor"),
+    ("py:meth", "str.format"),
+    ("py:class", "string.Template"),
 ]

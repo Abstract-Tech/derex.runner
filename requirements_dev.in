@@ -13,7 +13,7 @@ pip-tools
 pre-commit
 pytest
 pytest-cov
-pytest-mock
+pytest-mock>=v3.1.0
 pytest-runner
 pyyaml
 requests

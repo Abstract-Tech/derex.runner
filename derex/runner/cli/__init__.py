@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-
 """Console script for derex.runner."""
+from .build import build
+from .mongodb import mongodb
+from .mysql import mysql
+from .utils import ensure_project
 from click_plugins import with_plugins
-from derex.runner import __version__
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
-from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.secrets import HAS_MASTER_SECRET
-from derex.runner.utils import abspath_from_egg
-from distutils.spawn import find_executable
-from functools import wraps
 from typing import Any
 from typing import Optional
 
@@ -23,21 +21,6 @@ import sys
 
 
 logger = logging.getLogger(__name__)
-
-
-def ensure_project(func):
-    """Decorator that checks if the current command was invoked from inside a project,
-    (i.e. if the click context has a project) and prints a nice message if it's not.
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if click.get_current_context().obj is None:
-            click.echo("This command needs to be run inside a derex project")
-            return 1
-        func(*args, **kwargs)
-
-    return wrapper
 
 
 @with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
@@ -80,17 +63,10 @@ def debug(ctx):
 def reset_mailslurper(project):
     """Reset the mailslurper database.
     """
-    from derex.runner.docker import check_services
-    from derex.runner.docker import execute_mysql_query
+    from derex.runner.mysql import drop_database
     from derex.runner.docker import load_dump
-    from derex.runner.docker import wait_for_mysql
 
-    if not check_services(["mysql"]):
-        click.echo("Mysql not found.\nMaybe you forgot to run\nddc-services up -d")
-        return 1
-    wait_for_mysql()
-    click.echo("Dropping mailslurper database")
-    execute_mysql_query("DROP DATABASE IF EXISTS mailslurper")
+    drop_database("mailslurper")
     click.echo("Priming mailslurper database")
     load_dump("derex/runner/fixtures/mailslurper.sql")
     return 0
@@ -120,40 +96,6 @@ def compile_theme(project):
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
     run_compose(args, project=DebugBaseImageProject(), exit_afterwards=True)
-
-
-@derex.command(name="reset-mysql")
-@click.pass_obj
-@ensure_project
-@click.option(
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Allow resetting mysql database if runmode is production",
-)
-def reset_mysql_cmd(project, force):
-    """Reset mysql database for the project"""
-    from derex.runner.compose_utils import reset_mysql
-    from derex.runner.docker import check_services
-    from derex.runner.docker import execute_mysql_query
-    from derex.runner.docker import wait_for_mysql
-
-    if project.runmode is not ProjectRunMode.debug and not force:
-        # Safety belt: we don't want people to run this in production
-        click.get_current_context().fail(
-            "The command reset-mysql can only be run in `debug` runmode.\n"
-            "Use --force to override"
-        )
-
-    if not check_services(["mysql"]):
-        click.echo(
-            "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
-        )
-        return
-    wait_for_mysql()
-    execute_mysql_query(f"CREATE DATABASE IF NOT EXISTS {project.mysql_db_name}")
-    reset_mysql(DebugBaseImageProject())
-    return 0
 
 
 @derex.command()
@@ -190,142 +132,6 @@ def reset_rabbitmq(project):
     run_compose(args, exit_afterwards=True)
     click.echo(f"Rabbitmq vhost {vhost} created")
     return 0
-
-
-@derex.group()
-def build():
-    """Commands to build container images"""
-
-
-@build.command()
-@click.pass_obj
-@ensure_project
-def requirements(project):
-    """Build the image that contains python requirements"""
-    from derex.runner.build import build_requirements_image
-
-    click.echo(
-        f'Building docker image {project.requirements_image_name} ("{project.name}" requirements)'
-    )
-    build_requirements_image(project)
-
-
-@build.command()
-@click.pass_obj
-@click.pass_context
-@ensure_project
-def themes(ctx, project: Project):
-    """Build the image that includes compiled themes"""
-    from derex.runner.build import build_themes_image
-
-    ctx.forward(requirements)
-    click.echo(
-        f'Building docker image {project.themes_image_name} with "{project.name}" themes'
-    )
-    build_themes_image(project)
-    click.echo(f"Built image {project.themes_image_name}")
-
-
-@build.command()
-@click.pass_obj
-@click.pass_context
-@ensure_project
-def final(ctx, project: Project):
-    """Build the final image for this project.
-    For now this is the same as the final image"""
-    ctx.forward(themes)
-
-
-@build.command()
-@click.pass_obj
-@click.pass_context
-@ensure_project
-def final_refresh(ctx, project: Project):
-    """Also pull base docker image before starting building"""
-    from derex.runner.docker import pull_images
-
-    pull_images([project.base_image, project.final_base_image])
-    ctx.forward(final)
-
-
-@build.command()
-@click.argument(
-    "version",
-    type=click.Choice(OpenEdXVersions.__members__),
-    required=True,
-    callback=lambda _, __, value: value and OpenEdXVersions[value],
-)
-@click.option(
-    "-t",
-    "--target",
-    type=click.Choice(
-        [
-            "dev",
-            "nostatic-dev",
-            "nostatic",
-            "libgeos",
-            "base",
-            "sourceonly",
-            "wheels",
-            "translations",
-            "nodump",
-        ]
-    ),
-    default="dev",
-    help="Target to build (nostatic, dev, translations)",
-)
-@click.option(
-    "--push/--no-push", default=False, help="Also push image to registry after building"
-)
-@click.option(
-    "--only-print-image-name/--do-build",
-    default=False,
-    help="Only print image name for the given target",
-)
-@click.option(
-    "-d",
-    "--docker-opts",
-    envvar="DOCKER_OPTS",
-    default="--output type=image,name={docker_image_prefix}-{target}{push_arg}",
-    help=(
-        "Additional options to pass to the docker invocation.\n"
-        "By default outputs the image to the local docker daemon."
-    ),
-)
-def openedx(version, target, push, only_print_image_name, docker_opts):
-    """Build openedx image using docker. Defaults to dev image target."""
-    dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
-    git_repo = version.value["git_repo"]
-    git_branch = version.value["git_branch"]
-    python_version = version.value.get("python_version", "3.6")
-    docker_image_prefix = version.value["docker_image_prefix"]
-    image_name = f"{docker_image_prefix}-{target}:{__version__}"
-    if only_print_image_name:
-        click.echo(image_name)
-        return
-    push_arg = ",push=true" if push else ""
-    command = [
-        "docker",
-        "buildx",
-        "build",
-        str(dockerdir),
-        "-t",
-        image_name,
-        "--build-arg",
-        f"PYTHON_VERSION={python_version}",
-        "--build-arg",
-        f"EDX_PLATFORM_VERSION={git_branch}",
-        "--build-arg",
-        f"EDX_PLATFORM_REPOSITORY={git_repo}",
-        f"--target={target}",
-    ]
-    transifex_path = os.path.expanduser("~/.transifexrc")
-    if os.path.exists(transifex_path):
-        command.extend(["--secret", f"id=transifex,src={transifex_path}"])
-    if docker_opts:
-        command.extend(docker_opts.format(**locals()).split())
-    print("Invoking\n" + " ".join(command), file=sys.stderr)
-    os.execve(find_executable(command[0]), command, os.environ)
 
 
 @derex.command()
@@ -450,3 +256,11 @@ def update_minio(old_key: str):
 
 def red(string: str) -> str:
     return click.style(string, fg="red")
+
+
+derex.add_command(mysql)
+derex.add_command(mongodb)
+derex.add_command(build)
+
+
+__all__ = ["derex"]
