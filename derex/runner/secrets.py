@@ -69,7 +69,11 @@ def get_secret(secret: DerexSecrets) -> str:
     """Derive a secret using the master secret and the provided name.
     """
     binary_secret = scrypt(
-        MASTER_SECRET.encode("utf-8"), salt=secret.name.encode("utf-8"), n=2, r=8, p=1  # type: ignore
+        MASTER_SECRET.encode("utf-8"),
+        salt=secret.name.encode("utf-8"),
+        n=2,
+        r=8,
+        p=1,  # type: ignore
     )
     # Pad the binary string so that its length is a multiple of 3
     # This will make sure its base64 representation is equals-free

@@ -7,6 +7,7 @@ from typing import Union
 
 import json
 import os
+import pytest
 import yaml
 
 
@@ -193,6 +194,16 @@ def test_container_variables(testproj):
         assert env["DEREX_LMS_SITE_NAME"] == "onlinecourses.example"
 
 
+def test_project_name_constraints(testproj):
+    with testproj as projdir:
+        conf_file = Path(projdir) / "derex.config.yaml"
+        config = {"project_name": ";invalid;"}
+        conf_file.write_text(yaml.dump(config))
+        create_settings_file(Path(projdir), "production")
+        with pytest.raises(ValueError):
+            Project()
+
+
 def test_container_variables_json_serialized(testproj):
     with testproj as projdir:
         conf_file = Path(projdir) / "derex.config.yaml"
@@ -226,5 +237,4 @@ def create_settings_file(project_root: Path, filename: str):
     if not settings_dir.is_dir():
         settings_dir.mkdir()
         (settings_dir / "__init__.py").write_text("")
-        project = Project(read_only=True)
-    (project.settings_dir / f"{filename}.py").write_text("# Empty file")
+    (settings_dir / f"{filename}.py").write_text("# Empty file")

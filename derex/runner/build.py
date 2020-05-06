@@ -122,7 +122,4 @@ def build_themes_image(project: Project):
         )
 
 
-__all__ = [
-    "build_requirements_image",
-    "build_themes_image",
-]
+__all__ = ["build_requirements_image", "build_themes_image"]
