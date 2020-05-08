@@ -21,3 +21,7 @@ FACEBOOK_APP_ID = None
 # ('http://localhost:8008', 'http://localhost:8008')
 CREDENTIALS_INTERNAL_SERVICE_URL = None
 CREDENTIALS_PUBLIC_SERVICE_URL = None
+
+# This is undefined in the CMS common settings module.
+# It should be imported from the LMS but in ironwood it isn't.
+GENERATE_PROFILE_SCORES = False
