@@ -58,7 +58,7 @@ setup(
     include_package_data=True,
     keywords="derex.runner",
     name="derex.runner",
-    packages=find_namespace_packages(include=["derex.runner.*"]),
+    packages=find_namespace_packages(include=["derex.*"]),
     namespace_packages=["derex"],
     setup_requires=setup_requirements,
     test_suite="tests",
