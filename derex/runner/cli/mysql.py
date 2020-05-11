@@ -150,7 +150,7 @@ def show_users_cmd():
 @click.argument("destination_db_name", type=str)
 @click.pass_obj
 def copy_database_cmd(
-    project: Optional[Project], source_db_name: str, destination_db_name: Optional[str],
+    project: Optional[Project], source_db_name: str, destination_db_name: Optional[str]
 ):
     """
     Copy an existing mysql database. If no destination database is given it defaults

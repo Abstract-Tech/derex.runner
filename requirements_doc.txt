@@ -5,7 +5,7 @@
 #    pip-compile requirements_doc.in
 #
 alabaster==0.7.12         # via sphinx
-astroid==2.4.0            # via sphinx-autoapi
+astroid==2.4.1            # via sphinx-autoapi
 babel==2.8.0              # via sphinx
 certifi==2020.4.5.1       # via requests
 chardet==3.0.4            # via requests

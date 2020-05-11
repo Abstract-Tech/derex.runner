@@ -2,11 +2,10 @@ from path import Path
 
 
 STATIC_ROOT_BASE = "/openedx/staticfiles"
-STATIC_ROOT = {
-    "lms": Path(STATIC_ROOT_BASE),
-    "cms": Path(STATIC_ROOT_BASE) / "studio",
-}[SERVICE_VARIANT]
-STATIC_URL = {"lms": "/static/", "cms": "/static/studio/",}[SERVICE_VARIANT]
+STATIC_ROOT = {"lms": Path(STATIC_ROOT_BASE), "cms": Path(STATIC_ROOT_BASE) / "studio"}[
+    SERVICE_VARIANT
+]
+STATIC_URL = "/static/"
 
 WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = STATIC_ROOT / "webpack-stats.json"
 COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))

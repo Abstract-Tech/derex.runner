@@ -77,9 +77,7 @@ def list_mongodb(project: Optional[Project], db_name: str):
 @mongodb.command("copy")
 @click.argument("source_db_name", type=str, required=True)
 @click.argument("destination_db_name", type=str)
-@click.option(
-    "--drop", is_flag=True, default=False, help="Drop the source database",
-)
+@click.option("--drop", is_flag=True, default=False, help="Drop the source database")
 @click.pass_obj
 def copy_mongodb(
     project: Optional[Project],

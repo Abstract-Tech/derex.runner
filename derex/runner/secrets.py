@@ -3,7 +3,6 @@
 from base64 import b64encode
 from collections import Counter
 from enum import Enum
-from hashlib import scrypt
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -20,6 +19,36 @@ DEREX_MAIN_SECRET_MAX_SIZE = 1024
 DEREX_MAIN_SECRET_MIN_SIZE = 8
 DEREX_MAIN_SECRET_MIN_ENTROPY = 128
 DEREX_MAIN_SECRET_PATH = "/etc/derex/main_secret"
+
+
+def scrypt_hash_stdlib(main_secret: str, name: str) -> bytes:
+    from hashlib import scrypt
+
+    return scrypt(
+        main_secret.encode("utf-8"),
+        salt=name.encode("utf-8"),
+        n=2,
+        r=8,
+        p=1,  # type: ignore
+    )
+
+
+def scrypt_hash_addon(main_secret: str, name: str) -> bytes:
+    """
+    """
+    from scrypt import scrypt
+
+    return scrypt.hash(main_secret.encode("utf-8"), name.encode("utf-8"), N=2, r=8, p=1)
+
+
+try:
+    from hashlib import scrypt as _
+
+    scrypt_hash = scrypt_hash_stdlib
+except ImportError:
+    from scrypt import scrypt as _  # type:ignore  # noqa
+
+    scrypt_hash = scrypt_hash_addon
 
 
 class DerexSecrets(Enum):
@@ -68,13 +97,7 @@ def _get_master_secret() -> Optional[str]:
 def get_secret(secret: DerexSecrets) -> str:
     """Derive a secret using the master secret and the provided name.
     """
-    binary_secret = scrypt(
-        MASTER_SECRET.encode("utf-8"),
-        salt=secret.name.encode("utf-8"),
-        n=2,
-        r=8,
-        p=1,  # type: ignore
-    )
+    binary_secret = scrypt_hash(MASTER_SECRET, secret.name)
     # Pad the binary string so that its length is a multiple of 3
     # This will make sure its base64 representation is equals-free
     new_length = len(binary_secret) + (3 - len(binary_secret) % 3)
