@@ -165,14 +165,16 @@ class BuildError(RuntimeError):
     """
 
 
-def get_running_containers():
-    return {
-        container.name: client.api.inspect_container(container.name)
-        for container in client.networks.get("derex").containers
-    }
+def get_running_containers() -> Dict:
+    if "derex" in [network.name for network in client.networks.list()]:
+        return {
+            container.name: client.api.inspect_container(container.name)
+            for container in client.networks.get("derex").containers
+        }
+    return {}
 
 
-def get_exposed_container_names():
+def get_exposed_container_names() -> List:
     result = []
     for name, container in get_running_containers().items():
         names = container["NetworkSettings"]["Networks"]["derex"]["Aliases"]
