@@ -1,3 +1,5 @@
+from rich.logging import RichHandler
+
 import logging
 import os
 
@@ -27,17 +29,13 @@ class CustomFormatter(logging.Formatter):
 
 
 def setup_logging():
+    FORMAT = "%(message)s"
     loglevel = getattr(logging, os.environ.get("DEREX_LOGLEVEL", "WARN"))
-    logging.basicConfig()
     for logger in ("urllib3.connectionpool", "compose", "docker"):
         logging.getLogger(logger).setLevel(logging.WARN)
-    ch = logging.StreamHandler()
-    ch.setLevel(loglevel)
-    ch.setFormatter(CustomFormatter())
-    root_logger = logging.getLogger("")
-    root_logger.removeHandler(root_logger.handlers[0])
-    root_logger.addHandler(ch)
-    root_logger.setLevel(loglevel)
+    logging.basicConfig(
+        level=loglevel, format=FORMAT, datefmt="[%X] ", handlers=[RichHandler()],
+    )
 
 
 def setup_logging_decorator(func):

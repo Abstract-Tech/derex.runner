@@ -184,6 +184,7 @@ class Project:
         return self.root / DEREX_RUNNER_PROJECT_DIR / name
 
     def __init__(self, path: Union[Path, str] = None, read_only: bool = False):
+        logger.debug("Creating project object")
         # Load first, and only afterwards manipulate the folder
         # so that if an error occurs during loading we bail wout
         # before making any change

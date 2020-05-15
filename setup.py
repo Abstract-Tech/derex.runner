@@ -21,6 +21,7 @@ requirements = [
     "pymongo",
     "pymysql",
     "pyyaml",
+    "rich",
     "tabulate",
 ]
 

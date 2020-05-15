@@ -10,6 +10,9 @@ from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from derex.runner.secrets import HAS_MASTER_SECRET
+from rich import box
+from rich.console import Console
+from rich.table import Table
 from typing import Any
 from typing import Optional
 
@@ -41,16 +44,22 @@ def derex(ctx):
     if ctx.invoked_subcommand:
         return
 
-    click.echo(derex.get_help(ctx))
+    click.echo(derex.get_help(ctx) + "\n")
 
     from derex.runner.docker import get_exposed_container_names
 
     container_names = get_exposed_container_names()
     if container_names:
-        containers = "\n".join(container_names)
-        click.echo(
-            f"\nThese containers are running and exposing an HTTP server on port 80:\n\n{containers}"
+        console = Console()
+        table = Table(
+            title="[bold green]These containers are running and exposing an HTTP server on port 80",
+            box=box.SIMPLE,
         )
+        table.add_column("Name")
+        for container in container_names:
+            container = (f"[bold]{container[0]}",) + container[1:]
+            table.add_row(*container)
+        console.print(table)
 
 
 @derex.group()

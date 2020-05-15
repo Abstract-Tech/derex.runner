@@ -184,7 +184,7 @@ def get_exposed_container_names() -> List:
                 container["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
             )
             result.append(
-                "\t".join(
+                tuple(
                     map(lambda el: "http://" + el.replace(".derex", ""), matching_names)
                 )
             )
