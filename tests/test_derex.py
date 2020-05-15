@@ -89,22 +89,30 @@ def test_derex_runmode_wrong(testproj):
         assert "not valid" in result.stderr
 
 
-def test_derex_cli_group(sys_argv, testproj):
+def test_derex_cli_group_no_containers_running(monkeypatch):
+    from derex.runner import docker
+
     # Run when no container is running
-    with sys_argv(["ddc-services", "stop"]):
-        ddc_services()
-    result = runner.invoke(derex_cli_group)
+    monkeypatch.setattr(docker, "get_exposed_container_names", lambda: ())
+    result = runner.invoke(derex_cli_group, catch_exceptions=False)
     assert (
         "These containers are running and exposing an HTTP server on port 80"
         not in result.output
     )
 
+
+def test_derex_cli_group_one_container_running(monkeypatch):
+    from derex.runner import docker
+
     # Test output when containers are running
-    with sys_argv(["ddc-services", "up", "-d"]):
-        ddc_services()
-    with testproj:
-        result = runner.invoke(derex_cli_group)
-        assert (
-            "These containers are running and exposing an HTTP server on port 80"
-            in result.output
-        )
+    monkeypatch.setattr(
+        docker,
+        "get_exposed_container_names",
+        lambda: (("http://projectone.localhost",),),
+    )
+    result = runner.invoke(derex_cli_group)
+    assert (
+        # Note the \n, necessary because rich laid out the text for us
+        "These containers are running and \nexposing an HTTP server on port 80"
+        in result.output
+    )

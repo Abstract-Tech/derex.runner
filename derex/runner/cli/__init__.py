@@ -49,17 +49,19 @@ def derex(ctx):
     from derex.runner.docker import get_exposed_container_names
 
     container_names = get_exposed_container_names()
-    if container_names:
-        console = Console()
-        table = Table(
-            title="[bold green]These containers are running and exposing an HTTP server on port 80",
-            box=box.SIMPLE,
-        )
-        table.add_column("Name")
-        for container in container_names:
-            container = (f"[bold]{container[0]}",) + container[1:]
-            table.add_row(*container)
-        console.print(table)
+    if not container_names:
+        return
+
+    console = Console()
+    table = Table(
+        title="[bold green]These containers are running and exposing an HTTP server on port 80",
+        box=box.SIMPLE,
+    )
+    table.add_column("Name")
+    for container in container_names:
+        container = (f"[bold]{container[0]}",) + container[1:]
+        table.add_row(*container)
+    console.print(table)
 
 
 @derex.group()
