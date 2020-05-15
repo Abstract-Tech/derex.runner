@@ -82,11 +82,12 @@ def test_derex_runmode_wrong(testproj):
     with testproj:
         project = Project()
         # Use low level API to inject invalid value
-        project._set_status("runmode", "garbage")
+        project._set_status("runmode", "garbage-not-a-valid-runmode")
 
-        result = runner.invoke(derex_cli_group, ["runmode"])
+        result = runner.invoke(derex_cli_group, "runmode")
         # Ensure presence of error message
-        assert "not valid" in result.stderr
+        assert "garbage-not-a-valid-runmode" in result.stderr
+        assert "valid as runmode" in result.stderr
 
 
 def test_derex_cli_group_no_containers_running(monkeypatch):

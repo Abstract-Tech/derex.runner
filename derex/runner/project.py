@@ -115,7 +115,7 @@ class Project:
             # We found a string but we don't recognize it: warn the user
             logger.warning(
                 f"Value `{mode_str}` found in `{self.private_filepath(name)}` "
-                "is not valid for runmode "
+                "is not valid as runmode "
                 "(valid values are `debug` and `production`)"
             )
         default = self.config.get(f"default_{name}")
