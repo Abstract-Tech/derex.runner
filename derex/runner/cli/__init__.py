@@ -243,8 +243,8 @@ def update_minio(old_key: str):
     expected_string = "Rotation complete, please make sure to unset MINIO_ACCESS_KEY_OLD and MINIO_SECRET_KEY_OLD envs"
     script += f" && expect -c 'spawn /usr/bin/minio server /data; expect \"{expected_string}\" {{ close; exit 0 }}'"
     args = ["run", "--rm", "--entrypoint", "/bin/sh", "-T", "minio", "-c", script]
-    run_compose(args, exit_afterwards=True)
-    click.echo(f"Minio server rekeying finished")
+    run_compose(args, exit_afterwards=False)
+    click.echo("Minio server rekeying finished")
 
 
 def red(string: str) -> str:

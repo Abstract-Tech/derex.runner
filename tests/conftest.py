@@ -75,7 +75,7 @@ def testproj(workdir):
 
     directory = TemporaryDirectory("-derex-project")
     with open(f"{directory.name}/{CONF_FILENAME}", "w") as fh:
-        fh.write(f"project_name: testminimal\n")
+        fh.write("project_name: testminimal\n")
     result = workdir(Path(directory.name))
     # TemporaryDirectory will do its cleanup when it's garbage collected.
     # We attach it to the workdir context manager so that it will be garbage collected

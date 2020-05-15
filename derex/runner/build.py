@@ -13,11 +13,11 @@ def docker_commands_to_install_requirements(project: Project):
     dockerfile_contents = []
     if project.requirements_dir:
         dockerfile_contents.append(
-            f"RUN pip install pip==20.0.2\n"
+            "RUN pip install pip==20.0.2\n"
             # Constrain edx version, but omit the relative paths: we run this from our
             # requirements dir so that the derex user can use `./` in their requirements files
-            f"RUN grep == /openedx/edx-platform/requirements/edx/base.txt |grep -v ^git+https > /tmp/base.txt\n"
-            f"COPY requirements /openedx/derex.requirements/\n"
+            "RUN grep == /openedx/edx-platform/requirements/edx/base.txt |grep -v ^git+https > /tmp/base.txt\n"
+            "COPY requirements /openedx/derex.requirements/\n"
         )
         for requirments_file in os.listdir(project.requirements_dir):
             if requirments_file.endswith(".txt"):
