@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.5.0
+    rev: v3.0.0
     hooks:
       - id: trailing-whitespace
         exclude: .bumpversion.cfg
@@ -9,6 +9,10 @@ repos:
       - id: end-of-file-fixer
         exclude: .bumpversion.cfg
       - id: check-yaml
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.1
+    hooks:
       - id: flake8
         exclude: derex/runner/settings/derex/*
 
