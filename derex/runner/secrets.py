@@ -90,7 +90,7 @@ def _get_master_secret() -> Optional[str]:
         return master_secret
 
     if filepath.exists():
-        logger.error(f"File filepath is not readable; using default master secret")
+        logger.error(f"File {filepath} is not readable; using default master secret")
     return None
 
 
