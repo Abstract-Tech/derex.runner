@@ -138,7 +138,10 @@ FROM notranslations as nostatic
 # It's still missing the static files, hence the name.
 
 RUN --mount=type=bind,from=translations,target=/translations \
-    cp -avu /translations/openedx/edx-platform/conf/locale/ conf/
+    cp -avu /translations/openedx/edx-platform/conf/locale/ conf/ && \
+    `# Add a pth file to Python site packages to mimic derex_django installation` \
+    echo /openedx/derex_django > $(python -c 'import site; print(site.getsitepackages()[0])')/derex.pth
+
 
 FROM nostatic as nostatic-dev
 # This image has node dependencies installed, and can be used to compile assets
