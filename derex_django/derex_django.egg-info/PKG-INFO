@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: derex-django
+Version: 0.0.1
+Summary: Support package for derex
+Home-page: http://github.com/Abstract-Tech/derex.runner
+Author: Silvio Tomatis
+Author-email: silviot@abstract-technologies.de
+License: AGPL
+Description: UNKNOWN
+Platform: UNKNOWN
