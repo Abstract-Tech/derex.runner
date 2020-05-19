@@ -221,11 +221,16 @@ class Registry(object):
 
 def get_sorted_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
     """This function sorts lists of items using a Registry.
+
     Items are contained in dictionaries specifing a name and a priority which will
-    be used to register the item in the registry as well as the item itself.
-    Item will be retrieved using the "item_key" argument.
+    be used to register the item in the registry.
+
+    Items will be retrieved using the "item_key" argument as key.
 
     e.g.
+
+    .. code-block:: python
+
         {
             "name": "Initial item",
             "priority: "_begin",
