@@ -92,6 +92,10 @@ class Project:
     # Enum containing possible settings modules
     _available_settings = None
 
+    _derex_django_path = abspath_from_egg(
+        "derex.runner", "derex_django/README.rst"
+    ).parent
+
     @property
     def mysql_db_name(self) -> str:
         return self.config.get("mysql_db_name", f"{self.name}_openedx")

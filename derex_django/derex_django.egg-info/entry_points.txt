@@ -1,0 +1,5 @@
+[cms.djangoapp]
+derex_app = derex_django:DerexAppConfig
+
+[lms.djangoapp]
+derex_app = derex_django:DerexAppConfig
