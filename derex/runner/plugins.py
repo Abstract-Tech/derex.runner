@@ -13,10 +13,10 @@ def setup_plugin_manager():
     plugin_manager.add_hookspecs(plugin_spec)
     plugin_manager.load_setuptools_entrypoints("derex.runner")
     plugin_manager.register(compose_generation.BaseServices)
-    plugin_manager.register(compose_generation.BaseOpenEdx)
+    plugin_manager.register(compose_generation.BaseProject)
     plugin_manager.register(compose_generation.LocalServices)
-    plugin_manager.register(compose_generation.LocalOpenEdx)
-    plugin_manager.register(compose_generation.LocalRunmodeOpenEdx)
+    plugin_manager.register(compose_generation.LocalProject)
+    plugin_manager.register(compose_generation.LocalProjectRunmode)
     return plugin_manager
 
 

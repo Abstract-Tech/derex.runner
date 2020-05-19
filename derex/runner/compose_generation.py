@@ -69,7 +69,7 @@ class BaseServices:
         }
 
 
-class BaseOpenEdx:
+class BaseProject:
     @staticmethod
     @hookimpl
     def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
@@ -77,7 +77,7 @@ class BaseOpenEdx:
         """
         local_path = generate_ddc_project_file(project)
         options = ["--project-name", project.name, "-f", str(local_path)]
-        return {"options": options, "name": "base-openedx", "priority": "_begin"}
+        return {"options": options, "name": "base-project", "priority": "_begin"}
 
 
 class LocalServices:
@@ -99,7 +99,7 @@ class LocalServices:
         }
 
 
-class LocalOpenEdx:
+class LocalProject:
     @staticmethod
     @hookimpl
     def ddc_project_options(
@@ -111,12 +111,12 @@ class LocalOpenEdx:
             return None
         return {
             "options": ["-f", str(project.local_compose)],
-            "name": "local-openedx",
+            "name": "local-project",
             "priority": "_end",
         }
 
 
-class LocalRunmodeOpenEdx:
+class LocalProjectRunmode:
     @staticmethod
     @hookimpl
     def ddc_project_options(
@@ -128,7 +128,7 @@ class LocalRunmodeOpenEdx:
         if not local_path.is_file():
             return None
         options = ["-f", str(local_path)]
-        return {"options": options, "name": "local-runmode-openedx", "priority": "_end"}
+        return {"options": options, "name": "local-project-runmode", "priority": "_end"}
 
 
 def generate_ddc_project_file(project: Project) -> Path:
