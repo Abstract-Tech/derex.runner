@@ -115,7 +115,7 @@ class Project:
             # We found a string but we don't recognize it: warn the user
             logger.warning(
                 f"Value `{mode_str}` found in `{self.private_filepath(name)}` "
-                "is not valid for runmode "
+                "is not valid as runmode "
                 "(valid values are `debug` and `production`)"
             )
         default = self.config.get(f"default_{name}")
@@ -184,6 +184,7 @@ class Project:
         return self.root / DEREX_RUNNER_PROJECT_DIR / name
 
     def __init__(self, path: Union[Path, str] = None, read_only: bool = False):
+        logger.debug("Creating project object")
         # Load first, and only afterwards manipulate the folder
         # so that if an error occurs during loading we bail wout
         # before making any change
