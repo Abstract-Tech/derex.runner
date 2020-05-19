@@ -8,6 +8,7 @@ from click_plugins import with_plugins
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
+from derex.runner.project import ProjectNotFound
 from derex.runner.project import ProjectRunMode
 from derex.runner.secrets import HAS_MASTER_SECRET
 from rich import box
@@ -38,8 +39,11 @@ def derex(ctx):
 
     try:
         ctx.obj = Project()
-    except ValueError:
+    except ProjectNotFound:
         pass
+    except Exception as ex:
+        logger.error("\n".join(map(str, ex.args)))
+        sys.exit(1)
 
     if ctx.invoked_subcommand:
         return

@@ -417,7 +417,7 @@ def find_project_root(path: Path) -> Path:
         if (current / CONF_FILENAME).is_file():
             return current
         current = current.parent
-    raise ValueError(
+    raise ProjectNotFound(
         f"No directory found with a {CONF_FILENAME} file in it, starting from {path}"
     )
 
@@ -456,3 +456,8 @@ class OpenEdXVersions(Enum):
         "git_branch": "open-release/juniper.alpha1",
         "docker_image_prefix": "docker.io/derex/edx-juniper",
     }
+
+
+class ProjectNotFound(ValueError):
+    """No derex project could be found.
+    """
