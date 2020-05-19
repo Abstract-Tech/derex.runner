@@ -1,4 +1,5 @@
-from derex.runner.compose_utils import run_compose
+from derex.runner.ddc import run_ddc_project
+from derex.runner.ddc import run_ddc_services
 from derex.runner.docker import check_services
 from derex.runner.docker import client as docker_client
 from derex.runner.docker import wait_for_service
@@ -123,7 +124,7 @@ def copy_database(source_db_name: str, destination_db_name: str):
     """
     create_database(destination_db_name)
     logger.info(f"Copying database {source_db_name} to {destination_db_name}")
-    run_compose(
+    run_ddc_services(
         [
             "run",
             "--rm",
@@ -150,7 +151,7 @@ def reset_mysql_openedx(project: Project, dry_run: bool = False):
     assert (
         restore_dump_path
     ), "Could not find restore_dump.py in derex.runner distribution"
-    run_compose(
+    run_ddc_project(
         [
             "run",
             "--rm",

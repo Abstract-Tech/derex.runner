@@ -160,6 +160,20 @@ def pull_images(image_names: List[str]):
                 print(out["status"])
 
 
+def image_exists(needle: str) -> bool:
+    """If the given image tag exist in the local docker repository, return True.
+    """
+    docker_client = docker.APIClient()
+    images = docker_client.images()
+    images.sort(key=lambda el: el["Created"], reverse=True)
+    for image in images:
+        if "RepoTags" not in image or not image["RepoTags"]:
+            continue
+        if needle in image["RepoTags"]:
+            return True
+    return False
+
+
 class BuildError(RuntimeError):
     """An error occurred while building a docker image
     """

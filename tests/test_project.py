@@ -1,3 +1,4 @@
+from derex.runner.ddc import run_ddc_project
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from pathlib import Path
@@ -62,16 +63,14 @@ def test_runmode(testproj):
         assert Project().runmode == ProjectRunMode.production
 
 
-def test_docker_compose_addition(testproj, mocker):
+def test_ddc_project_addition(testproj, mocker, capsys):
     from derex.runner import hookimpl
-    from derex.runner.compose_utils import get_compose_options
-    from derex.runner.plugins import setup_plugin_manager
 
     class CustomAdditional:
         @staticmethod
         @hookimpl
-        def local_compose_options(project: Project) -> Dict[str, Union[str, List[str]]]:
-            """See derex.runner.plugin_spec.compose_options docstring
+        def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
+            """See derex.runner.plugin_spec.ddc_project_options docstring
             """
             return {
                 "options": ["custom-additional"],
@@ -84,32 +83,33 @@ def test_docker_compose_addition(testproj, mocker):
         with docker_compose_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
-        mgr = setup_plugin_manager()
-        mgr.register(CustomAdditional)
-        mocker.patch(
-            "derex.runner.compose_utils.setup_plugin_manager", return_value=mgr
-        )
-        opts = get_compose_options(args=[], variant="", project=project)
+        run_ddc_project([], project, dry_run=True)
+        output = capsys.readouterr().out
         # The last option should be the path of the user docker compose file for this project
-        assert opts[-1] == str(docker_compose_path)
+        assert output.endswith(f"-f {docker_compose_path}\n")
 
 
-def test_docker_compose_addition_per_runmode(testproj, mocker):
-    from derex.runner.compose_utils import get_compose_options
-
+def test_docker_compose_addition_per_runmode(testproj, mocker, capsys):
     with testproj:
-        docker_compose_path = Path(testproj._tmpdir.name) / "docker-compose-debug.yml"
-        with docker_compose_path.open("w") as fh:
+        docker_compose_debug_path = (
+            Path(testproj._tmpdir.name) / "docker-compose-debug.yml"
+        )
+        with docker_compose_debug_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
-        opts = get_compose_options(args=[], variant="", project=project)
+        run_ddc_project([], project, dry_run=True)
+        output = capsys.readouterr().out
         # The last option should be the path of the debug docker compose
-        assert opts[-1] == str(docker_compose_path)
+        assert output.endswith(f"-f {docker_compose_debug_path}\n")
 
         project.runmode = ProjectRunMode.production
-        opts = get_compose_options(args=[], variant="", project=project)
-        # The last option should be the path of the production docker compose file
-        assert opts[-1] != str(docker_compose_path)
+        default_project_docker_compose_file = project.private_filepath(
+            "docker-compose.yml"
+        )
+        run_ddc_project([], project, dry_run=True)
+        output = capsys.readouterr().out
+        # The last option should be the path of the project default docker compose file
+        assert output.endswith(f"-f {default_project_docker_compose_file}\n")
 
 
 def test_settings_enum(testproj):

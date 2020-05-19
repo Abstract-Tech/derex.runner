@@ -2,6 +2,8 @@ from collections import namedtuple
 from derex.runner import compose_generation
 from derex.runner import plugin_spec
 from pprint import pformat
+from typing import Dict
+from typing import List
 
 import pluggy
 
@@ -10,10 +12,11 @@ def setup_plugin_manager():
     plugin_manager = pluggy.PluginManager("derex.runner")
     plugin_manager.add_hookspecs(plugin_spec)
     plugin_manager.load_setuptools_entrypoints("derex.runner")
-    plugin_manager.register(compose_generation.LocalOpenEdX)
     plugin_manager.register(compose_generation.BaseServices)
-    plugin_manager.register(compose_generation.LocalUser)
-    plugin_manager.register(compose_generation.LocalRunmodeOpenEdX)
+    plugin_manager.register(compose_generation.BaseOpenEdx)
+    plugin_manager.register(compose_generation.LocalServices)
+    plugin_manager.register(compose_generation.LocalOpenEdx)
+    plugin_manager.register(compose_generation.LocalRunmodeOpenEdx)
     return plugin_manager
 
 
@@ -214,3 +217,26 @@ class Registry(object):
                 self.add(*el)
             except ValueError:
                 raise ValueError(f"Could not add these to registry:\n{pformat(to_add)}")
+
+
+def get_sorted_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
+    """This function sorts lists of items using a Registry.
+    Items are contained in dictionaries specifing a name and a priority which will
+    be used to register the item in the registry as well as the item itself.
+    Item will be retrieved using the "item_key" argument.
+
+    e.g.
+        {
+            "name": "Initial item",
+            "priority: "_begin",
+            "item_key": item
+        }
+    """
+    registry = Registry()
+    registry.add_list(
+        [
+            (dictionary["name"], dictionary[item_key], dictionary["priority"])
+            for dictionary in dictionaries
+        ]
+    )
+    return [item for lst in registry for item in lst]
