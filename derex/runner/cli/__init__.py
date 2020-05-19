@@ -90,7 +90,7 @@ def reset_mailslurper(project):
 @ensure_project
 def compile_theme(project):
     """Compile theme sass files"""
-    from derex.runner.compose_utils import run_ddc_project
+    from derex.runner.ddc import run_ddc_project
 
     if project.themes_dir is None:
         click.echo("No theme directory present in this project")
@@ -129,7 +129,7 @@ def create_bucket(project):
 @ensure_project
 def reset_rabbitmq(project):
     """Create rabbitmq vhost"""
-    from derex.runner.compose_utils import run_ddc_services
+    from derex.runner.ddc import run_ddc_services
 
     vhost = f"{project.name}_edxqueue"
     args = [
@@ -242,7 +242,7 @@ def update_minio(old_key: str):
     If your read your current SecretKey, it means the current credentials are correct and you don't need
     to update your keys.
     """
-    from derex.runner.compose_utils import run_ddc_services
+    from derex.runner.ddc import run_ddc_services
 
     # We need to stop minio after it's done re-keying. To this end, we use the expect package
     script = "apk add expect --no-cache "
