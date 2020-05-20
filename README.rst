@@ -13,10 +13,10 @@ Manage Open edX projects
 Introduction
 ------------
 
-Derex simplifies running edX: it takes care of starting the needed services
-(mysql, mongodb, rabbitmq etc) and introduces the concept of edX *projects*.
+Derex simplifies running Open edX: it takes care of starting the needed services
+(mysql, mongodb, rabbitmq etc) and introduces the concept of Open edX *projects*.
 
-A project is a directory that defines what an edX instance should look like.
+A project is a directory that defines what an Open edX instance should look like.
 It can specify additional requirements, custom themes and plugins.
 
 ``derex.runner`` uses docker compose (it's bundled, you don't have to
@@ -36,11 +36,11 @@ Make sure you have python 3.6 or later and docker 19.03.5 or later installed.
 A virtualenv is also recommended. For derex we use `direnv
 <https://direnv.net/>`_. Its main purpose is to define directory-specific
 environment variables, but it can also automatically activate a virtualenv when
-you ```cd``` into a directory. We include a ```.envrc``` file that will instruct
-```direnv``` to create and activate a local python3 virtualenv.
+you ``cd`` into a directory. We include a ``.envrc`` file that will instruct
+``direnv`` to create and activate a local python3 virtualenv.
 
 We recommend to `install it <https://direnv.net/docs/installation.html>`_ to try
-out the following instructions. Alternatively you can replace ```direnv allow```
+out the following instructions. Alternatively you can replace ``direnv allow``
 with your virtualenv activation command.
 
 
