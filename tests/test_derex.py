@@ -112,9 +112,10 @@ def test_derex_cli_group_one_container_running(monkeypatch):
         lambda: (("http://projectone.localhost",),),
     )
     result = runner.invoke(derex_cli_group)
+    # The replacement of "\n" characters is necessary because rich lay out text
+    # based on the terminal window size
+    plain_output = result.output.replace("\n", "")
     assert (
-        # The replacement of "\n" characters is necessary because rich lay out text
-        # based on the terminal window size
         "These containers are running and exposing an HTTP server on port 80"
-        in result.output.replace("\n", "")
+        in plain_output
     )
