@@ -12,8 +12,8 @@ import pytest
 import yaml
 
 
-MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
-COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
+MINIMAL_PROJ = Path(__file__).parent.with_name("examples") / "minimal"
+COMPLETE_PROJ = Path(__file__).parent.with_name("examples") / "complete"
 
 
 def test_complete_project(workdir):

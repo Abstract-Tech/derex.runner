@@ -111,7 +111,7 @@ stages:
 
           - script: |
               set -ex
-              cd tests/fixtures/complete
+              cd examples/complete
               derex mysql reset --force
               derex reset-rabbitmq
               derex create-bucket
@@ -125,16 +125,16 @@ stages:
               ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
             displayName: "Test complete project fixtures"
 
-          - script: cd tests/fixtures/complete && derex build requirements
+          - script: cd examples/complete && derex build requirements
             displayName: 'Build requirements image for project "complete"'
 
-          - script: cd tests/fixtures/complete; ddc-project up -d; sleep 3
+          - script: cd examples/complete; ddc-project up -d; sleep 3
             displayName: "Start edX daemons"
 
           - script: echo 127.0.0.1 localhost studio.complete.localhost complete.localhost | sudo tee -a /etc/hosts
             displayName: Add studio.complete.localhost and complete.localhost to /etc/hosts
 
-          - script: cd tests/fixtures/complete; ddc-project logs cms lms
+          - script: cd examples/complete; ddc-project logs cms lms
             condition: always()
             displayName: Show CMS/LMS logs
 
@@ -146,15 +146,15 @@ stages:
           - script: $(CURL) http://studio.complete.localhost/ || (sleep 10; $(CURL) http://studio.complete.localhost/)
             displayName: Curl the CMS
 
-          - script: cd tests/fixtures/complete && derex compile-theme
+          - script: cd examples/complete && derex compile-theme
             displayName: Compile theme
 
-          - script: cd tests/fixtures/complete && derex build final
+          - script: cd examples/complete && derex build final
             displayName: Build final image
 
           - script: |
               set -ex
-              cd tests/fixtures/complete
+              cd examples/complete
               docker images
               # This should not be needed, but for some reason Azure does not tag the image
               docker tag $(docker images -q|head -n1) complete/openedx-themes
@@ -172,14 +172,14 @@ stages:
 
           - script: |
               set -ex
-              cd tests/fixtures/complete
+              cd examples/complete
               derex runmode production --force
               ddc-project up -d
               sleep 5  # Give it time to start up
             displayName: "Start production image lms/cms"
 
           - script: |
-              cd tests/fixtures/complete
+              cd examples/complete
               ddc-project config
               ddc-project logs cms lms
             condition: always()
@@ -201,12 +201,12 @@ stages:
 
           - script: |
               ddc-services logs
-              cd tests/fixtures/complete; ddc-project logs
+              cd examples/complete; ddc-project logs
             condition: always()
             displayName: "Show logs"
 
           - script: |
-              cd tests/fixtures/complete; ddc-project config
+              cd examples/complete; ddc-project config
             condition: always()
             displayName: "Show ddc-project config"
 
@@ -230,7 +230,7 @@ stages:
 
           - script: |
               set -ex
-              cd tests/fixtures/minimal
+              cd examples/minimal
               docker images
               docker run --rm derex/edx-ironwood-dev ls -l
               ddc-project config
@@ -241,7 +241,7 @@ stages:
 
           - script: |
               set -x
-              cd tests/fixtures/minimal
+              cd examples/minimal
               echo 127.0.0.1 localhost flower.minimal.localhost | sudo tee -a /etc/hosts
               ddc-project up -d lms_worker cms_worker flower
               while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done

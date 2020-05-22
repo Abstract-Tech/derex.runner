@@ -10,7 +10,7 @@ import pytest
 import uuid
 
 
-MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
+MINIMAL_PROJ = Path(__file__).parent.with_name("examples") / "minimal"
 runner = CliRunner(mix_stderr=False)
 
 
