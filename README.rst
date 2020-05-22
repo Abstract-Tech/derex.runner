@@ -93,7 +93,3 @@ Credits
 -------
 
 This work uses extensively parts of the `tutor <https://github.com/regisb/tutor>`_ project. Many thanks to Régis Behmo!
-
-This package was created with `Cookiecutter
-<https://github.com/audreyr/cookiecutter>`_ and the `cookiecutter-namespace-template
-<https://github.com/veit/cookiecutter-namespace-template>`_ project template.
