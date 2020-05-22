@@ -6,7 +6,6 @@ coverage
 flake8
 flake8-import-order
 git+https://github.com/Abstract-Tech/pytest-black.git#egg=pytest-black
-git+https://github.com/Abstract-Tech/pytest-flake8.git#egg=pytest-flake8
 isort
 mypy==0.761  # For some reason pip-compile is stuck to 0.740
 pip-tools

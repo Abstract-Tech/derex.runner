@@ -87,8 +87,8 @@ steps:
       docker images
       derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target}" --target=translations $(DOCKER_IMAGES_SLUG)
       docker images
-      docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)"
-    continueOnError: true # Do not make the build fail because of translation issues
+      docker run --rm derex/edx-${DOCKER_IMAGES_SLUG}-translations:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)" ||
+        echo "##vso[task.logissue type=error]Problems with translations found"
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Check translations
 
