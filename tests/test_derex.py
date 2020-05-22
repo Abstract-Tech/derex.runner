@@ -109,11 +109,16 @@ def test_derex_cli_group_one_container_running(monkeypatch):
     monkeypatch.setattr(
         docker,
         "get_exposed_container_names",
-        lambda: (("http://projectone.localhost",),),
+        lambda: (
+            (
+                "http://projectone.localhost",
+                "http://preview.projectone.localhost",
+                "http://172.29.0.3",
+            ),
+        ),
     )
     result = runner.invoke(derex_cli_group)
     assert (
-        # Note the \n, necessary because rich laid out the text for us
-        "These containers are running and \nexposing an HTTP server on port 80"
+        "These containers are running and exposing an HTTP server on port 80"
         in result.output
     )
