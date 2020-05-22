@@ -122,3 +122,14 @@ def test_derex_cli_group_one_container_running(monkeypatch):
         "These containers are running and exposing an HTTP server on port 80"
         in result.output
     )
+
+
+@pytest.fixture(autouse=True)
+def fix_terminal_width(monkeypatch):
+    from rich.console import Console
+    import derex.runner.cli
+
+    def wrapper(*args, **kwargs):
+        return Console(*args, **dict(kwargs, width=120, force_terminal=True))
+
+    monkeypatch.setattr(derex.runner.cli, "Console", wrapper)
