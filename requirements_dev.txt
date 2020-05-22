@@ -5,12 +5,12 @@
 #    pip-compile requirements_dev.in
 #
 alabaster==0.7.12         # via -r requirements_doc.txt, sphinx
-appdirs==1.4.3            # via -r requirements.txt, black, virtualenv
+appdirs==1.4.4            # via -r requirements.txt, black, virtualenv
 astroid==2.4.1            # via -r requirements_doc.txt, sphinx-autoapi
 attrs==19.3.0             # via -r requirements.txt, black, jsonschema, pytest
 babel==2.8.0              # via -r requirements_doc.txt, sphinx
 bcrypt==3.1.7             # via -r requirements.txt, paramiko
-black==19.3b0             # via -r requirements_dev.in, pytest-black
+black==19.10b0            # via -r requirements_dev.in, pytest-black
 bleach==3.1.5             # via readme-renderer
 bump2version==1.0.0       # via -r requirements_dev.in
 cached-property==1.5.1    # via -r requirements.txt, docker-compose
@@ -20,6 +20,8 @@ cfgv==3.1.0               # via pre-commit
 chardet==3.0.4            # via -r requirements.txt, -r requirements_doc.txt, requests
 click-plugins==1.1.1      # via -r requirements.txt
 click==7.1.2              # via -r requirements.txt, black, click-plugins, pip-tools
+colorama==0.4.3           # via -r requirements.txt, rich
+commonmark==0.9.1         # via -r requirements.txt, rich
 coverage==5.1             # via -r requirements_dev.in, pytest-cov
 cryptography==2.9.2       # via -r requirements.txt, paramiko, secretstorage
 distlib==0.3.0            # via virtualenv
@@ -28,14 +30,13 @@ docker[ssh]==4.2.0        # via -r requirements.txt, docker-compose
 dockerpty==0.4.1          # via -r requirements.txt, docker-compose
 docopt==0.6.2             # via -r requirements.txt, docker-compose
 docutils==0.16            # via -r requirements_doc.txt, readme-renderer, sphinx
-entrypoints==0.3          # via flake8
 filelock==3.0.12          # via tox, virtualenv
 flake8-import-order==0.18.1  # via -r requirements_dev.in
-flake8==3.7.9             # via -r requirements_dev.in, pytest-flake8
-identify==1.4.15          # via pre-commit
+flake8==3.8.1             # via -r requirements_dev.in, pytest-flake8
+identify==1.4.16          # via pre-commit
 idna==2.9                 # via -r requirements.txt, -r requirements_doc.txt, requests
 imagesize==1.2.0          # via -r requirements_doc.txt, sphinx
-importlib-metadata==1.6.0  # via -r requirements.txt, jsonschema, keyring, pluggy, pre-commit, pytest, tox, twine, virtualenv
+importlib-metadata==1.6.0  # via -r requirements.txt, flake8, jsonschema, keyring, pluggy, pre-commit, pytest, tox, twine, virtualenv
 isort==4.3.21             # via -r requirements_dev.in
 jeepney==0.4.3            # via keyring, secretstorage
 jinja2==2.11.2            # via -r requirements.txt, -r requirements_doc.txt, sphinx, sphinx-autoapi
@@ -44,22 +45,24 @@ keyring==21.2.1           # via twine
 lazy-object-proxy==1.4.3  # via -r requirements_doc.txt, astroid
 markupsafe==1.1.1         # via -r requirements.txt, -r requirements_doc.txt, jinja2
 mccabe==0.6.1             # via flake8
-more-itertools==8.2.0     # via pytest
+more-itertools==8.3.0     # via pytest
 mypy-extensions==0.4.3    # via mypy
 mypy==0.761               # via -r requirements_dev.in
 nodeenv==1.3.5            # via pre-commit
-packaging==20.3           # via -r requirements_doc.txt, bleach, pytest, sphinx, tox
+packaging==20.4           # via -r requirements_doc.txt, bleach, pytest, sphinx, tox
 paramiko==2.7.1           # via -r requirements.txt, docker
+pathspec==0.8.0           # via black
 pathtools==0.1.2          # via watchdog
 pip-tools==5.1.2          # via -r requirements_dev.in
 pkginfo==1.5.0.1          # via twine
 pluggy==0.13.1            # via -r requirements.txt, pytest, tox
-pre-commit==2.3.0         # via -r requirements_dev.in
+pprintpp==0.4.0           # via -r requirements.txt, rich
+pre-commit==2.4.0         # via -r requirements_dev.in
 py==1.8.1                 # via pytest, tox
-pycodestyle==2.5.0        # via flake8, flake8-import-order
+pycodestyle==2.6.0        # via flake8, flake8-import-order
 pycparser==2.20           # via -r requirements.txt, cffi
-pyflakes==2.1.1           # via flake8
-pygments==2.6.1           # via -r requirements_doc.txt, readme-renderer, sphinx
+pyflakes==2.2.0           # via flake8
+pygments==2.6.1           # via -r requirements.txt, -r requirements_doc.txt, readme-renderer, rich, sphinx
 pymongo==3.10.1           # via -r requirements.txt
 pymysql==0.9.3            # via -r requirements.txt
 pynacl==1.3.0             # via -r requirements.txt, paramiko
@@ -70,14 +73,16 @@ pytest-cov==2.8.1         # via -r requirements_dev.in
 git+https://github.com/Abstract-Tech/pytest-flake8.git#egg=pytest-flake8  # via -r requirements_dev.in
 pytest-mock==3.1.0        # via -r requirements_dev.in
 pytest-runner==5.2        # via -r requirements_dev.in
-pytest==5.4.1             # via -r requirements_dev.in, pytest-black, pytest-cov, pytest-flake8, pytest-mock
+pytest==5.4.2             # via -r requirements_dev.in, pytest-black, pytest-cov, pytest-flake8, pytest-mock
 pytz==2020.1              # via -r requirements_doc.txt, babel
 pyyaml==5.3.1             # via -r requirements.txt, -r requirements_dev.in, -r requirements_doc.txt, docker-compose, pre-commit, sphinx-autoapi
 readme-renderer==26.0     # via twine
+regex==2020.5.14          # via black
 requests-toolbelt==0.9.1  # via twine
 requests==2.23.0          # via -r requirements.txt, -r requirements_dev.in, -r requirements_doc.txt, docker, docker-compose, requests-toolbelt, sphinx, twine
+rich==1.2.1               # via -r requirements.txt
 secretstorage==3.1.2      # via keyring
-six==1.14.0               # via -r requirements.txt, -r requirements_doc.txt, astroid, bcrypt, bleach, cryptography, docker, docker-compose, dockerpty, jsonschema, packaging, pip-tools, pynacl, pyrsistent, readme-renderer, tox, virtualenv, websocket-client
+six==1.15.0               # via -r requirements.txt, -r requirements_doc.txt, astroid, bcrypt, bleach, cryptography, docker, docker-compose, dockerpty, jsonschema, packaging, pip-tools, pynacl, pyrsistent, readme-renderer, tox, virtualenv, websocket-client
 snowballstemmer==2.0.0    # via -r requirements_doc.txt, sphinx
 sphinx-autoapi==1.3.0     # via -r requirements_doc.txt
 sphinx-press-theme==0.5.1  # via -r requirements_doc.txt
@@ -90,15 +95,15 @@ sphinxcontrib-qthelp==1.0.3  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via -r requirements_doc.txt, sphinx
 tabulate==0.8.7           # via -r requirements.txt
 texttable==1.6.2          # via -r requirements.txt, docker-compose
-toml==0.10.0              # via black, pre-commit, tox
-tox==3.15.0               # via -r requirements_dev.in
+toml==0.10.1              # via black, pre-commit, pytest-black, tox
+tox==3.15.1               # via -r requirements_dev.in
 tqdm==4.46.0              # via twine
 twine==3.1.1              # via -r requirements_dev.in
-typed-ast==1.4.1          # via -r requirements_doc.txt, astroid, mypy
-typing-extensions==3.7.4.2  # via mypy
+typed-ast==1.4.1          # via -r requirements_doc.txt, astroid, black, mypy
+typing-extensions==3.7.4.2  # via -r requirements.txt, mypy, rich
 unidecode==1.1.1          # via -r requirements_doc.txt, sphinx-autoapi
 urllib3==1.25.9           # via -r requirements.txt, -r requirements_doc.txt, requests
-virtualenv==20.0.20       # via pre-commit, tox
+virtualenv==20.0.21       # via pre-commit, tox
 watchdog==0.10.2          # via -r requirements_dev.in
 wcwidth==0.1.9            # via pytest
 webencodings==0.5.1       # via bleach
