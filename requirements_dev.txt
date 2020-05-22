@@ -32,7 +32,7 @@ docopt==0.6.2             # via -r requirements.txt, docker-compose
 docutils==0.16            # via -r requirements_doc.txt, readme-renderer, sphinx
 filelock==3.0.12          # via tox, virtualenv
 flake8-import-order==0.18.1  # via -r requirements_dev.in
-flake8==3.8.1             # via -r requirements_dev.in, pytest-flake8
+flake8==3.8.1             # via -r requirements_dev.in
 identify==1.4.16          # via pre-commit
 idna==2.9                 # via -r requirements.txt, -r requirements_doc.txt, requests
 imagesize==1.2.0          # via -r requirements_doc.txt, sphinx
@@ -70,10 +70,9 @@ pyparsing==2.4.7          # via -r requirements_doc.txt, packaging
 pyrsistent==0.16.0        # via -r requirements.txt, jsonschema
 git+https://github.com/Abstract-Tech/pytest-black.git#egg=pytest-black  # via -r requirements_dev.in
 pytest-cov==2.8.1         # via -r requirements_dev.in
-git+https://github.com/Abstract-Tech/pytest-flake8.git#egg=pytest-flake8  # via -r requirements_dev.in
 pytest-mock==3.1.0        # via -r requirements_dev.in
 pytest-runner==5.2        # via -r requirements_dev.in
-pytest==5.4.2             # via -r requirements_dev.in, pytest-black, pytest-cov, pytest-flake8, pytest-mock
+pytest==5.4.2             # via -r requirements_dev.in, pytest-black, pytest-cov, pytest-mock
 pytz==2020.1              # via -r requirements_doc.txt, babel
 pyyaml==5.3.1             # via -r requirements.txt, -r requirements_dev.in, -r requirements_doc.txt, docker-compose, pre-commit, sphinx-autoapi
 readme-renderer==26.0     # via twine
