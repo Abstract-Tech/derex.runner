@@ -90,7 +90,7 @@ def reset_mailslurper(project):
 @ensure_project
 def compile_theme(project):
     """Compile theme sass files"""
-    from derex.runner.compose_utils import run_compose
+    from derex.runner.ddc import run_ddc_project
 
     if project.themes_dir is None:
         click.echo("No theme directory present in this project")
@@ -108,7 +108,7 @@ def compile_theme(project):
             paver compile_sass --theme-dirs /openedx/themes --themes {themes}
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
-    run_compose(args, project=DebugBaseImageProject(), exit_afterwards=True)
+    run_ddc_project(args, DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command()
@@ -129,7 +129,7 @@ def create_bucket(project):
 @ensure_project
 def reset_rabbitmq(project):
     """Create rabbitmq vhost"""
-    from derex.runner.compose_utils import run_compose
+    from derex.runner.ddc import run_ddc_services
 
     vhost = f"{project.name}_edxqueue"
     args = [
@@ -142,7 +142,7 @@ def reset_rabbitmq(project):
         rabbitmqctl set_permissions -p {vhost} guest ".*" ".*" ".*"
         """,
     ]
-    run_compose(args, exit_afterwards=True)
+    run_ddc_services(args, exit_afterwards=True)
     click.echo(f"Rabbitmq vhost {vhost} created")
     return 0
 
@@ -242,7 +242,7 @@ def update_minio(old_key: str):
     If your read your current SecretKey, it means the current credentials are correct and you don't need
     to update your keys.
     """
-    from derex.runner.compose_utils import run_compose
+    from derex.runner.ddc import run_ddc_services
 
     # We need to stop minio after it's done re-keying. To this end, we use the expect package
     script = "apk add expect --no-cache "
@@ -254,7 +254,7 @@ def update_minio(old_key: str):
     expected_string = "Rotation complete, please make sure to unset MINIO_ACCESS_KEY_OLD and MINIO_SECRET_KEY_OLD envs"
     script += f" && expect -c 'spawn /usr/bin/minio server /data; expect \"{expected_string}\" {{ close; exit 0 }}'"
     args = ["run", "--rm", "--entrypoint", "/bin/sh", "-T", "minio", "-c", script]
-    run_compose(args, exit_afterwards=False)
+    run_ddc_services(args, exit_afterwards=False)
     click.echo("Minio server rekeying finished")
 
 

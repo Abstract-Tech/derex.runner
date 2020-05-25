@@ -17,5 +17,5 @@ def test_abspath_from_egg():
 
     assert derex.runner.utils.abspath_from_egg("derex.runner", "derex/runner/utils.py")
     assert derex.runner.utils.abspath_from_egg(
-        "derex.runner", "derex/runner/templates/local.yml.j2"
+        "derex.runner", "derex/runner/templates/docker-compose-project.yml.j2"
     )

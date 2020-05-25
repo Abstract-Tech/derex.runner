@@ -10,12 +10,14 @@ hookspec = pluggy.HookspecMarker("derex.runner")
 
 
 @hookspec
-def compose_options() -> Dict[str, Union[str, float, int, List[str]]]:
+def ddc_services_options() -> Dict[str, Union[str, float, int, List[str]]]:
     """Return a dict describing how to add this plugin.
     The dict `name` and `priority` keys will be used to determine ordering.
-    The `variant` key can have values `services` or `openedx`.
     The `options` key contains a list of strings pointing to docker-compose yml files
     suitable to be passed as options to docker-compose.
+
+    Called by ddc-services cli command.
+
     Example:
 
     .. code-block:: python
@@ -23,20 +25,22 @@ def compose_options() -> Dict[str, Union[str, float, int, List[str]]]:
         {
             "name": "addon",
             "priority": ">derex-local",
-            "variant": "openedx",
             "options": ["-f", "/path/to/docker-compose.yml"],
         }
     """
 
 
 @hookspec
-def local_compose_options(
+def ddc_project_options(
     project: Project,
 ) -> Dict[str, Union[str, float, int, List[str]]]:
     """Return a dict describing how to add this plugin to a local project.
     The dict `name` and `priority` keys will be used to determine ordering.
     The `options` key contains a list of strings pointing to docker-compose yml files
     suitable to be passed as options to docker-compose.
+
+    Called by ddc-project cli command.
+
     Example:
 
     .. code-block:: python

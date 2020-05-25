@@ -14,7 +14,7 @@ MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 
 
-def test_ddc_services(sys_argv, capsys):
+def test_ddc_services(sys_argv, capsys, monkeypatch):
     """Test the derex docker compose shortcut."""
     from derex.runner.ddc import ddc_services
 
@@ -30,6 +30,12 @@ def test_ddc_services(sys_argv, capsys):
         ddc_services()
     output = capsys.readouterr().out
     assert "adminer" in output
+
+    monkeypatch.setenv("DEREX_ETC_PATH", COMPLETE_PROJ / "derex_etc_dir")
+    with sys_argv(["ddc-services", "config"]):
+        ddc_services()
+    output = capsys.readouterr().out
+    assert "my-overridden-secret-password" in output
 
 
 def test_ddc_project(sys_argv, mocker, workdir_copy, capsys):
