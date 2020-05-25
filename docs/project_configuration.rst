@@ -67,7 +67,7 @@ Runmode
 
 A project can be in one of two runmodes: `debug` or `production`.
 
-In debug mode the edx servers are run with the Django `runserver` command, while
+In debug mode the Open edX servers are run with the Django `runserver` command, while
 in production `gunicorn` is used.
 
 Custom docker-compose.yml
