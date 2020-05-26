@@ -89,7 +89,7 @@ def create_database(database_name: str):
     """Create a database if doesn't exists"""
     client = get_mysql_client()
     logger.info(f'Creating database "{database_name}"...')
-    client.execute(f"CREATE DATABASE {database_name} CHARACTER SET utf8")
+    client.execute(f"CREATE DATABASE `{database_name}` CHARACTER SET utf8")
     logger.info(f'Successfully created database "{database_name}"')
 
 
@@ -105,7 +105,7 @@ def drop_database(database_name: str):
     """Drops the selected database"""
     client = get_mysql_client()
     logger.info(f'Dropping database "{database_name}"...')
-    client.execute(f"DROP DATABASE IF EXISTS {database_name};")
+    client.execute(f"DROP DATABASE IF EXISTS `{database_name}`;")
     logger.info(f'Successfully dropped database "{database_name}"')
 
 
