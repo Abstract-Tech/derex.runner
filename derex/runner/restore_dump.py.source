@@ -33,10 +33,10 @@ def get_connection(include_db=True):
 def restore_dump():
     admin_cursor = get_connection(include_db=False).cursor()
     admin_cursor.execute(
-        "DROP DATABASE IF EXISTS {}".format(settings.DATABASES["default"]["NAME"])
+        "DROP DATABASE IF EXISTS `{}`".format(settings.DATABASES["default"]["NAME"])
     )
     admin_cursor.execute(
-        "CREATE DATABASE {} CHARACTER SET utf8".format(
+        "CREATE DATABASE `{}` CHARACTER SET utf8".format(
             settings.DATABASES["default"]["NAME"]
         )
     )

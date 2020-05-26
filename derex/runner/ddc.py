@@ -65,8 +65,8 @@ def ddc_project():
     setup_logging()
     try:
         project = Project()
-    except ValueError:
-        click.echo("You need to run this command in a derex project")
+    except ValueError as exc:
+        click.echo(str(exc))
         sys.exit(1)
     compose_args, dry_run = ddc_parse_args(sys.argv)
     # If trying to start up containers, first check that needed services are running
