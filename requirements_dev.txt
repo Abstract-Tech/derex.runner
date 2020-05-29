@@ -32,8 +32,8 @@ docopt==0.6.2             # via -r requirements.txt, docker-compose
 docutils==0.16            # via -r requirements_doc.txt, readme-renderer, sphinx
 filelock==3.0.12          # via tox, virtualenv
 flake8-import-order==0.18.1  # via -r requirements_dev.in
-flake8==3.8.1             # via -r requirements_dev.in
-identify==1.4.16          # via pre-commit
+flake8==3.8.2             # via -r requirements_dev.in
+identify==1.4.17          # via pre-commit
 idna==2.9                 # via -r requirements.txt, -r requirements_doc.txt, requests
 imagesize==1.2.0          # via -r requirements_doc.txt, sphinx
 importlib-metadata==1.6.0  # via -r requirements.txt, flake8, jsonschema, keyring, pluggy, pre-commit, pytest, tox, twine, virtualenv
@@ -53,7 +53,7 @@ packaging==20.4           # via -r requirements_doc.txt, bleach, pytest, sphinx,
 paramiko==2.7.1           # via -r requirements.txt, docker
 pathspec==0.8.0           # via black
 pathtools==0.1.2          # via watchdog
-pip-tools==5.1.2          # via -r requirements_dev.in
+pip-tools==5.2.0          # via -r requirements_dev.in
 pkginfo==1.5.0.1          # via twine
 pluggy==0.13.1            # via -r requirements.txt, pytest, tox
 pprintpp==0.4.0           # via -r requirements.txt, rich
@@ -69,7 +69,7 @@ pynacl==1.3.0             # via -r requirements.txt, paramiko
 pyparsing==2.4.7          # via -r requirements_doc.txt, packaging
 pyrsistent==0.16.0        # via -r requirements.txt, jsonschema
 git+https://github.com/Abstract-Tech/pytest-black.git#egg=pytest-black  # via -r requirements_dev.in
-pytest-cov==2.8.1         # via -r requirements_dev.in
+pytest-cov==2.9.0         # via -r requirements_dev.in
 pytest-mock==3.1.0        # via -r requirements_dev.in
 pytest-runner==5.2        # via -r requirements_dev.in
 pytest==5.4.2             # via -r requirements_dev.in, pytest-black, pytest-cov, pytest-mock
@@ -84,8 +84,8 @@ secretstorage==3.1.2      # via keyring
 six==1.15.0               # via -r requirements.txt, -r requirements_doc.txt, astroid, bcrypt, bleach, cryptography, docker, docker-compose, dockerpty, jsonschema, packaging, pip-tools, pynacl, pyrsistent, readme-renderer, tox, virtualenv, websocket-client
 snowballstemmer==2.0.0    # via -r requirements_doc.txt, sphinx
 sphinx-autoapi==1.3.0     # via -r requirements_doc.txt
-sphinx-press-theme==0.5.1  # via -r requirements_doc.txt
-sphinx==3.0.3             # via -r requirements_doc.txt, sphinx-autoapi, sphinx-press-theme
+git+https://github.com/Abstract-Tech/sphinx_press_theme.git  # via -r requirements_doc.txt
+sphinx==3.0.4             # via -r requirements_doc.txt, sphinx-autoapi, sphinx-press-theme
 sphinxcontrib-applehelp==1.0.2  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-devhelp==1.0.2  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-htmlhelp==1.0.3  # via -r requirements_doc.txt, sphinx
