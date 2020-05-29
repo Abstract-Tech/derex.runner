@@ -12,25 +12,6 @@ AWS_QUERYSTRING_AUTH = True
 S3_USE_SIGV4 = True
 ORA2_FILEUPLOAD_BACKEND = "s3"
 
-# Hack lifted from tutor-minio
-# Configuring boto is required for ora2 because ora2 does not read
-# host/port/ssl settings from django. Hence this hack.
-# http://docs.pythonboto.org/en/latest/boto_config_tut.html
-import os
-
-
-os.environ["AWS_CREDENTIAL_FILE"] = "/tmp/boto.cfg"
-with open("/tmp/boto.cfg", "w") as f:
-    f.write(
-        """[Boto]
-is_secure = False
-[s3]
-host = {}
-calling_format = boto.s3.connection.OrdinaryCallingFormat""".format(
-            AWS_S3_HOST
-        )
-    )
-
 COURSE_IMPORT_EXPORT_STORAGE = DEFAULT_FILE_STORAGE
 USER_TASKS_ARTIFACT_STORAGE = DEFAULT_FILE_STORAGE
 
