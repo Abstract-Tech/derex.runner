@@ -4,6 +4,7 @@
 #
 #    pip-compile requirements_doc.in
 #
+-e git+https://github.com/Abstract-Tech/sphinx_press_theme.git#egg=sphinx_press_theme  # via -r requirements_doc.in
 alabaster==0.7.12         # via sphinx
 astroid==2.4.1            # via sphinx-autoapi
 babel==2.8.0              # via sphinx
@@ -24,8 +25,7 @@ requests==2.23.0          # via sphinx
 six==1.15.0               # via astroid, packaging
 snowballstemmer==2.0.0    # via sphinx
 sphinx-autoapi==1.3.0     # via -r requirements_doc.in
-git+https://github.com/Abstract-Tech/sphinx_press_theme.git  # via -r requirements_doc.in
-sphinx==3.0.4             # via -r requirements_doc.in, sphinx-autoapi
+sphinx==3.0.4             # via -r requirements_doc.in, sphinx-autoapi, sphinx-press-theme
 sphinxcontrib-applehelp==1.0.2  # via sphinx
 sphinxcontrib-devhelp==1.0.2  # via sphinx
 sphinxcontrib-htmlhelp==1.0.3  # via sphinx

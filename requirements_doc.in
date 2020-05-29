@@ -1,4 +1,4 @@
 Sphinx
 sphinx-autoapi
-git+https://github.com/Abstract-Tech/sphinx_press_theme.git
+-e git+https://github.com/Abstract-Tech/sphinx_press_theme.git#egg=sphinx_press_theme
 sphinx-press-theme
