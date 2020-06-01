@@ -90,6 +90,7 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
 COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
+    export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     pip install numpy -c /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse gevent "whitenoise[brotli]<5"
@@ -113,7 +114,7 @@ COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install "whitenoise[brotli]<5" flower gevent --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install --trusted-host pypi.abzt.de --find-links http://pypi.abzt.de/alpine-3.11 --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt && \
+    pip install --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt && \
     `# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option` \
     `# It s not very clear why it was pinned in the first place` \
     pip install gunicorn==19.10.0
