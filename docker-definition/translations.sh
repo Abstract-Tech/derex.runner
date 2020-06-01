@@ -5,6 +5,8 @@ if [ \! -f /root/.transifexrc-orig ]; then
     echo "Transifex credentials unset. Building without translations."
     ls -la /root/
     exit 0
+else
+    echo Translations found.
 fi
 
 set -x
