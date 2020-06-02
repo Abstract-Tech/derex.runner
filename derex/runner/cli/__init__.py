@@ -50,7 +50,7 @@ def derex(ctx):
 
     click.echo(derex.get_help(ctx) + "\n")
 
-    from derex.runner.docker import get_exposed_container_names
+    from derex.runner.docker_utils import get_exposed_container_names
 
     container_names = get_exposed_container_names()
     if not container_names:
@@ -81,7 +81,7 @@ def reset_mailslurper(project):
     """Reset the mailslurper database.
     """
     from derex.runner.mysql import drop_database
-    from derex.runner.docker import load_dump
+    from derex.runner.docker_utils import load_dump
 
     drop_database("mailslurper")
     click.echo("Priming mailslurper database")
@@ -120,7 +120,7 @@ def compile_theme(project):
 @ensure_project
 def create_bucket(project):
     """Create S3 buckets on Minio"""
-    from derex.runner.docker import run_minio_shell
+    from derex.runner.docker_utils import run_minio_shell
 
     click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
     command = f"mc mb --ignore-existing local/{project.name}; "
@@ -228,7 +228,7 @@ def settings(project: Project, settings: Optional[Any]):
 
 @debug.command()
 def minio_shell():
-    from derex.runner.docker import run_minio_shell
+    from derex.runner.docker_utils import run_minio_shell
 
     run_minio_shell()
 

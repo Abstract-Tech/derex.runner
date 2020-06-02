@@ -8,7 +8,7 @@ The functions have to be reachable under the common name `ddc_project_options`
 so a class is put in place to hold each of them.
 """
 from derex.runner import hookimpl
-from derex.runner.docker import image_exists
+from derex.runner.docker_utils import image_exists
 from derex.runner.local_appdir import DEREX_DIR
 from derex.runner.local_appdir import ensure_dir
 from derex.runner.project import Project

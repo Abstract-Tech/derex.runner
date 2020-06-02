@@ -60,7 +60,7 @@ def final(ctx, project: Project):
 @ensure_project
 def final_refresh(ctx, project: Project):
     """Also pull base docker image before starting building"""
-    from derex.runner.docker import pull_images
+    from derex.runner.docker_utils import pull_images
 
     pull_images([project.base_image, project.final_base_image])
     ctx.forward(final)

@@ -1,6 +1,6 @@
-from derex.runner.docker import check_services
-from derex.runner.docker import client as docker_client
-from derex.runner.docker import wait_for_service
+from derex.runner.docker_utils import check_services
+from derex.runner.docker_utils import client as docker_client
+from derex.runner.docker_utils import wait_for_service
 from functools import wraps
 from pymongo import MongoClient
 from typing import cast

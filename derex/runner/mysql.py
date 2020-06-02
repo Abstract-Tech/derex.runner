@@ -1,8 +1,8 @@
 from derex.runner.ddc import run_ddc_project
 from derex.runner.ddc import run_ddc_services
-from derex.runner.docker import check_services
-from derex.runner.docker import client as docker_client
-from derex.runner.docker import wait_for_service
+from derex.runner.docker_utils import check_services
+from derex.runner.docker_utils import client as docker_client
+from derex.runner.docker_utils import wait_for_service
 from derex.runner.project import Project
 from derex.runner.utils import abspath_from_egg
 from typing import cast
