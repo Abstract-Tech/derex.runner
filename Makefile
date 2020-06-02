@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help requirements requirements-refresh requirements-clean
+.PHONY: clean clean-test clean-pyc clean-build docs help requirements requirements-refresh requirements-clean executable
 .DEFAULT_GOAL := help
 
 define BROWSER_PYSCRIPT
@@ -97,3 +97,6 @@ requirements_doc.txt: requirements_doc.in
 
 requirements_dev.txt: requirements_dev.in requirements_doc.in
 	pip-compile requirements_dev.in > requirements_dev.txt
+
+executable: ## Build a single executable file using pyinstaller
+	$(MAKE) -C bundle executable

@@ -3,6 +3,17 @@ stages:
     variables:
       PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black
     jobs:
+      - job: PyInstallerBuild
+        pool:
+          vmImage: "ubuntu-18.04"
+        steps:
+          - template: prepare.yml
+
+          - script: |
+              pip install pyinstaller
+              make executable
+            displayName: "Build binary with pyinstaller"
+
       - job: RunPytests
         timeoutInMinutes: 40
         pool:
