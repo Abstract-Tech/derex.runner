@@ -1,4 +1,4 @@
 .PHONY: executable
 
 executable:
-	pyinstaller --clean --additional-hooks-dir=. executable.py -F -n derex
+	pyinstaller --hidden-import='pkg_resources.py2_warn' --clean --additional-hooks-dir=. executable.py -F -n derex
