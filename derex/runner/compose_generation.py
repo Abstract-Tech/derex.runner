@@ -22,7 +22,6 @@ from jinja2 import Template
 from pathlib import Path
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Union
 
 import logging
@@ -83,17 +82,18 @@ class BaseProject:
 class LocalServices:
     @staticmethod
     @hookimpl
-    def ddc_services_options() -> Optional[Dict[str, Union[str, List[str]]]]:
+    def ddc_services_options() -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.ddc_services_options docstring.
         """
         local_path = (
             Path(os.getenv("DEREX_ETC_PATH", DEREX_ETC_PATH))
             / "docker-compose-services.yml"
         )
-        if not local_path.is_file():
-            return None
+        options: List[str] = []
+        if local_path.is_file():
+            options = ["-f", str(local_path)]
         return {
-            "options": ["-f", str(local_path)],
+            "options": options,
             "name": "local-services",
             "priority": "_end",
         }
@@ -102,15 +102,14 @@ class LocalServices:
 class LocalProject:
     @staticmethod
     @hookimpl
-    def ddc_project_options(
-        project: Project,
-    ) -> Optional[Dict[str, Union[str, List[str]]]]:
+    def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.ddc_project_options docstring
         """
-        if project.local_compose is None:
-            return None
+        options: List[str] = []
+        if project.local_compose:
+            options = ["-f", str(project.local_compose)]
         return {
-            "options": ["-f", str(project.local_compose)],
+            "options": options,
             "name": "local-project",
             "priority": "_end",
         }
@@ -119,15 +118,13 @@ class LocalProject:
 class LocalProjectRunmode:
     @staticmethod
     @hookimpl
-    def ddc_project_options(
-        project: Project,
-    ) -> Optional[Dict[str, Union[str, List[str]]]]:
+    def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.ddc_project_options docstring
         """
         local_path = project.root / f"docker-compose-{project.runmode.value}.yml"
-        if not local_path.is_file():
-            return None
-        options = ["-f", str(local_path)]
+        options: List[str] = []
+        if local_path.is_file():
+            options = ["-f", str(local_path)]
         return {"options": options, "name": "local-project-runmode", "priority": "_end"}
 
 
