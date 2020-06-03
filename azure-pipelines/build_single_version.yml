@@ -22,7 +22,7 @@ steps:
     displayName: "Remove Haskell compiler and cached apt archives to save disk space"
 
   - script: |
-      if [ "$TRANSIFEX_USERNAME" == "$(TRANSIFEX_USERNAME)" ] || [ "$TRANSIFEX_PASSWORD" -eq '$(TRANSIFEX_PASSWORD)' ]; then
+      if [ "$TRANSIFEX_USERNAME" == '$(TRANSIFEX_USERNAME)' ] || [ "$TRANSIFEX_PASSWORD" == '$(TRANSIFEX_PASSWORD)' ]; then
           echo "Transifex credentials unset. Building without translations."
           exit 0
       fi
