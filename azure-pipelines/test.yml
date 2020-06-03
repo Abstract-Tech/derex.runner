@@ -15,14 +15,13 @@ stages:
             displayName: "Build binary with pyinstaller"
 
           - script: |
+              set -ex
               ln -s ./bundle/dist/derex ddc-project
               ln -s ./bundle/dist/derex ddc-services
-              ls -ltr
               ./bundle/dist/derex
               ./ddc-services ps
-              ./ddc-project ps
               cd tests/fixtures/minimal
-              ./ddc-project config
+              ../../../ddc-project config
             displayName: "Test pyinstaller created binary"
 
       - job: RunPytests
