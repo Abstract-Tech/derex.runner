@@ -14,6 +14,16 @@ stages:
               make executable
             displayName: "Build binary with pyinstaller"
 
+          - script: |
+              ./bundle/dist/derex
+              ln -s ./bundle/dist/derex ddc-project
+              ln -s ./bundle/dist/derex ddc-services
+              ./ddc-services ps
+              ./ddc-project ps
+              cd tests/fixtures/minimal
+              ./ddc-project config
+            displayName: "Test pyinstaller created binary"
+
       - job: RunPytests
         timeoutInMinutes: 40
         pool:
