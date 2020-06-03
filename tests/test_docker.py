@@ -10,10 +10,10 @@ MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 
 
 def test_ensure_volumes_present(mocker):
-    from derex.runner.docker import ensure_volumes_present
-    from derex.runner.docker import VOLUMES
+    from derex.runner.docker_utils import ensure_volumes_present
+    from derex.runner.docker_utils import VOLUMES
 
-    client = mocker.patch("derex.runner.docker.client")
+    client = mocker.patch("derex.runner.docker_utils.client")
 
     client.volumes.list.return_value = []
     ensure_volumes_present()
@@ -28,9 +28,9 @@ def test_ensure_volumes_present(mocker):
 
 
 def test_check_services(mocker):
-    from derex.runner.docker import check_services
+    from derex.runner.docker_utils import check_services
 
-    client = mocker.patch("derex.runner.docker.client")
+    client = mocker.patch("derex.runner.docker_utils.client")
 
     client.containers.get.return_value.status = "running"
     assert check_services(["mysql"])
@@ -42,12 +42,12 @@ def test_check_services(mocker):
 
 
 def test_wait_for_service(mocker):
-    from derex.runner.docker import wait_for_service
+    from derex.runner.docker_utils import wait_for_service
 
     container = mocker.MagicMock()
     container.exec_run.return_value = mocker.MagicMock(exit_code=0)
 
-    client = mocker.patch("derex.runner.docker.client")
+    client = mocker.patch("derex.runner.docker_utils.client")
     client.containers.get.return_value = container
 
     wait_for_service("mysql", 'mysql -psecret -e "SHOW DATABASES"', 1)
@@ -56,10 +56,10 @@ def test_wait_for_service(mocker):
 
 
 def test_get_final_image(mocker):
-    from derex.runner.docker import image_exists
+    from derex.runner.docker_utils import image_exists
 
     mocker.patch(
-        "derex.runner.docker.docker.APIClient",
+        "derex.runner.docker_utils.docker.APIClient",
         return_value=mocker.Mock(
             images=mocker.Mock(return_value=DOCKER_DAEMON_IMAGES_RESPONSE)
         ),

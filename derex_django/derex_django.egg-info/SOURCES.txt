@@ -1,0 +1,10 @@
+README.rst
+setup.py
+derex_django/__init__.py
+derex_django/app.py
+derex_django.egg-info/PKG-INFO
+derex_django.egg-info/SOURCES.txt
+derex_django.egg-info/dependency_links.txt
+derex_django.egg-info/entry_points.txt
+derex_django.egg-info/not-zip-safe
+derex_django.egg-info/top_level.txt

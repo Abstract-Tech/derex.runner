@@ -1,5 +1,5 @@
-from derex.runner.docker import build_image
-from derex.runner.docker import docker_has_experimental
+from derex.runner.docker_utils import build_image
+from derex.runner.docker_utils import docker_has_experimental
 from derex.runner.project import Project
 
 import logging

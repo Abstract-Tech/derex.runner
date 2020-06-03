@@ -80,7 +80,7 @@ def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
     from derex.runner.ddc import ddc_services
 
     mocker.patch("derex.runner.ddc.check_services", return_value=True)
-    client = mocker.patch("derex.runner.docker.client")
+    client = mocker.patch("derex.runner.docker_utils.client")
     client.containers.get.return_value.exec_run.side_effect = [
         SimpleNamespace(exit_code=-1)
     ] + list(repeat(SimpleNamespace(exit_code=0), 10))

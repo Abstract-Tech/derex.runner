@@ -8,6 +8,7 @@ from click_plugins import with_plugins
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
+from derex.runner.project import ProjectNotFound
 from derex.runner.project import ProjectRunMode
 from derex.runner.secrets import HAS_MASTER_SECRET
 from rich import box
@@ -38,15 +39,18 @@ def derex(ctx):
 
     try:
         ctx.obj = Project()
-    except ValueError:
+    except ProjectNotFound:
         pass
+    except Exception as ex:
+        logger.error("\n".join(map(str, ex.args)))
+        sys.exit(1)
 
     if ctx.invoked_subcommand:
         return
 
     click.echo(derex.get_help(ctx) + "\n")
 
-    from derex.runner.docker import get_exposed_container_names
+    from derex.runner.docker_utils import get_exposed_container_names
 
     container_names = get_exposed_container_names()
     if not container_names:
@@ -77,7 +81,7 @@ def reset_mailslurper(project):
     """Reset the mailslurper database.
     """
     from derex.runner.mysql import drop_database
-    from derex.runner.docker import load_dump
+    from derex.runner.docker_utils import load_dump
 
     drop_database("mailslurper")
     click.echo("Priming mailslurper database")
@@ -116,7 +120,7 @@ def compile_theme(project):
 @ensure_project
 def create_bucket(project):
     """Create S3 buckets on Minio"""
-    from derex.runner.docker import run_minio_shell
+    from derex.runner.docker_utils import run_minio_shell
 
     click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
     command = f"mc mb --ignore-existing local/{project.name}; "
@@ -224,7 +228,7 @@ def settings(project: Project, settings: Optional[Any]):
 
 @debug.command()
 def minio_shell():
-    from derex.runner.docker import run_minio_shell
+    from derex.runner.docker_utils import run_minio_shell
 
     run_minio_shell()
 

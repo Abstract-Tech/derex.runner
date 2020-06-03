@@ -31,7 +31,7 @@ def test_derex_compile_theme(workdir_copy, sys_argv):
 def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
     """Test the open edx ironwood docker compose shortcut."""
     mocker.patch("derex.runner.ddc.check_services", return_value=True)
-    client = mocker.patch("derex.runner.docker.client")
+    client = mocker.patch("derex.runner.docker_utils.client")
     client.containers.get.return_value.exec_run.side_effect = [
         SimpleNamespace(exit_code=-1)
     ] + list(repeat(SimpleNamespace(exit_code=0), 10))
@@ -91,10 +91,10 @@ def test_derex_runmode_wrong(testproj):
 
 
 def test_derex_cli_group_no_containers_running(monkeypatch):
-    from derex.runner import docker
+    from derex.runner import docker_utils
 
     # Run when no container is running
-    monkeypatch.setattr(docker, "get_exposed_container_names", lambda: ())
+    monkeypatch.setattr(docker_utils, "get_exposed_container_names", lambda: ())
     result = runner.invoke(derex_cli_group, catch_exceptions=False)
     assert (
         "These containers are running and exposing an HTTP server on port 80"
@@ -103,11 +103,11 @@ def test_derex_cli_group_no_containers_running(monkeypatch):
 
 
 def test_derex_cli_group_one_container_running(monkeypatch):
-    from derex.runner import docker
+    from derex.runner import docker_utils
 
     # Test output when containers are running
     monkeypatch.setattr(
-        docker,
+        docker_utils,
         "get_exposed_container_names",
         lambda: (
             (
