@@ -1,11 +1,11 @@
+from derex.runner.plugins import Registry
 from itertools import permutations
 
+import logging
 import pytest
 
 
 def test_registry_exception():
-    from derex.runner.plugins import Registry
-
     registry = Registry()
     registry.add("one", "one", "badlocation")
 
@@ -17,8 +17,6 @@ def test_registry_exception():
 
 
 def test_registry_basic():
-    from derex.runner.plugins import Registry
-
     registry = Registry()
     registry.add("last", "I should be last", "_end")
     registry.add("first", "I should be first", "_begin")
@@ -40,8 +38,6 @@ def test_registry_basic():
 
 
 def test_registry_add_list():
-    from derex.runner.plugins import Registry
-
     # TODO: adding a third elemnt in between begin and end makes this not
     # work anymore. It's good enough for what we're using it (allowing users
     # to hint where they want their options) but can be greatly improved.
@@ -64,8 +60,6 @@ def test_registry_add_list():
 
 
 def test_registry_add_list_impossible():
-    from derex.runner.plugins import Registry
-
     to_add = [
         ("zero", "zero", "_begin"),
         ("one", "one", "<two"),
@@ -75,3 +69,45 @@ def test_registry_add_list_impossible():
     registry = Registry()
     with pytest.raises(ValueError):
         registry.add_list(to_add)
+
+
+def test_plugin_sorting_and_validation(caplog):
+    from derex.runner.plugins import get_sorted_plugins
+
+    caplog.set_level(logging.DEBUG)
+    plugins = [
+        {"name": "missing-priority", "options": ["no", "priority"]},
+        {"priority": "<missing-name", "options": ["no", "name"]},
+        {"name": "missing-options", "priority": ">missing-options"},
+        {
+            "name": "valid-with-options",
+            "priority": "_begin",
+            "options": ["this", "list", "should", "contain"],
+        },
+        {
+            "name": "valid-with-options-and-priority",
+            "priority": ">valid-with-options",
+            "options": ["only", "valid"],
+        },
+        {
+            "name": "valid-with-empty-options",
+            "priority": "_end",
+            "options": ["plugins"],
+        },
+        {
+            "name": "invalid-options-type",
+            "priority": "<valid-with-empty-options",
+            "options": "not a valid plugin",
+        },
+    ]
+
+    plugins = get_sorted_plugins(plugins)
+
+    assert caplog.text.count("Missing 'priority' field.") == 1
+    assert caplog.text.count("Missing value for 'priority' field") == 1
+    assert caplog.text.count("Missing 'name' field.") == 1
+    assert caplog.text.count("Missing value for 'name' field") == 1
+    assert caplog.text.count("Missing 'options' field.") == 1
+    assert caplog.text.count("Plugins 'options' field must be a list.") == 2
+
+    assert plugins == ["this", "list", "should", "contain", "only", "valid", "plugins"]
