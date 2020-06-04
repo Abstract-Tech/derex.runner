@@ -6,7 +6,10 @@ steps:
       cacheHitVar: "ImagesSentinelHit"
     displayName: "Docker images sentinel cache"
 
-  - script: docker manifest inspect derex/openedx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') || echo '##vso[task.setvariable variable=needs_build]true'
+  - script: |
+      docker manifest inspect derex/openedx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') || echo '##vso[task.setvariable variable=needs_build]true'
+      set -ex
+      docker manifest inspect derex/openedx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
     displayName: "Set needs_build pipeline variable"
 
   - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
