@@ -6,12 +6,12 @@ steps:
       cacheHitVar: "ImagesSentinelHit"
     displayName: "Docker images sentinel cache"
 
-  - script: docker manifest inspect derex/edx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') || echo '##vso[task.setvariable variable=needs_build]true'
+  - script: docker manifest inspect derex/openedx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') || echo '##vso[task.setvariable variable=needs_build]true'
     displayName: "Set needs_build pipeline variable"
 
   - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     displayName: "Log into docker registry"
-    condition: ne(variables.needs_build, 'false')
+    condition: ne(variables.needs_push, 'false')
     env:
       DOCKER_USERNAME: $(DOCKER_USERNAME)
       DOCKER_PASSWORD: $(DOCKER_PASSWORD)
@@ -19,12 +19,12 @@ steps:
   - template: load_images.yml
     parameters:
       DOCKER_IMAGES_SLUG: $(DOCKER_IMAGES_SLUG)
-      CONDITION: "ne(variables.needs_build, 'false')"
+      CONDITION: "ne(variables.needs_push, 'false')"
 
-  - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
-    condition: ne(variables.needs_build, 'false')
+  - script: docker push derex/openedx-$(DOCKER_IMAGES_SLUG)-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
+    condition: ne(variables.needs_push, 'false')
     displayName: "Push $(DOCKER_IMAGES_SLUG) dev image"
 
-  - script: docker push derex/edx-$(DOCKER_IMAGES_SLUG)-nostatic:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
-    condition: ne(variables.needs_build, 'false')
+  - script: docker push derex/openedx-$(DOCKER_IMAGES_SLUG)-nostatic:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
+    condition: ne(variables.needs_push, 'false')
     displayName: "Push $(DOCKER_IMAGES_SLUG) nostatic image"
