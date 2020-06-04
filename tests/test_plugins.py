@@ -1,5 +1,6 @@
 from itertools import permutations
 
+import logging
 import pytest
 
 
@@ -75,3 +76,45 @@ def test_registry_add_list_impossible():
     registry = Registry()
     with pytest.raises(ValueError):
         registry.add_list(to_add)
+
+
+def test_plugin_sorting_and_validation(caplog):
+    from derex.runner.plugins import sort_and_validate_plugins
+
+    caplog.set_level(logging.DEBUG)
+    plugins = [
+        {"name": "missing-priority", "options": ["no", "priority"]},
+        {"priority": "<missing-name", "options": ["no", "name"]},
+        {"name": "missing-options", "priority": ">missing-options"},
+        {
+            "name": "valid-with-options",
+            "priority": "_begin",
+            "options": ["this", "list", "should", "contain"],
+        },
+        {
+            "name": "valid-with-options-and-priority",
+            "priority": ">valid-with-options",
+            "options": ["only", "valid"],
+        },
+        {
+            "name": "valid-with-empty-options",
+            "priority": "_end",
+            "options": ["plugins"],
+        },
+        {
+            "name": "invalid-options-type",
+            "priority": "<valid-with-empty-options",
+            "options": "not a valid plugin",
+        },
+    ]
+
+    plugins = sort_and_validate_plugins(plugins)
+
+    assert caplog.text.count("Missing 'priority' field.") == 1
+    assert caplog.text.count("Missing value for 'priority' field") == 1
+    assert caplog.text.count("Missing 'name' field.") == 1
+    assert caplog.text.count("Missing value for 'name' field") == 1
+    assert caplog.text.count("Missing 'options' field.") == 1
+    assert caplog.text.count("Plugins 'options' field must be a list.") == 2
+
+    assert plugins == ["this", "list", "should", "contain", "only", "valid", "plugins"]

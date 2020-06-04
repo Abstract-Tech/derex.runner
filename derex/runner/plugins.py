@@ -5,7 +5,11 @@ from pprint import pformat
 from typing import Dict
 from typing import List
 
+import logging
 import pluggy
+
+
+logger = logging.getLogger(__name__)
 
 
 def setup_plugin_manager():
@@ -219,7 +223,7 @@ class Registry(object):
                 raise ValueError(f"Could not add these to registry:\n{pformat(to_add)}")
 
 
-def get_sorted_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
+def sort_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
     """This function sorts lists of items using a Registry.
 
     Items are contained in dictionaries specifing a name and a priority which will
@@ -245,3 +249,34 @@ def get_sorted_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
         ]
     )
     return [item for lst in registry for item in lst]
+
+
+def sort_and_validate_plugins(plugins):
+    validated_plugins = []
+    for plugin in plugins:
+        valid = True
+        if not plugin:
+            logger.info(f"Skip loading empty plugin '{plugin}'")
+            valid = False
+        for field in ["name", "priority", "options"]:
+            if field not in plugin.keys():
+                logger.error(
+                    f"Skip loading plugin '{plugin}'. Missing '{field}' field."
+                )
+                valid = False
+        for field in ["name", "priority"]:
+            if not plugin.get(field):
+                logger.error(
+                    f"Skip loading plugin '{plugin}'. Missing value for '{field}' field"
+                )
+                valid = False
+        if not isinstance(plugin.get("options"), list):
+            logger.error(
+                f"Skip loading plugin '{plugin}'. Plugins 'options' field must be a list."
+            )
+            valid = False
+        if valid:
+            validated_plugins.append(plugin)
+
+    sorted_plugins = sort_items(validated_plugins, "options")
+    return sorted_plugins

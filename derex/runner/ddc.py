@@ -8,8 +8,8 @@ from derex.runner.docker_utils import check_services
 from derex.runner.docker_utils import ensure_volumes_present
 from derex.runner.docker_utils import is_docker_working
 from derex.runner.logging_utils import setup_logging
-from derex.runner.plugins import get_sorted_items
 from derex.runner.plugins import setup_plugin_manager
+from derex.runner.plugins import sort_and_validate_plugins
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
 from tempfile import mkstemp
@@ -98,8 +98,8 @@ def run_ddc_services(
     Used by ddc-services cli command.
     """
     ensure_volumes_present()
-    plugins_argv = get_sorted_items(
-        setup_plugin_manager().hook.ddc_services_options(), "options"
+    plugins_argv = sort_and_validate_plugins(
+        setup_plugin_manager().hook.ddc_services_options()
     )
     compose_argv = plugins_argv + argv
     run_docker_compose(compose_argv, dry_run, exit_afterwards)
@@ -117,8 +117,8 @@ def run_ddc_project(
 
     Used by ddc-project cli command.
     """
-    plugins_argv = get_sorted_items(
-        setup_plugin_manager().hook.ddc_project_options(project=project), "options",
+    plugins_argv = sort_and_validate_plugins(
+        setup_plugin_manager().hook.ddc_project_options(project=project),
     )
     compose_argv = plugins_argv + argv
     run_docker_compose(compose_argv, dry_run, exit_afterwards)
