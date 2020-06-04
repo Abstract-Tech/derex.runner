@@ -190,7 +190,7 @@ def get_running_containers() -> Dict:
 
 def get_exposed_container_names() -> List:
     result = []
-    for name, container in get_running_containers().items():
+    for container in get_running_containers().values():
         names = container["NetworkSettings"]["Networks"]["derex"]["Aliases"]
         matching_names = list(filter(lambda el: el.endswith("localhost.derex"), names))
         if matching_names:
@@ -199,7 +199,9 @@ def get_exposed_container_names() -> List:
             )
             result.append(
                 tuple(
-                    map(lambda el: "http://" + el.replace(".derex", ""), matching_names)
+                    map(
+                        lambda el: "http://" + re.sub(".derex$", "", el), matching_names
+                    )
                 )
             )
     return result
