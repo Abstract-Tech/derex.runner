@@ -102,6 +102,38 @@ def test_derex_cli_group_no_containers_running(monkeypatch):
     )
 
 
+def test_get_exposed_container_names(monkeypatch):
+    from derex.runner import docker_utils
+
+    response = {
+        "derex_services_minio_1": {
+            "NetworkSettings": {
+                "Networks": {
+                    "derex": {
+                        "Aliases": ["minio.localhost.derex"],
+                        "IPAddress": "172.11.0.12",
+                    }
+                }
+            }
+        },
+        "derex-themes_lms_1": {
+            "NetworkSettings": {
+                "Networks": {
+                    "derex": {
+                        "Aliases": ["studio.derex-themes.localhost.derex"],
+                        "IPAddress": "172.11.0.12",
+                    }
+                }
+            }
+        },
+    }
+    monkeypatch.setattr(docker_utils, "get_running_containers", lambda: response)
+    result = docker_utils.get_exposed_container_names()
+
+    assert result[0][0] == "http://minio.localhost"
+    assert result[1][0] == "http://studio.derex-themes.localhost"
+
+
 def test_derex_cli_group_one_container_running(monkeypatch):
     from derex.runner import docker_utils
 
