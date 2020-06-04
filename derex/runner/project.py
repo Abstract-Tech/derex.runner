@@ -212,12 +212,12 @@ class Project:
         self.openedx_version = OpenEdXVersions[
             self.config.get("openedx_version", "ironwood")
         ]
-        image_prefix = self.openedx_version.value["docker_image_prefix"]
+        source_image_prefix = self.openedx_version.value["docker_image_prefix"]
         self.base_image = self.config.get(
-            "base_image", f"{image_prefix}-dev:{__version__}"
+            "base_image", f"{source_image_prefix}-dev:{__version__}"
         )
         self.final_base_image = self.config.get(
-            "final_base_image", f"{image_prefix}-nostatic:{__version__}"
+            "final_base_image", f"{source_image_prefix}-nostatic:{__version__}"
         )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
