@@ -52,6 +52,9 @@ class Project:
     # Tne image name of the base image for the final production project build
     final_base_image: str
 
+    # The named version of Open edX to use
+    openedx_version: "OpenEdXVersions"
+
     #: The directory containing requirements, if defined
     requirements_dir: Optional[Path] = None
 
@@ -206,11 +209,15 @@ class Project:
         self.root = find_project_root(Path(path))
         config_path = self.root / CONF_FILENAME
         self.config = yaml.load(config_path.open(), Loader=yaml.FullLoader)
+        self.openedx_version = OpenEdXVersions[
+            self.config.get("openedx_version", "ironwood")
+        ]
+        image_prefix = self.openedx_version.value["docker_image_prefix"]
         self.base_image = self.config.get(
-            "base_image", f"derex/edx-ironwood-dev:{__version__}"
+            "base_image", f"{image_prefix}-dev:{__version__}"
         )
         self.final_base_image = self.config.get(
-            "final_base_image", f"derex/edx-ironwood-nostatic:{__version__}"
+            "final_base_image", f"{image_prefix}-nostatic:{__version__}"
         )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
