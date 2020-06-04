@@ -1,4 +1,3 @@
-from derex.runner.plugins import Registry
 from itertools import permutations
 
 import logging
@@ -6,6 +5,8 @@ import pytest
 
 
 def test_registry_exception():
+    from derex.runner.plugins import Registry
+
     registry = Registry()
     registry.add("one", "one", "badlocation")
 
@@ -17,6 +18,8 @@ def test_registry_exception():
 
 
 def test_registry_basic():
+    from derex.runner.plugins import Registry
+
     registry = Registry()
     registry.add("last", "I should be last", "_end")
     registry.add("first", "I should be first", "_begin")
@@ -38,6 +41,8 @@ def test_registry_basic():
 
 
 def test_registry_add_list():
+    from derex.runner.plugins import Registry
+
     # TODO: adding a third elemnt in between begin and end makes this not
     # work anymore. It's good enough for what we're using it (allowing users
     # to hint where they want their options) but can be greatly improved.
@@ -60,6 +65,8 @@ def test_registry_add_list():
 
 
 def test_registry_add_list_impossible():
+    from derex.runner.plugins import Registry
+
     to_add = [
         ("zero", "zero", "_begin"),
         ("one", "one", "<two"),
