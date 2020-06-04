@@ -72,7 +72,7 @@ def test_registry_add_list_impossible():
 
 
 def test_plugin_sorting_and_validation(caplog):
-    from derex.runner.plugins import get_sorted_plugins
+    from derex.runner.plugins import sort_and_validate_plugins
 
     caplog.set_level(logging.DEBUG)
     plugins = [
@@ -101,7 +101,7 @@ def test_plugin_sorting_and_validation(caplog):
         },
     ]
 
-    plugins = get_sorted_plugins(plugins)
+    plugins = sort_and_validate_plugins(plugins)
 
     assert caplog.text.count("Missing 'priority' field.") == 1
     assert caplog.text.count("Missing value for 'priority' field") == 1

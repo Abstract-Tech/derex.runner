@@ -223,7 +223,7 @@ class Registry(object):
                 raise ValueError(f"Could not add these to registry:\n{pformat(to_add)}")
 
 
-def get_sorted_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
+def sort_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
     """This function sorts lists of items using a Registry.
 
     Items are contained in dictionaries specifing a name and a priority which will
@@ -251,7 +251,7 @@ def get_sorted_items(dictionaries: List[Dict], item_key: str) -> List[Dict]:
     return [item for lst in registry for item in lst]
 
 
-def get_sorted_plugins(plugins):
+def sort_and_validate_plugins(plugins):
     validated_plugins = []
     for plugin in plugins:
         valid = True
@@ -278,5 +278,5 @@ def get_sorted_plugins(plugins):
         if valid:
             validated_plugins.append(plugin)
 
-    sorted_plugins = get_sorted_items(validated_plugins, "options")
+    sorted_plugins = sort_items(validated_plugins, "options")
     return sorted_plugins
