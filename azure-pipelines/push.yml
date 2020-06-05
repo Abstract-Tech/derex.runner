@@ -28,6 +28,6 @@ stages:
           vmImage: "ubuntu-18.04"
         variables:
           - name: DOCKER_IMAGES_SLUG
-            value: hawthorn
+            value: juniper
         steps:
           - template: push_single_version.yml
