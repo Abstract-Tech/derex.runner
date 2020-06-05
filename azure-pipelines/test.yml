@@ -3,7 +3,7 @@ stages:
     variables:
       PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black
     jobs:
-      - job: PyInstallerBuild
+      - job: PyInstallerBuildLinux
         pool:
           vmImage: "ubuntu-18.04"
         steps:
@@ -28,6 +28,35 @@ stages:
             inputs:
               pathToPublish: ./bundle/dist/derex
               artifactName: LinuxBinary
+
+      - job: PyInstallerBuildMacOs
+        pool:
+          vmImage: "macOS-10.14"
+        steps:
+          - template: prepare.yml
+
+          - script: |
+              pip install pyinstaller scrypt
+              # The Openssl version on MacOS 10.14 does not support scrypt
+              # so we pip install it and leave a trace to pyinstaller to pick it up
+              echo -e  "\nimport scrypt" >> bundle/executable.py
+              make executable
+            displayName: "Build binary with pyinstaller"
+
+          - script: |
+              set -ex
+              ln -s ./bundle/dist/derex ddc-project
+              ln -s ./bundle/dist/derex ddc-services
+              ./bundle/dist/derex
+              ./ddc-services ps
+              cd tests/fixtures/minimal
+              ../../../ddc-project config
+            displayName: "Test pyinstaller created binary"
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: ./bundle/dist/derex
+              artifactName: MacOSBinary
 
       - job: RunPytests
         timeoutInMinutes: 40
