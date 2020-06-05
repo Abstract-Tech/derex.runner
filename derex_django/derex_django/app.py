@@ -16,18 +16,10 @@ class DerexAppConfig(AppConfig):
     plugin_app = {
         PluginSettings.CONFIG: {
             ProjectType.LMS: {
-                SettingsType.PRODUCTION: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.AWS: {PluginSettings.RELATIVE_PATH: "app"},
                 SettingsType.COMMON: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.DEVSTACK: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.TEST: {PluginSettings.RELATIVE_PATH: "app"},
             },
             ProjectType.CMS: {
-                SettingsType.PRODUCTION: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.AWS: {PluginSettings.RELATIVE_PATH: "app"},
                 SettingsType.COMMON: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.DEVSTACK: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.TEST: {PluginSettings.RELATIVE_PATH: "app"},
             },
         },
     }
