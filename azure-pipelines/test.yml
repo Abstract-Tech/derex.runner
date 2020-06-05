@@ -16,17 +16,15 @@ stages:
 
           - script: |
               set -ex
-              ln -s ./bundle/dist/derex ddc-project
-              ln -s ./bundle/dist/derex ddc-services
               ./bundle/dist/derex
-              ./ddc-services ps
+              ./bundle/dist/ddc-services ps
               cd tests/fixtures/minimal
-              ../../../ddc-project config
+              ../../../bundle/dist/ddc-project config
             displayName: "Test pyinstaller created binary"
 
           - task: PublishBuildArtifacts@1
             inputs:
-              pathToPublish: ./bundle/dist/derex
+              pathToPublish: "./bundle/dist/*"
               artifactName: LinuxBinary
 
       - job: PyInstallerBuildMacOs
@@ -45,17 +43,15 @@ stages:
 
           - script: |
               set -ex
-              ln -s ./bundle/dist/derex ddc-project
-              ln -s ./bundle/dist/derex ddc-services
               ./bundle/dist/derex
-              ./ddc-services ps
+              ./bundle/dist/ddc-services ps
               cd tests/fixtures/minimal
-              ../../../ddc-project config
+              ../../../bundle/dist/ddc-project config
             displayName: "Test pyinstaller created binary"
 
           - task: PublishBuildArtifacts@1
             inputs:
-              pathToPublish: ./bundle/dist/derex
+              pathToPublish: "./bundle/dist/*"
               artifactName: MacOSBinary
 
       - job: RunPytests
