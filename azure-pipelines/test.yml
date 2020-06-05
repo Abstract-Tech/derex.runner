@@ -24,6 +24,11 @@ stages:
               ../../../ddc-project config
             displayName: "Test pyinstaller created binary"
 
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: ./bundle/dist/derex
+              artifactName: LinuxBinary
+
       - job: RunPytests
         timeoutInMinutes: 40
         pool:
