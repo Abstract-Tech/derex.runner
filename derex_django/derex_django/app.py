@@ -10,7 +10,7 @@ class DerexAppConfig(AppConfig):
     name = "derex_django"
 
     def ready(self):
-        monkey_patch_course_default_image()
+        # monkey_patch_course_default_image()
         write_boto_config_file()
 
     plugin_app = {
