@@ -24,7 +24,7 @@ stages:
 
           - task: PublishBuildArtifacts@1
             inputs:
-              pathToPublish: "./bundle/dist/*"
+              pathToPublish: ./bundle/dist/
               artifactName: LinuxBinary
 
       - job: PyInstallerBuildMacOs
@@ -51,7 +51,7 @@ stages:
 
           - task: PublishBuildArtifacts@1
             inputs:
-              pathToPublish: "./bundle/dist/*"
+              pathToPublish: ./bundle/dist/
               artifactName: MacOSBinary
 
       - job: RunPytests
