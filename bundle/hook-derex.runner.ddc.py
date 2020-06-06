@@ -11,9 +11,8 @@ datas += collect_data_files("derex.runner")
 datas += collect_data_files("compose", include_py_files=True)
 
 try:
-    import scrypt  # type: ignore # noqa: F403,F401
+    import _scrypt  # type: ignore # noqa: F403,F401
 
-    datas += copy_metadata("scrypt")
-    datas += collect_data_files("scrypt", include_py_files=True)
+    binaries = [(_scrypt.__file__, ".")]
 except ImportError:
     pass
