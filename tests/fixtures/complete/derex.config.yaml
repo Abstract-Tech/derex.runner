@@ -6,3 +6,5 @@ variables:
     production: { "foo": "baz" }
 
 openedx_version: ironwood
+
+image_prefix: derex/test-ironwood-complete
