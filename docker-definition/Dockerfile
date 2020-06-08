@@ -92,6 +92,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     pip install numpy -c /tmp/derex.txt && \
+    `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
+    sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse gevent "whitenoise[brotli]<5"
 

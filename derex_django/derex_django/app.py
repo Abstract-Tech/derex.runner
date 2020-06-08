@@ -10,24 +10,16 @@ class DerexAppConfig(AppConfig):
     name = "derex_django"
 
     def ready(self):
-        monkey_patch_course_default_image()
+        # monkey_patch_course_default_image()
         write_boto_config_file()
 
     plugin_app = {
         PluginSettings.CONFIG: {
             ProjectType.LMS: {
-                SettingsType.PRODUCTION: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.AWS: {PluginSettings.RELATIVE_PATH: "app"},
                 SettingsType.COMMON: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.DEVSTACK: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.TEST: {PluginSettings.RELATIVE_PATH: "app"},
             },
             ProjectType.CMS: {
-                SettingsType.PRODUCTION: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.AWS: {PluginSettings.RELATIVE_PATH: "app"},
                 SettingsType.COMMON: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.DEVSTACK: {PluginSettings.RELATIVE_PATH: "app"},
-                SettingsType.TEST: {PluginSettings.RELATIVE_PATH: "app"},
             },
         },
     }

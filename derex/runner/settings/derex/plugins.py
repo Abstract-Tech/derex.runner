@@ -10,9 +10,12 @@ AUTH_TOKENS = {}
 
 # This is at the bottom because it is going to load more settings after base settings are loaded
 
-# Load aws.py in plugins for reverse compatibility.  This can be removed after aws.py
-# is officially removed.
-plugin_settings.add_plugins(__name__, PROJECT_TYPE, plugin_constants.SettingsType.AWS)
+if hasattr(plugin_constants.SettingsType, "AWS"):
+    # Load aws.py in plugins for reverse compatibility.  This can be removed after aws.py
+    # is officially removed.
+    plugin_settings.add_plugins(
+        __name__, PROJECT_TYPE, plugin_constants.SettingsType.AWS
+    )
 
 # We continue to load production.py over aws.py
 

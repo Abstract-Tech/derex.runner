@@ -62,7 +62,7 @@ def show_databases() -> List[Tuple[str, int, int]]:
         query_result = cast(Tuple[Tuple[str]], client.fetchall())
         databases_names = [row[0] for row in query_result]
         for database_name in databases_names:
-            client.execute(f"USE {database_name}")
+            client.execute(f"USE `{database_name}`")
             table_count = client.execute("SHOW TABLES;")
             try:
                 client.execute("SELECT COUNT(*) FROM auth_user;")
