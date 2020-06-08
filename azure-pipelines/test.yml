@@ -42,11 +42,25 @@ stages:
             displayName: "Build binary with pyinstaller"
 
           - script: |
+              #brew cask install docker
+              brew cask install https://raw.githubusercontent.com/Homebrew/homebrew-cask/b8c67034bd78f9585b1316564f223b97055bc0dc/Casks/docker.rb
+              sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
+              /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+
+              while ! docker info 2>/dev/null ; do
+                sleep 2
+                echo "Waiting for docker service to be in the running state"
+              done
+              docker info
+            displayName: Install Docker for MacOS
+
+          - script: |
               #set -ex
               ./bundle/dist/derex --help
               ./bundle/dist/ddc-services --help
-              # cd tests/fixtures/minimal
-              # ../../../bundle/dist/ddc-project config
+              ./bundle/dist/ddc-services ps
+              cd tests/fixtures/minimal
+              ../../../bundle/dist/ddc-project config
               true
             displayName: "Test pyinstaller created binary"
 
