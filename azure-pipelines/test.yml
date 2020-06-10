@@ -224,24 +224,6 @@ stages:
           - script: |
               set -ex
               cd tests/fixtures/complete
-              docker images
-              # This should not be needed, but for some reason Azure does not tag the image
-              docker tag $(docker images -q|head -n1) complete/openedx-themes
-              docker images
-
-              echo Installing dive
-              wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
-              DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
-              echo Analyzing image
-              dive --ci complete/openedx-themes
-            condition: always()
-            displayName: Test the complete image with dive
-            continueOnError: true # Do not make the build fail because of this step, for now
-            timeoutInMinutes: 40
-
-          - script: |
-              set -ex
-              cd tests/fixtures/complete
               ddc-project up -d
               sleep 5  # Give it time to start up
             displayName: "Start production image lms/cms"
@@ -277,6 +259,24 @@ stages:
               cd tests/fixtures/complete; ddc-project config
             condition: always()
             displayName: "Show ddc-project config"
+
+          - script: |
+              set -ex
+              cd tests/fixtures/complete
+              docker images
+              # This should not be needed, but for some reason Azure does not tag the image
+              docker tag $(docker images -q|head -n1) complete/openedx-themes
+              docker images
+
+              echo Installing dive
+              wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
+              DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
+              echo Analyzing image
+              dive --ci complete/openedx-themes
+            condition: always()
+            displayName: Test the complete image with dive
+            continueOnError: true # Do not make the build fail because of this step, for now
+            timeoutInMinutes: 40
 
       - job: TestMinimal
         timeoutInMinutes: 40
