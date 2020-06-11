@@ -30,6 +30,7 @@ _settings_modules = [
     "search",
     "container_env",
     "plugins",
+    "auth",
 ]
 
 for setting_module in _settings_modules:
