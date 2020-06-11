@@ -1,4 +1,3 @@
-from packaging import __version__
 from packaging.version import parse as version_parse
 from path import Path
 
