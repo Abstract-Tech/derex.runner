@@ -1,7 +1,12 @@
 from openedx.core.lib.logsettings import get_logger_config
+from packaging.version import parse as version_parse
 
+import django
 import os
 import sys
+
+
+DJANGO_VERSION = version_parse(django.__version__)
 
 
 LOG_DIR = "/openedx/logs"
@@ -13,6 +18,7 @@ LOGGING = get_logger_config(
     local_loglevel="INFO",
     service_variant=SERVICE_VARIANT,
 )
+
 LOGGING["handlers"]["console"] = {
     "level": "INFO",
     "class": "logging.StreamHandler",
@@ -41,6 +47,12 @@ LOGGING["handlers"]["tracking"] = {
     "formatter": "raw",
 }
 LOGGING["loggers"][""]["handlers"] = ["console", "local", "error"]
+
+
+# Enable userid_context filter if on Juniper or later
+if DJANGO_VERSION > version_parse("2"):
+    LOGGING["handlers"]["console"]["filters"] = ["userid_context"]
+    LOGGING["handlers"]["local"]["filters"] = ["userid_context"]
 
 
 # TODO: Remove this when we are able to properly
