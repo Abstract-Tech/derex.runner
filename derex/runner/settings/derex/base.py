@@ -15,7 +15,7 @@ SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 DEREX_PROJECT = os.environ["DEREX_PROJECT"]
 
 _settings_modules = [
-    "django",
+    "django_settings",
     "mysql",
     "mongo",
     "caches",
