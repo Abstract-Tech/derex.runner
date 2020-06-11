@@ -116,7 +116,7 @@ COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install "whitenoise[brotli]<5" flower gevent --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
+    pip install "whitenoise[brotli]<5" flower gevent packaging --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt && \
     `# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option` \
