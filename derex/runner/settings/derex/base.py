@@ -29,6 +29,7 @@ _settings_modules = [
     "openedx_platform",
     "container_env",
     "plugins",
+    "auth",
 ]
 
 for setting_module in _settings_modules:
