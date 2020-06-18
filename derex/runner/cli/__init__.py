@@ -5,6 +5,7 @@ from .mongodb import mongodb
 from .mysql import mysql
 from .utils import ensure_project
 from click_plugins import with_plugins
+from derex.runner import __version__
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 @with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
 @click.group(invoke_without_command=True)
+@click.version_option(__version__)
 @click.pass_context
 @setup_logging_decorator
 def derex(ctx):
