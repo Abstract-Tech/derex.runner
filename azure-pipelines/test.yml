@@ -187,7 +187,7 @@ stages:
 
           - script: |
               cd tests/fixtures/complete &&
-                ddc-project pull || {
+                ddc-project pull lms || {
                   derex build requirements --push
                 }
             displayName: Pull requirements image or build it and push it
@@ -216,7 +216,7 @@ stages:
           - script: |
               cd tests/fixtures/complete &&
                 derex runmode production --force
-                ddc-project pull || {
+                ddc-project pull lms || {
                   derex build final --push
                 }
             displayName: Pull final image or build it and push it
