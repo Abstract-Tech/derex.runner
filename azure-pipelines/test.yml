@@ -216,7 +216,7 @@ stages:
           - script: |
               cd tests/fixtures/complete &&
                 derex runmode production --force
-                ddc-project pull lms || {
+                { ddc-project pull lms && derex compile-theme; } || {
                   derex build final --push
                 }
             displayName: Pull final image or build it and push it
