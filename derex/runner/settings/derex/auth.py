@@ -1,16 +1,32 @@
-from packaging.version import parse as version_parse
-
-import django
+import json
 
 
-DJANGO_VERSION = version_parse(django.__version__)
+# Projects going to production should generated their key with something like
+# ./manage.py lms generate_jwt_signing_key
+# See https://github.com/edx/edx-platform/blob/open-release/juniper.master/openedx/core/djangoapps/oauth_dispatch/docs/decisions/0008-use-asymmetric-jwts.rst
+JWT_AUTH["JWT_PRIVATE_SIGNING_JWK"] = json.dumps(
+    {
+        "kty": "RSA",
+        "kid": "L9IHZW6G",
+        "e": "AQAB",
+        "n": "uId8gxb1JqiwS2jYDo6jKAolZzniNr2lviBga-pDyZuBOsVkqL1kreDKKo4C4MFF11XAeFfjEkRlYayrGfHh3GWIyeVA3zr5c1PL0RlxwgmPCRo8XRD5r2hofcRYUzQkjKAVYcs-etLB3_e0Lj0HH0z1RDEKA7dZ6wvJc1UtsUJwLp3IuKRv3I9WXbM3C6RTQgGpfII7tAPsnqnn6TYLvXcvScXpA56IZC6THO5__SuW9JtKMvhX8nuM-U5sBgQi-JFhR1aHoOzmrgMCkw4VvPZC2yPDapqwxl74nUSDN5TokxSheGGtrh6LRUtBWeb4sDE8Xpp_2F7cV-DwYORiKw",
+        "d": "TUhVIfPh_Wxl1VdWMZaUh4bkTlzEPKflvACEUX3-IPgTQgF83Fzhxx7fnL34P5hCf2KHJv-r9rEVgrhVupp-vRb7GI9-wV9KLP5Z3Lua1Ki7MpU91b5vzAJezNmIImSysAC1o80C4F7XWs07tafSjU3mZMZjCtZl_tZjav2wEs3n79rzM8ihmOpLiSOoecvVu6j3ihWdd-k2VNQjSdW9-Mq8ZKgO-BpHNmor9ce2MUTTMKe4U27hTaaPPCyx_uL1ezA82RC2PCuGQt3WJ-BVmtFqdn4JZ96YcTDPWMe_vvVs6Zuwj6wsAgbtRaklhPivuiLGlRdaBGYaXJfxfUTvSQ",
+        "p": "u3cpGjFFD5nNqx1vAE0maz8_pgfYfUTLmznuiXtmVU4d2NPQueEPlD-TCQN7NfAzWk6uFeDSh8PONHJulkFd74xzJltS4nGRjsjoMyX-ptN5_lP1howBFZwe_x2s8nax18v6z2L1RvjruFTmMh5AXvmOFZOMgUbmjosva35FKzk",
+        "q": "-_2GcItzMS7NePv95IOSJ5s0Qb2BMwoAuQPSMgKGF7M_MVYIQHVMtz3BBB52QpgPwBoDv2bzDdU0mwQgOyMDt94Ya06aiHH8WXtFgjKD9FAwN9zsO3ZIiKhmA5WomcxyMVB2N0lVs9gTut_09TW57bfAeSfUdd7ztwh7DJqFZIM",
+    }
+)
 
+JWT_AUTH["JWT_PUBLIC_SIGNING_JWK_SET"] = json.dumps(
+    {
+        "keys": [
+            {
+                "e": "AQAB",
+                "kid": "L9IHZW6G",
+                "kty": "RSA",
+                "n": "uId8gxb1JqiwS2jYDo6jKAolZzniNr2lviBga-pDyZuBOsVkqL1kreDKKo4C4MFF11XAeFfjEkRlYayrGfHh3GWIyeVA3zr5c1PL0RlxwgmPCRo8XRD5r2hofcRYUzQkjKAVYcs-etLB3_e0Lj0HH0z1RDEKA7dZ6wvJc1UtsUJwLp3IuKRv3I9WXbM3C6RTQgGpfII7tAPsnqnn6TYLvXcvScXpA56IZC6THO5__SuW9JtKMvhX8nuM-U5sBgQi-JFhR1aHoOzmrgMCkw4VvPZC2yPDapqwxl74nUSDN5TokxSheGGtrh6LRUtBWeb4sDE8Xpp_2F7cV-DwYORiKw",
+            }
+        ]
+    }
+)
 
-if DJANGO_VERSION > version_parse("2"):
-    # Projects going to production should generated their key with something like
-    # import jwcrypto.jwk as jwk
-    # key = jwk.JWK.generate(kty='RSA', size=2048)
-    # print(key.export_private())
-    JWT_AUTH[
-        "JWT_PRIVATE_SIGNING_JWK"
-    ] = '{"d":"XdrFu-xd3UoLWLG_cF9SZIqURI84-yz3JtALpWjFm_RccRltMGryfwnnSkyt0tZ_tbKSHmpG30EHy1NoAwSz8U7rF2sQUNmKHdYERbHQl__ojJEOf6oQo0NIJ-yxO7mbnvIbE34hXECXze58CX0vCzp2M4_776AZX7E1s-ddtLrv4xyyjz3Ns5K9Mtc_XE_sVbhyBPeKXD4pwzyqBxCeKy2OxGWtNdH-E7gZxfSoWaALZDI8GtuL1u7CpICahiXPstvanNk1BUz7Rimrh93Iwcj4Qwu_tDMGE4jFH6F-bCi3NCDCdGpKWkgYtu1rES0kStQdjpi4XJ_C9TtZc52ykQ","dp":"lzwXRCsl7mOtX57AY23BmR08a1CEtJTESNm4MapwwHhyvrFKpi78ae-g4FUiz2npetABJ1FmJ6_7MK0cdlMVTLV0_fRNo_SWrcdLfI_zTzapHF2mCdqoHQCItdjeaXSPYnxf2YJKnQJtdXy6oGmGy4FXFrRidZ0ArLL92P3loV8","dq":"nZbC6aMOIPjO5muJmEcOQCFQ8ioJ2ljjIc1H10RsJi1uzvYLjjTy4i-Zj8x51056gYT-1UNp7NHwOZJy4KKrI0ZnlVjXxUeKtvitWB04254h8G3d8bR9s16i2qIzSAe0trXFH0SpgPPcW3dN3hzy_HteI13jRACvHCu_pdKEpMU","e":"AQAB","kty":"RSA","n":"vckVlcMRJ0mzZz70V6KgYEc40TANen5-cTL_jakK07wi_Ma4X1r4QlJK0apYrxJMRbeNAFW6WD6dOHBAoZ1yR6YdZuggs0kmhoBzemaDStZQgh8lPZlprjskP8whPc6MYbzQIU-UR3vWeOa5Pgv6kaJU4XLsbHdwDPl0fAUBN5qDnolR1JGgDRzD2f-ifJWYV2XJHik0W1pMeWWirTWfkwmSGjlWEIoT-jzWDBJ3Tj5BNco8QTSnlijZHeEB_PDwHKGa1K1pTskrqY4uHLVmiK9XCqWbwdQnpCZ_fMheJIvoSPmWtE5WATMOXzVb9VpN0Iqyvm2RnFvctnKrrFHFJw","p":"87kB_0W7Dc1zDMLErt1AaPGDH2YzL34gWqLIkYHgGj7IHRVRLwci0tiUT4gPypj2V3j1c5lgBmJPCC3cM_GYOASX7uK7WrTfcCiMRw4EqmgCLz4g0bRVYjZ868V7p8MrjJ-H4KOYlLH2pSHmQrDFpTBRbsumzKXmqrtRgGxd13s","q":"x1iDwTyDmEnNMMRiWWjmYC8LuRQYluYZt7EviEkHSAk8Ll9oYnij9yNIt5EWYzs1tMg9cMPToQJaLMplFUUNcd5JCjxCQy_5bkKtsCIAHOQse9OAS_0DN08OSA7kdrP5GB7aKQfno0ohOzqTL7Yp6yZXj-nRKBkJqhEBvfxsw0U","qi":"Henw2VLSkYPVy6dExEik4ET_hyaJnZmxmuiyXD9Fdw_ONcS7ni5Ps6PFpcTr_vmofz8oS1ZNuYL5P4YCswFsRrwy1i3M_AB0gojWS9oTspVytdCxiC0i2ccdMuZ8z1kvel7pVSZiW51FgzbPH4oGrcN5Wfm8HAMDrp1vUW6ZHzU"}'
+JWT_AUTH["JWT_SIGNING_ALGORITHM"] = "RS512"
