@@ -13,7 +13,7 @@ steps:
       # Always push images with a .dev tag.
       # Only push non-dev images if they are not already present.
       # This way non-dev images guarantee immutability.
-      { echo ${DEREX_VERSION}|grep dev || docker manifest inspect ${IMAGE}; } || { echo '##vso[task.setvariable variable=needs_push]true'; echo Image needs pushing ; }
+      { echo ${DEREX_VERSION}|grep dev || ! docker manifest inspect ${IMAGE}; } && { echo '##vso[task.setvariable variable=needs_push]true'; echo Image needs pushing ; }
     displayName: "Set needs_push pipeline variable"
 
   - script: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
