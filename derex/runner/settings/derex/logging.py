@@ -1,12 +1,7 @@
 from openedx.core.lib.logsettings import get_logger_config
-from packaging.version import parse as version_parse
 
-import django
 import os
 import sys
-
-
-DJANGO_VERSION = version_parse(django.__version__)
 
 
 LOG_DIR = "/openedx/logs"
@@ -18,20 +13,26 @@ LOGGING = get_logger_config(
     local_loglevel="INFO",
     service_variant=SERVICE_VARIANT,
 )
+LOGGING["handlers"]["console"].update(
+    {
+        "level": "INFO",
+        "class": "logging.StreamHandler",
+        "formatter": "standard",
+        "stream": sys.stderr,
+    }
+)
+LOGGING["handlers"]["local"].update(
+    {
+        "level": "INFO",
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": os.path.join(LOG_DIR, "info.log"),
+        "maxBytes": 1024 * 1024 * 10,  # 10MB
+        "formatter": "standard",
+    }
+)
+LOGGING["handlers"]["local"].pop("address", None)
+LOGGING["handlers"]["local"].pop("facility", None)
 
-LOGGING["handlers"]["console"] = {
-    "level": "INFO",
-    "class": "logging.StreamHandler",
-    "formatter": "standard",
-    "stream": sys.stderr,
-}
-LOGGING["handlers"]["local"] = {
-    "level": "INFO",
-    "class": "logging.handlers.RotatingFileHandler",
-    "filename": os.path.join(LOG_DIR, "info.log"),
-    "maxBytes": 1024 * 1024 * 10,  # 10MB
-    "formatter": "standard",
-}
 LOGGING["handlers"]["error"] = {
     "level": "ERROR",
     "class": "logging.handlers.RotatingFileHandler",
@@ -46,13 +47,8 @@ LOGGING["handlers"]["tracking"] = {
     "maxBytes": 1024 * 1024 * 10,  # 10MB
     "formatter": "raw",
 }
+
 LOGGING["loggers"][""]["handlers"] = ["console", "local", "error"]
-
-
-# Enable userid_context filter if on Juniper or later
-if DJANGO_VERSION > version_parse("2"):
-    LOGGING["handlers"]["console"]["filters"] = ["userid_context"]
-    LOGGING["handlers"]["local"]["filters"] = ["userid_context"]
 
 
 # TODO: Remove this when we are able to properly
