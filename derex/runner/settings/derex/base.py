@@ -15,7 +15,7 @@ SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 DEREX_PROJECT = os.environ["DEREX_PROJECT"]
 
 _settings_modules = [
-    "django",
+    "django_settings",
     "mysql",
     "mongo",
     "caches",
@@ -29,6 +29,7 @@ _settings_modules = [
     "openedx_platform",
     "container_env",
     "plugins",
+    "auth",
 ]
 
 for setting_module in _settings_modules:

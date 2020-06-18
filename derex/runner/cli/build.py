@@ -18,40 +18,55 @@ def build():
 @build.command()
 @click.pass_obj
 @ensure_project
-def requirements(project):
+@click.option(
+    "--push/--no-push", default=False, help="Also push image to registry after building"
+)
+def requirements(project, push: bool):
     """Build the image that contains python requirements"""
     from derex.runner.build import build_requirements_image
+    from derex.runner.docker_utils import push_image
 
     click.echo(
         f'Building docker image {project.requirements_image_name} ("{project.name}" requirements)'
     )
-    build_requirements_image(project)
+    image_name = build_requirements_image(project)
+    if push and image_name is not None:
+        push_image(image_name)
 
 
 @build.command()
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def themes(ctx, project: Project):
+@click.option(
+    "--push/--no-push", default=False, help="Also push image to registry after building"
+)
+def themes(ctx, project: Project, push: bool):
     """Build the image that includes compiled themes"""
     from derex.runner.build import build_themes_image
+    from derex.runner.docker_utils import push_image
 
-    ctx.forward(requirements)
+    ctx.forward(requirements, push=push)
     click.echo(
         f'Building docker image {project.themes_image_name} with "{project.name}" themes'
     )
-    build_themes_image(project)
+    image_name = build_themes_image(project)
     click.echo(f"Built image {project.themes_image_name}")
+    if push and image_name is not None:
+        push_image(image_name)
 
 
 @build.command()
 @click.pass_obj
 @click.pass_context
 @ensure_project
-def final(ctx, project: Project):
+@click.option(
+    "--push/--no-push", default=False, help="Also push image to registry after building"
+)
+def final(ctx, project: Project, push: bool):
     """Build the final image for this project.
     For now this is the same as the final image"""
-    ctx.forward(themes)
+    ctx.forward(themes, push=push)
 
 
 @build.command()

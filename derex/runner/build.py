@@ -1,6 +1,7 @@
 from derex.runner.docker_utils import build_image
 from derex.runner.docker_utils import docker_has_experimental
 from derex.runner.project import Project
+from typing import Optional
 
 import logging
 import os
@@ -27,13 +28,14 @@ def docker_commands_to_install_requirements(project: Project):
     return dockerfile_contents
 
 
-def build_requirements_image(project: Project):
+def build_requirements_image(project: Project) -> Optional[str]:
     """Build the docker image the includes project requirements for the given project.
-    The requirements are installed in a container based on the dev image, and assets
-    are compiled there.
+    The requirements are installed in a container based on the dev image, and
+    assets are compiled there. Returns None if no requirements are specified.
+    Otherwise returns the newly built requirements image name.
     """
     if project.requirements_dir is None:
-        return
+        return None
     dockerfile_contents = [f"FROM {project.base_image}"]
     dockerfile_contents.extend(docker_commands_to_install_requirements(project))
     compile_command = ("; \\\n").join(
@@ -61,14 +63,15 @@ def build_requirements_image(project: Project):
     dockerfile_text = "\n".join(dockerfile_contents)
     paths_to_copy = [str(project.requirements_dir)]
     build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_name)
+    return project.requirements_image_name
 
 
-def build_themes_image(project: Project):
+def build_themes_image(project: Project) -> Optional[str]:
     """Build the docker image the includes themes and requirements for the given project.
     The image will be lightweight, containing only things needed to run edX.
     """
     if project.themes_dir is None:
-        return
+        return None
     dockerfile_contents = [
         f"FROM {project.requirements_image_name} as static",
         f"FROM {project.final_base_image}",
@@ -120,6 +123,7 @@ def build_themes_image(project: Project):
         logger.warning(
             "To build a smaller image enable the --experimental flag in the docker server"
         )
+    return project.themes_image_name
 
 
 __all__ = ["build_requirements_image", "build_themes_image"]

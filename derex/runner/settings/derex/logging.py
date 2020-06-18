@@ -13,19 +13,26 @@ LOGGING = get_logger_config(
     local_loglevel="INFO",
     service_variant=SERVICE_VARIANT,
 )
-LOGGING["handlers"]["console"] = {
-    "level": "INFO",
-    "class": "logging.StreamHandler",
-    "formatter": "standard",
-    "stream": sys.stderr,
-}
-LOGGING["handlers"]["local"] = {
-    "level": "INFO",
-    "class": "logging.handlers.RotatingFileHandler",
-    "filename": os.path.join(LOG_DIR, "info.log"),
-    "maxBytes": 1024 * 1024 * 10,  # 10MB
-    "formatter": "standard",
-}
+LOGGING["handlers"]["console"].update(
+    {
+        "level": "INFO",
+        "class": "logging.StreamHandler",
+        "formatter": "standard",
+        "stream": sys.stderr,
+    }
+)
+LOGGING["handlers"]["local"].update(
+    {
+        "level": "INFO",
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": os.path.join(LOG_DIR, "info.log"),
+        "maxBytes": 1024 * 1024 * 10,  # 10MB
+        "formatter": "standard",
+    }
+)
+LOGGING["handlers"]["local"].pop("address", None)
+LOGGING["handlers"]["local"].pop("facility", None)
+
 LOGGING["handlers"]["error"] = {
     "level": "ERROR",
     "class": "logging.handlers.RotatingFileHandler",
@@ -40,6 +47,7 @@ LOGGING["handlers"]["tracking"] = {
     "maxBytes": 1024 * 1024 * 10,  # 10MB
     "formatter": "raw",
 }
+
 LOGGING["loggers"][""]["handlers"] = ["console", "local", "error"]
 
 

@@ -1,6 +1,7 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
+from collections import OrderedDict
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
@@ -215,3 +216,32 @@ def run_minio_shell(command="sh"):
         "docker run -ti --rm --network derex --entrypoint /bin/sh minio/mc -c '"
         f'mc config host add local http://minio:80 minio_derex "{minio_key}" --api s3v4 ; set -ex; {command}\''
     )
+
+
+def push_image(image_name):
+    """Push the given image to the docker registry.
+    Authentication needs to be already set up or this funciton will not work.
+    """
+    res = client.api.push(image_name, stream=True, decode=True)
+    details = OrderedDict()
+    status = [f"Pushing {image_name}"]
+    GO_UP = "\033[A" + "\033[2J\033[1;1f"
+    print("---" * 5)
+    to_print = []
+    for out in res:
+        print(GO_UP * (len(to_print)))
+        to_print = list(status)
+        if "id" not in out:
+            if "status" in out:
+                status.append(out["status"])
+            else:
+                if "aux" in out:
+                    status = "Pushed digest {out['aux']['Digest']}"
+
+        else:
+            details[out["id"]] = out
+        for k, el in details.items():
+            to_print.append(f'{el["id"]} {el["status"]}')
+            if "progress" in el:
+                to_print[-1] += el["progress"]
+        print("\n".join(to_print), end="")
