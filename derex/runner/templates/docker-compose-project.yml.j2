@@ -166,6 +166,16 @@ services:
       SERVICE_VARIANT: cms
       DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
 
+  celerybeat:
+    <<: *common-conf
+    command:
+      sh -c './manage.py lms celery beat -A lms.celery:APP --scheduler django_celery_beat.schedulers:DatabaseScheduler'
+    environment:
+      <<: *common-env
+      C_FORCE_ROOT: "True"
+      SERVICE_VARIANT: lms
+      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
+
 networks:
   derex:
     name: derex
