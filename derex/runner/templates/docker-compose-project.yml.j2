@@ -169,7 +169,7 @@ services:
   celerybeat:
     <<: *common-conf
     command:
-      sh -c './manage.py lms celery beat -A lms.celery:APP --scheduler django_celery_beat.schedulers:DatabaseScheduler'
+      sh -c './manage.py lms celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
