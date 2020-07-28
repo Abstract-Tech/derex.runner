@@ -59,9 +59,8 @@ Run the following commands:
     ddc-services up -d  # Start mysql, mongodb, rabbitmq and admin tools
     derex reset-mailslurper  # Prime the mailslurper mysql database
     derex mysql reset  # Prime the mysql database
-    derex create-buckets  # Create the S3-like buckets on Minio
+    derex create-bucket  # Create the S3-like buckets on Minio
     ddc-project up -d  # Start LMS/CMS daemons and workers
-    derex compile-theme  # Compile theme sass files
 
 Run derex to see running services:
 
