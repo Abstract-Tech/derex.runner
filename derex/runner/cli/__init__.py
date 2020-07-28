@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 @with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
 @click.group(invoke_without_command=True)
+@click.version_option()
 @click.pass_context
 @setup_logging_decorator
 def derex(ctx):
