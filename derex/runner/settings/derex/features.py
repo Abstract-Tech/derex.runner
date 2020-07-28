@@ -13,7 +13,9 @@ FEATURES.update(
         "ENABLE_DISCUSSION_SERVICE": False,
         "ENABLE_GRADE_DOWNLOADS": True,
         "ENABLE_OAUTH2_PROVIDER": True,
+        "ENABLE_PREREQUISITE_COURSES": True,
         "ENABLE_SPECIAL_EXAMS": True,
         "ENABLE_SYSADMIN_DASHBOARD": True,
+        "MILESTONES_APP": True,
     }
 )
