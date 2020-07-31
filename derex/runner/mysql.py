@@ -68,7 +68,11 @@ def show_databases() -> List[Tuple[str, int, int]]:
                 client.execute("SELECT COUNT(*) FROM auth_user;")
                 query_result = cast(Tuple[Tuple[str]], client.fetchall())
                 django_users_count = int(query_result[0][0])
-            except (pymysql.err.InternalError, pymysql.err.ProgrammingError):
+            except (
+                pymysql.err.InternalError,
+                pymysql.err.ProgrammingError,
+                pymysql.err.OperationalError,
+            ):
                 django_users_count = 0
             databases_tuples.append((database_name, table_count, django_users_count))
     finally:
