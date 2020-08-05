@@ -58,6 +58,7 @@ Run the following commands:
     cd tests/fixtures/minimal/
     ddc-services up -d  # Start mysql, mongodb, rabbitmq and admin tools
     derex reset-mailslurper  # Prime the mailslurper mysql database
+    derex reset-rabbitmq  # Create rabbitmq user and queue
     derex mysql reset  # Prime the mysql database
     derex create-bucket  # Create the S3-like buckets on Minio
     ddc-project up -d  # Start LMS/CMS daemons and workers
