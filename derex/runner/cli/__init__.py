@@ -118,6 +118,33 @@ def compile_theme(project):
 
 @derex.command()
 @click.pass_obj
+@click.argument("course_ids", nargs=-1)
+@ensure_project
+def reindex_courses(project, course_ids):
+    """Reindex all courses on elasticsearch.
+    Course ids may be specified as arguemnts in order
+    to reindex specific courses.
+
+    e.g. `derex reindex_courses course-v1:edX+DemoX+Demo_Course`"""
+
+    from derex.runner.ddc import run_ddc_project
+
+    django_cmd = ["python", "manage.py", "cms", "reindex_course"]
+
+    if course_ids:
+        for course_id in course_ids:
+            django_cmd.append(course_id)
+    else:
+        # Here we use the "--setup" option instead of "--all" to avoid
+        # the confirmation prompt
+        django_cmd.append("--setup")
+
+    args = ["run", "--rm", "cms", "sh", "-c", " ".join(django_cmd)]
+    run_ddc_project(args, DebugBaseImageProject(), exit_afterwards=True)
+
+
+@derex.command()
+@click.pass_obj
 @ensure_project
 def create_bucket(project):
     """Create S3 buckets on Minio"""
