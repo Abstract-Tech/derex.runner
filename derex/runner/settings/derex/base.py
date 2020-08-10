@@ -27,6 +27,7 @@ _settings_modules = [
     "placeholders",
     "features",
     "openedx_platform",
+    "search",
     "container_env",
     "plugins",
 ]
