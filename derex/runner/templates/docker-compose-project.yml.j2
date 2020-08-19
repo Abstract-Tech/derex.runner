@@ -128,7 +128,7 @@ services:
   lms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n lms.edx -Q lms.default'
+      sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default'
     healthcheck:
       test: celery inspect ping -A lms.celery:APP -d celery@lms.edx
       interval: 15m
@@ -144,7 +144,7 @@ services:
   cms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n cms.edx -Q cms.default'
+      sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default'
     healthcheck:
       test: celery inspect ping -A cms.celery:APP -d celery@cms.edx
       interval: 15m
