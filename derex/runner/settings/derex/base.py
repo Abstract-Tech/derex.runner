@@ -34,7 +34,7 @@ _settings_modules = [
 ]
 
 for setting_module in _settings_modules:
-    setting_module_path = str(Path(__file__).parent / setting_module + ".py")
+    setting_module_path = str(Path(__file__).parent / "{}.py".format(setting_module))
     # We are using execfile in order to share the current scope so that we
     # don't have to redefine and reimport everything in every single settings
     # module
