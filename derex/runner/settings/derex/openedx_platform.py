@@ -22,3 +22,5 @@ if SERVICE_VARIANT == "cms":
 # https://files.edx.org/openedx-logos/edx-openedx-logo-tag.png
 # to a local URL to make sure derex installations of Open edX are self-contained
 FOOTER_OPENEDX_LOGO_IMAGE = "/static/images/openedx-logo-tag.png"
+
+ENABLE_COMPREHENSIVE_THEMING = True
