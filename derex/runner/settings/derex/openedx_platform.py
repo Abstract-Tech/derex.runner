@@ -24,3 +24,4 @@ if SERVICE_VARIANT == "cms":
 FOOTER_OPENEDX_LOGO_IMAGE = "/static/images/openedx-logo-tag.png"
 
 WIKI_ENABLED = True
+ENABLE_COMPREHENSIVE_THEMING = True
