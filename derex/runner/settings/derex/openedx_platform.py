@@ -14,9 +14,11 @@ HOSTNAME_MODULESTORE_DEFAULT_MAPPINGS = {PREVIEW_DOMAIN: "draft-preferred"}
 SESSION_COOKIE_DOMAIN = LMS_BASE
 
 if SERVICE_VARIANT == "cms":
-    LOGIN_URL = "/signin"
-    FRONTEND_LOGIN_URL = reverse_lazy("login_redirect_to_lms")
-    FRONTEND_LOGOUT_URL = LMS_ROOT_URL + "/logout"
+    LOGIN_URL = reverse_lazy("login_redirect_to_lms")
+    LOGIN_REDIRECT_URL = "/home/"
+    FRONTEND_LOGIN_URL = "{}/login".format(LMS_ROOT_URL)
+    FRONTEND_LOGOUT_URL = "{}/logout".format(LMS_ROOT_URL)
+    FRONTEND_REGISTER_URL = "{}/register".format(LMS_ROOT_URL)
 
 # We prefer to change the default value
 # https://files.edx.org/openedx-logos/edx-openedx-logo-tag.png
