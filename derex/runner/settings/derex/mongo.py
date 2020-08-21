@@ -6,6 +6,8 @@ except ImportError:
 from xmodule.modulestore.modulestore_settings import update_module_store_settings
 
 
+DATA_DIR = Path("/openedx/data")
+
 MONGODB_HOST = "mongodb"
 MONGODB_DB_NAME = os.environ["MONGODB_DB_NAME"]
 DOC_STORE_CONFIG = {
@@ -21,7 +23,7 @@ CONTENTSTORE = {
 update_module_store_settings(
     MODULESTORE,
     doc_store_settings=DOC_STORE_CONFIG,
-    module_store_options={"fs_root": Path("/openedx/data"),},
+    module_store_options={"fs_root": DATA_DIR},
 )
 
 # This is needed for the Sysadmin dashboard "Git Logs" tab
