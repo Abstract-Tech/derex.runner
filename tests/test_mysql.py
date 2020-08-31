@@ -1,6 +1,6 @@
 from .conftest import assert_result_ok
 from click.testing import CliRunner
-from derex.runner.mysql import get_mysql_client
+from derex.runner.mysql import get_system_mysql_client
 from derex.runner.mysql import show_databases
 from itertools import repeat
 from types import SimpleNamespace
@@ -26,7 +26,7 @@ def cleanup_mysql(start_mysql):
     """Ensure no test database is left behind"""
     yield
 
-    client = get_mysql_client()
+    client = get_system_mysql_client()
     client.execute("SHOW DATABASES;")
     to_delete = []
     for database in client.fetchall():
@@ -53,7 +53,7 @@ def test_derex_mysql(start_mysql):
     runner.invoke(create_database_cmd, test_db_name)
     assert test_db_name in [database[0] for database in show_databases()]
 
-    mysql_client = get_mysql_client()
+    mysql_client = get_system_mysql_client()
     mysql_client.connection.autocommit(True)
     mysql_client.execute(f"USE {test_db_name};")
     mysql_client.execute("CREATE TABLE test (field VARCHAR(255) NOT NULL);")

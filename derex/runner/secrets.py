@@ -53,6 +53,8 @@ except ImportError:
 
 class DerexSecrets(Enum):
     minio = "minio"
+    mysql = "mysql"
+    mongodb = "mongodb"
 
 
 def get_var(name: str, vartype: type) -> Any:

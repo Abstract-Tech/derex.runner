@@ -1,9 +1,12 @@
+from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.ddc import run_ddc_project
 from derex.runner.ddc import run_ddc_services
 from derex.runner.docker_utils import check_services
 from derex.runner.docker_utils import client as docker_client
 from derex.runner.docker_utils import wait_for_service
 from derex.runner.project import Project
+from derex.runner.secrets import DerexSecrets
+from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from typing import cast
 from typing import List
@@ -21,11 +24,34 @@ def wait_for_mysql(max_seconds: int = 20):
     """With a freshly created container mysql might need a bit of time to prime
     its files. This functions waits up to max_seconds seconds.
     """
-    return wait_for_service("mysql", 'mysql -psecret -e "SHOW DATABASES"', max_seconds)
+    password = get_secret(DerexSecrets.mysql)
+    check_command = f'mysql -u {MYSQL_ROOT_USER} -p{password} -e "SHOW DATABASES"'
+    return wait_for_service("mysql", check_command, max_seconds)
+
+
+def get_system_mysql_client() -> pymysql.cursors.Cursor:
+    container = docker_client.containers.get("mysql")
+    mysql_host = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
+    password = get_secret(DerexSecrets.mysql)
+    return get_mysql_client(host=mysql_host, user=MYSQL_ROOT_USER, password=password)
+
+
+def get_project_mysql_client(project: Project) -> pymysql.cursors.Cursor:
+    return get_mysql_client(
+        host=project.mysql_db_host,
+        user=project.mysql_db_user,
+        password=project.mysql_db_password,
+        database=project.mysql_db_name,
+    )
 
 
 def get_mysql_client(
-    user: str = "root", password: str = "secret", database: Optional[str] = "", **kwargs
+    host: str,
+    user: str,
+    password: str,
+    port: Optional[int] = 3306,
+    database: Optional[str] = None,
+    **kwargs,
 ) -> pymysql.cursors.Cursor:
     """Return a cursor on the mysql server. If the connection object is needed
     it can be accessed from the cursor object:
@@ -42,11 +68,8 @@ def get_mysql_client(
         )
 
     wait_for_mysql()
-    container = docker_client.containers.get("mysql")
-    mysql_host = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
-
     connection = pymysql.connect(
-        host=mysql_host, port=3306, user=user, passwd=password, db=database, **kwargs
+        host=host, port=port, user=user, passwd=password, db=database, **kwargs
     )
     return connection.cursor()
 
@@ -55,7 +78,7 @@ def show_databases() -> List[Tuple[str, int, int]]:
     """List all existing databases together with some
     useful infos (number of tables, number of Django users).
     """
-    client = get_mysql_client()
+    client = get_system_mysql_client()
     try:
         databases_tuples = []
         client.execute("SHOW DATABASES;")
@@ -83,7 +106,7 @@ def show_databases() -> List[Tuple[str, int, int]]:
 def show_users() -> Optional[Tuple[Tuple[str, str, str]]]:
     """List all mysql users.
     """
-    client = get_mysql_client()
+    client = get_system_mysql_client()
     client.execute("SELECT user, host, password FROM mysql.user;")
     users = cast(Tuple[Tuple[str, str, str]], client.fetchall())
     return users
@@ -91,7 +114,7 @@ def show_users() -> Optional[Tuple[Tuple[str, str, str]]]:
 
 def create_database(database_name: str):
     """Create a database if doesn't exists"""
-    client = get_mysql_client()
+    client = get_system_mysql_client()
     logger.info(f'Creating database "{database_name}"...')
     client.execute(f"CREATE DATABASE `{database_name}` CHARACTER SET utf8")
     logger.info(f'Successfully created database "{database_name}"')
@@ -99,7 +122,7 @@ def create_database(database_name: str):
 
 def create_user(user: str, password: str, host: str):
     """Create a user if doesn't exists"""
-    client = get_mysql_client()
+    client = get_system_mysql_client()
     logger.info(f"Creating user '{user}'@'{host}'...")
     client.execute(f"CREATE USER '{user}'@'{host}' IDENTIFIED BY '{password}';")
     logger.info(f"Successfully created user '{user}'@'{host}'")
@@ -107,7 +130,7 @@ def create_user(user: str, password: str, host: str):
 
 def drop_database(database_name: str):
     """Drops the selected database"""
-    client = get_mysql_client()
+    client = get_system_mysql_client()
     logger.info(f'Dropping database "{database_name}"...')
     client.execute(f"DROP DATABASE IF EXISTS `{database_name}`;")
     logger.info(f'Successfully dropped database "{database_name}"')
@@ -115,7 +138,7 @@ def drop_database(database_name: str):
 
 def drop_user(user: str, host: str):
     """Drops the selected user"""
-    client = get_mysql_client()
+    client = get_system_mysql_client()
     logger.info(f"Dropping user '{user}'@'{host}'...")
     client.execute(f"DROP USER '{user}'@'{host}';")
     logger.info(f"Successfully dropped user '{user}'@'{host}'")
@@ -167,4 +190,29 @@ def reset_mysql_openedx(project: Project, dry_run: bool = False):
         ],
         project=project,
         dry_run=dry_run,
+    )
+
+
+def update_mysql_root_user_password(current_password: str):
+    """Update the mysql root user password"""
+    if not check_services(["mysql"]):
+        raise RuntimeError(
+            "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
+        )
+
+    derex_password = get_secret(DerexSecrets.mysql)
+    run_ddc_services(
+        [
+            "exec",
+            "mysql",
+            "mysql",
+            "-u",
+            MYSQL_ROOT_USER,
+            f"-p{current_password}",
+            "-e",
+            f"""SET PASSWORD FOR '{MYSQL_ROOT_USER}'@'localhost' = PASSWORD('{derex_password}');
+            SET PASSWORD FOR '{MYSQL_ROOT_USER}'@'%' = PASSWORD('{derex_password}');
+            GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ROOT_USER}'@'%' WITH GRANT OPTION;
+            FLUSH PRIVILEGES;""",
+        ]
     )

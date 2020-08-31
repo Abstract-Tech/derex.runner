@@ -10,9 +10,6 @@ import os
 import re
 
 
-CONF_FILENAME = "derex.config.yaml"
-
-
 def get_dir_hash(
     dirname: Union[Path, str],
     excluded_files: List = [],

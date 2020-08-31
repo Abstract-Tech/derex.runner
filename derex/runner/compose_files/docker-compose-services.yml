@@ -8,6 +8,9 @@ services:
     command: mongod --smallfiles --nojournal
       --storageEngine wiredTiger
       --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "{{ MONGODB_ROOT_USERNAME }}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{ MONGODB_ROOT_PASSWORD }}"
     volumes:
       - derex_mongodb:/data/db
     networks:
@@ -19,7 +22,7 @@ services:
     container_name: mysql
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
     environment:
-      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
     volumes:
       - derex_mysql:/var/lib/mysql
     networks:
@@ -109,15 +112,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "-q",
-          "-O",
-          "-",
-          "http://localhost:8080/minio/health/live",
-        ]
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080"]
       interval: 30s
       timeout: 20s
       retries: 3

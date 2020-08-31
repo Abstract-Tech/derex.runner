@@ -11,9 +11,6 @@ from derex.runner.project import Project
 from derex.runner.project import ProjectNotFound
 from derex.runner.project import ProjectRunMode
 from derex.runner.secrets import HAS_MASTER_SECRET
-from rich import box
-from rich.console import Console
-from rich.table import Table
 from typing import Any
 from typing import Optional
 
@@ -21,6 +18,7 @@ import click
 import importlib_metadata
 import logging
 import os
+import rich
 import sys
 
 
@@ -57,10 +55,10 @@ def derex(ctx):
     if not container_names:
         return
 
-    console = Console()
-    table = Table(
+    console = rich.console.Console()
+    table = rich.table.Table(
         title="[bold green]These containers are running and exposing an HTTP server on port 80",
-        box=box.SIMPLE,
+        box=rich.box.SIMPLE,
     )
     table.add_column("Name")
     for container in container_names:
@@ -259,6 +257,20 @@ def minio_shell():
     from derex.runner.docker_utils import run_minio_shell
 
     run_minio_shell()
+
+
+@debug.command("print-secret")
+@click.argument(
+    "secret", type=str, required=True,
+)
+def print_secret(secret):
+    from derex.runner.secrets import get_secret, DerexSecrets
+
+    derex_secret = getattr(DerexSecrets, secret, None)
+    if not derex_secret:
+        raise click.exceptions.ClickException(f'No secrets found for "{secret}"')
+    click.echo(get_secret(derex_secret))
+    return 0
 
 
 @derex.command()

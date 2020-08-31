@@ -8,6 +8,7 @@ The functions have to be reachable under the common name `ddc_project_options`
 so a class is put in place to hold each of them.
 """
 from derex.runner import hookimpl
+from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.docker_utils import image_exists
 from derex.runner.local_appdir import DEREX_DIR
 from derex.runner.local_appdir import ensure_dir
@@ -195,7 +196,11 @@ def generate_ddc_services_file() -> str:
     )
     ensure_dir(local_path)
     tmpl = Template(DDC_SERVICES_YML_PATH.read_text())
-    minio_secret_key = get_secret(DerexSecrets.minio)
-    text = tmpl.render(MINIO_SECRET_KEY=minio_secret_key)
+    text = tmpl.render(
+        MINIO_SECRET_KEY=get_secret(DerexSecrets.minio),
+        MONGODB_ROOT_USERNAME=MONGODB_ROOT_USER,
+        MONGODB_ROOT_PASSWORD=get_secret(DerexSecrets.mongodb),
+        MYSQL_ROOT_PASSWORD=get_secret(DerexSecrets.mysql),
+    )
     local_path.write_text(text)
     return str(local_path)

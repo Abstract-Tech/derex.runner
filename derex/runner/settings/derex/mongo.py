@@ -13,8 +13,9 @@ MONGODB_DB_NAME = os.environ["MONGODB_DB_NAME"]
 DOC_STORE_CONFIG = {
     "host": MONGODB_HOST,
     "db": MONGODB_DB_NAME,
-    "user": None,
-    "password": None,
+    "user": os.environ["MONGODB_USER"],
+    "password": os.environ["MONGODB_PASSWORD"],
+    "authsource": "admin",
 }
 CONTENTSTORE = {
     "ENGINE": "xmodule.contentstore.mongo.MongoContentStore",
@@ -30,4 +31,6 @@ update_module_store_settings(
 MONGODB_LOG = {
     "host": DOC_STORE_CONFIG["host"],
     "db": "{}_xlog".format(MONGODB_DB_NAME),
+    "user": DOC_STORE_CONFIG["user"],
+    "password": DOC_STORE_CONFIG["password"],
 }

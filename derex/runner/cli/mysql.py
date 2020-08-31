@@ -11,6 +11,13 @@ import click
 @click.pass_context
 def mysql(context: click.core.Context):
     """Commands to operate on the mysql database"""
+    from derex.runner.docker_utils import check_services
+
+    if not check_services(["mysql"]):
+        raise click.exceptions.ClickException(
+            'Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"'
+        )
+
     if context.invoked_subcommand is None:
         from derex.runner.mysql import show_databases
 
@@ -209,4 +216,24 @@ def reset_mysql_cmd(context, force):
         ):
             return 1
     reset_mysql_openedx(DebugBaseImageProject())
+    return 0
+
+
+@mysql.command(name="update-root-password")
+@click.argument("current_password", type=str, required=True)
+@click.option(
+    "--force", is_flag=True, default=False, help="Do not ask for confirmation",
+)
+def set_mysql_user_password(current_password: str, force: bool):
+    """Update the system mysql root user password.
+    If the new password is omitted we use the one derived from the Derex main secret."""
+    from derex.runner.mysql import MYSQL_ROOT_USER
+
+    if click.confirm(
+        f'This is going to update the password for the mysql "{MYSQL_ROOT_USER}" user.\n'
+        "Are you sure you want to continue?"
+    ):
+        from derex.runner.mysql import update_mysql_root_user_password
+
+        update_mysql_root_user_password(current_password)
     return 0

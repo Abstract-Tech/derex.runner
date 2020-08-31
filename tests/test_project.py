@@ -1,3 +1,5 @@
+from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.ddc import run_ddc_project
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
@@ -214,7 +216,7 @@ def test_container_variables_json_serialized(minimal_project):
         config = {
             "project_name": "minimal",
             "variables": {
-                "lms_ALL_JWT_AUTH": {
+                "ALL_JWT_AUTH": {
                     "base": {
                         "JWT_AUDIENCE": "jwt-audience",
                         "JWT_SECRET_KEY": "jwt-secret",
@@ -223,16 +225,33 @@ def test_container_variables_json_serialized(minimal_project):
                         "JWT_AUDIENCE": "prod-audience",
                         "JWT_SECRET_KEY": "prod-secret",
                     },
-                }
+                },
             },
         }
         conf_file.write_text(yaml.dump(config))
         create_settings_file(Project().root, "production")
         project = Project()
         env = project.get_container_env()
-        assert "DEREX_JSON_LMS_ALL_JWT_AUTH" in env
-        expected = json.loads(env["DEREX_JSON_LMS_ALL_JWT_AUTH"])
-        assert expected == config["variables"]["lms_ALL_JWT_AUTH"]["base"]
+        assert "DEREX_JSON_ALL_JWT_AUTH" in env
+        expected = config["variables"]["ALL_JWT_AUTH"]["base"]
+        assert expected == json.loads(env["DEREX_JSON_ALL_JWT_AUTH"])
+
+        # Test secrets
+        with open(Path(projdir) / SECRETS_CONF_FILENAME, "w") as secrets_conf_file:
+            secrets_config = {
+                "variables": {
+                    "ALL_MYSQL_ROOT_PASSWORD": {
+                        "base": "base-secret-password",
+                        "production": "production-secret-password",
+                    },
+                },
+            }
+            secrets_conf_file.write(yaml.dump(secrets_config))
+        project = Project()
+        env = project.get_container_env()
+        assert "DEREX_ALL_MYSQL_ROOT_PASSWORD" in env
+        expected = secrets_config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["base"]
+        assert expected == env["DEREX_ALL_MYSQL_ROOT_PASSWORD"]
 
 
 def create_settings_file(project_root: Path, filename: str):

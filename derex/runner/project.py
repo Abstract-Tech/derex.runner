@@ -1,8 +1,11 @@
 from derex.runner import __version__
+from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import MONGODB_ROOT_USER
+from derex.runner.constants import MYSQL_ROOT_USER
+from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
-from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
 from enum import Enum
 from enum import IntEnum
@@ -103,8 +106,16 @@ class Project:
         return self.config.get("mysql_db_name", f"{self.name}_openedx")
 
     @property
+    def mysql_user(self) -> str:
+        return self.config.get("mysql_user", MYSQL_ROOT_USER)
+
+    @property
     def mongodb_db_name(self) -> str:
         return self.config.get("mongodb_db_name", f"{self.name}_openedx")
+
+    @property
+    def mongodb_user(self) -> str:
+        return self.config.get("mongodb_user", MONGODB_ROOT_USER)
 
     @property
     def runmode(self) -> ProjectRunMode:
@@ -207,7 +218,14 @@ class Project:
             path = os.getcwd()
         self.root = find_project_root(Path(path))
         config_path = self.root / CONF_FILENAME
+        secrets_config_path = self.root / SECRETS_CONF_FILENAME
         self.config = yaml.load(config_path.open(), Loader=yaml.FullLoader)
+        try:
+            self.secrets_config = yaml.load(
+                secrets_config_path.open(), Loader=yaml.FullLoader
+            )
+        except FileNotFoundError:
+            self.secrets_config = {}
         self.openedx_version = OpenEdXVersions[
             self.config.get("openedx_version", "ironwood")
         ]
@@ -391,13 +409,15 @@ class Project:
         """
         settings = self.settings.name
         result = {}
-        variables = self.config.get("variables", {})
-        for variable in variables:
-            value = variables[variable][settings]
-            if not isinstance(value, str):
-                result[f"DEREX_JSON_{variable.upper()}"] = json.dumps(value)
-            else:
-                result[f"DEREX_{variable.upper()}"] = value
+
+        for config in [self.config, self.secrets_config]:
+            variables = config.get("variables", {})
+            for variable in variables:
+                value = variables[variable][settings]
+                if not isinstance(value, str):
+                    result[f"DEREX_JSON_{variable.upper()}"] = json.dumps(value)
+                else:
+                    result[f"DEREX_{variable.upper()}"] = value
         return result
 
     def secret(self, name: str) -> str:
