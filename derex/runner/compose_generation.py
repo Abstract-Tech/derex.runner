@@ -143,9 +143,40 @@ def generate_ddc_project_file(project: Project) -> Path:
             f"Image {project.requirements_image_name} not found\n"
             "Run\nderex build requirements\n to build it"
         )
+    derex_django_path = abspath_from_egg(
+        "derex.runner", "derex_django/README.rst"
+    ).parent
+
+    derex_openedx_customizations_dir = (
+        abspath_from_egg(
+            "derex.runner",
+            "derex/runner/compose_files/openedx_customizations/README.rst",
+        ).parent
+        / project.openedx_version.name
+    )
+    openedx_customizations = []
+    for openedx_customizations_dir in [
+        derex_openedx_customizations_dir,
+        project.openedx_customizations_dir,
+    ]:
+        if openedx_customizations_dir and openedx_customizations_dir.exists():
+            for python_file_path in openedx_customizations_dir.rglob("*.py"):
+                openedx_customizations.append(
+                    (
+                        str(python_file_path),
+                        str(python_file_path).replace(
+                            str(openedx_customizations_dir), "/openedx/edx-platform"
+                        ),
+                    )
+                )
+
     tmpl = Template(template_path.read_text())
     text = tmpl.render(
-        project=project, final_image=final_image, wsgi_py_path=WSGI_PY_PATH
+        project=project,
+        final_image=final_image,
+        wsgi_py_path=WSGI_PY_PATH,
+        derex_django_path=derex_django_path,
+        openedx_customizations=openedx_customizations,
     )
     project_compose_path.write_text(text)
     return project_compose_path

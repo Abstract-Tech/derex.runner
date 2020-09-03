@@ -12,6 +12,7 @@ import yaml
 
 MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
+MINIMAL_JUNIPER_PROJ = Path(__file__).with_name("fixtures") / "minimal-juniper"
 
 
 def test_ddc_services(sys_argv, capsys, monkeypatch):
@@ -62,6 +63,22 @@ def test_ddc_project(sys_argv, mocker, workdir_copy, capsys):
         with sys_argv(["ddc-project", "config"]):
             ddc_project()
     assert "worker" in capsys.readouterr().out
+
+    with workdir_copy(MINIMAL_JUNIPER_PROJ):
+        with sys_argv(["ddc-project", "config"]):
+            ddc_project()
+    assert (
+        "/derex/runner/compose_files/openedx_customizations/juniper/"
+        in capsys.readouterr().out
+    )
+
+    with workdir_copy(COMPLETE_PROJ):
+        with sys_argv(["ddc-project", "config"]):
+            ddc_project()
+    assert (
+        ":/openedx/edx-platform/test_openedx_customization.py"
+        in capsys.readouterr().out
+    )
 
 
 def test_ddc_project_symlink_mounting(sys_argv, mocker, workdir_copy, capsys):

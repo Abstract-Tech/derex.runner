@@ -71,6 +71,9 @@ class Project:
     # fixtures and themes.
     plugins_dir: Optional[Path] = None
 
+    # The directory containing openedx python modules to be replaced
+    openedx_customizations_dir: Optional[Path] = None
+
     # The image name of the image that includes requirements
     requirements_image_name: str
 
@@ -94,10 +97,6 @@ class Project:
 
     # Enum containing possible settings modules
     _available_settings = None
-
-    _derex_django_path = abspath_from_egg(
-        "derex.runner", "derex_django/README.rst"
-    ).parent
 
     @property
     def mysql_db_name(self) -> str:
@@ -276,6 +275,10 @@ class Project:
         plugins_dir = self.root / "plugins"
         if plugins_dir.is_dir():
             self.plugins_dir = plugins_dir
+
+        openedx_customizations_dir = self.root / "openedx_customizations"
+        if openedx_customizations_dir.is_dir():
+            self.openedx_customizations_dir = openedx_customizations_dir
 
         self.image_name = self.themes_image_name
 
