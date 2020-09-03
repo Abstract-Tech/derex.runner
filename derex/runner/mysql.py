@@ -18,22 +18,25 @@ import pymysql
 
 
 logger = logging.getLogger(__name__)
+MYSQL_ROOT_PASSWORD = get_secret(DerexSecrets.mysql)
 
 
 def wait_for_mysql(max_seconds: int = 20):
     """With a freshly created container mysql might need a bit of time to prime
     its files. This functions waits up to max_seconds seconds.
     """
-    password = get_secret(DerexSecrets.mysql)
-    check_command = f'mysql -u {MYSQL_ROOT_USER} -p{password} -e "SHOW DATABASES"'
+    check_command = (
+        f'mysql -u {MYSQL_ROOT_USER} -p{MYSQL_ROOT_PASSWORD} -e "SHOW DATABASES"'
+    )
     return wait_for_service("mysql", check_command, max_seconds)
 
 
 def get_system_mysql_client() -> pymysql.cursors.Cursor:
     container = docker_client.containers.get("mysql")
     mysql_host = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
-    password = get_secret(DerexSecrets.mysql)
-    return get_mysql_client(host=mysql_host, user=MYSQL_ROOT_USER, password=password)
+    return get_mysql_client(
+        host=mysql_host, user=MYSQL_ROOT_USER, password=MYSQL_ROOT_PASSWORD
+    )
 
 
 def get_project_mysql_client(project: Project) -> pymysql.cursors.Cursor:
@@ -159,8 +162,8 @@ def copy_database(source_db_name: str, destination_db_name: str):
             "sh",
             "-c",
             f"""set -ex
-                mysqldump -h mysql -u root -psecret {source_db_name} --no-create-db |
-                mysql -h mysql --user=root -psecret {destination_db_name}
+                mysqldump -h mysql -u root -p{MYSQL_ROOT_PASSWORD} {source_db_name} --no-create-db |
+                mysql -h mysql --user=root -p{MYSQL_ROOT_PASSWORD} {destination_db_name}
             """,
         ]
     )
@@ -200,7 +203,6 @@ def update_mysql_root_user_password(current_password: str):
             "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
         )
 
-    derex_password = get_secret(DerexSecrets.mysql)
     run_ddc_services(
         [
             "exec",
@@ -210,8 +212,8 @@ def update_mysql_root_user_password(current_password: str):
             MYSQL_ROOT_USER,
             f"-p{current_password}",
             "-e",
-            f"""SET PASSWORD FOR '{MYSQL_ROOT_USER}'@'localhost' = PASSWORD('{derex_password}');
-            SET PASSWORD FOR '{MYSQL_ROOT_USER}'@'%' = PASSWORD('{derex_password}');
+            f"""SET PASSWORD FOR '{MYSQL_ROOT_USER}'@'localhost' = PASSWORD('{MYSQL_ROOT_PASSWORD}');
+            SET PASSWORD FOR '{MYSQL_ROOT_USER}'@'%' = PASSWORD('{MYSQL_ROOT_PASSWORD}');
             GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ROOT_USER}'@'%' WITH GRANT OPTION;
             FLUSH PRIVILEGES;""",
         ]
