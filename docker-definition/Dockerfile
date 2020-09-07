@@ -94,6 +94,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install numpy -c /tmp/derex.txt && \
     `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
     sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /tmp/derex.txt && \
+    `# sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html) ` \
+    sed -e "s|.*sympy==0.7.1*|sympy==1.5.1|" -i /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse gevent "whitenoise[brotli]<5"
 
