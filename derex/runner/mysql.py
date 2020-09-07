@@ -106,9 +106,8 @@ def show_databases() -> List[Tuple[str, int, int]]:
     return databases_tuples
 
 
-def show_users() -> Optional[Tuple[Tuple[str, str, str]]]:
-    """List all mysql users.
-    """
+def list_users() -> Optional[Tuple[Tuple[str, str, str]]]:
+    """List all mysql users."""
     client = get_system_mysql_client()
     client.execute("SELECT user, host, password FROM mysql.user;")
     users = cast(Tuple[Tuple[str, str, str]], client.fetchall())
@@ -116,7 +115,7 @@ def show_users() -> Optional[Tuple[Tuple[str, str, str]]]:
 
 
 def create_database(database_name: str):
-    """Create a database if doesn't exists"""
+    """Create a database if doesn't exists."""
     client = get_system_mysql_client()
     logger.info(f'Creating database "{database_name}"...')
     client.execute(f"CREATE DATABASE `{database_name}` CHARACTER SET utf8")
@@ -124,7 +123,7 @@ def create_database(database_name: str):
 
 
 def create_user(user: str, password: str, host: str):
-    """Create a user if doesn't exists"""
+    """Create a user if doesn't exists."""
     client = get_system_mysql_client()
     logger.info(f"Creating user '{user}'@'{host}'...")
     client.execute(f"CREATE USER '{user}'@'{host}' IDENTIFIED BY '{password}';")
@@ -132,7 +131,7 @@ def create_user(user: str, password: str, host: str):
 
 
 def drop_database(database_name: str):
-    """Drops the selected database"""
+    """Drops the selected database."""
     client = get_system_mysql_client()
     logger.info(f'Dropping database "{database_name}"...')
     client.execute(f"DROP DATABASE IF EXISTS `{database_name}`;")
@@ -140,18 +139,35 @@ def drop_database(database_name: str):
 
 
 def drop_user(user: str, host: str):
-    """Drops the selected user"""
+    """Drops the selected user."""
     client = get_system_mysql_client()
     logger.info(f"Dropping user '{user}'@'{host}'...")
     client.execute(f"DROP USER '{user}'@'{host}';")
     logger.info(f"Successfully dropped user '{user}'@'{host}'")
 
 
+def execute_root_shell(command: Optional[str]):
+    """Open a root shell on the mysql database. If a command is given
+    it is executed."""
+    args = [
+        "run",
+        "--rm",
+        "mysql",
+        "mysql",
+        "-h",
+        "mysql",
+        "-u",
+        MYSQL_ROOT_USER,
+        f"-p{MYSQL_ROOT_PASSWORD}",
+    ]
+    if command:
+        args.extend(["-e", command])
+    run_ddc_services(args)
+
+
 def copy_database(source_db_name: str, destination_db_name: str):
-    """
-    Copy an existing MySQL database. This actually involves exporting and importing back
-    the database with a different name.
-    """
+    """Copy an existing MySQL database. This actually involves exporting and importing back
+    the database with a different name."""
     create_database(destination_db_name)
     logger.info(f"Copying database {source_db_name} to {destination_db_name}")
     run_ddc_services(
@@ -173,8 +189,7 @@ def copy_database(source_db_name: str, destination_db_name: str):
 
 
 def reset_mysql_openedx(project: Project, dry_run: bool = False):
-    """Run script from derex/openedx image to reset the mysql db.
-    """
+    """Run script from derex/openedx image to reset the mysql db."""
     restore_dump_path = abspath_from_egg(
         "derex.runner", "derex/runner/restore_dump.py.source"
     )
@@ -196,17 +211,21 @@ def reset_mysql_openedx(project: Project, dry_run: bool = False):
     )
 
 
-def update_mysql_root_user_password(current_password: str):
-    """Update the mysql root user password"""
+def reset_mysql_password(current_password: str):
+    """Reset the mysql root user password."""
     if not check_services(["mysql"]):
         raise RuntimeError(
             "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
         )
+    logger.info(f'Resetting password for mysql user "{MYSQL_ROOT_USER}"')
 
     run_ddc_services(
         [
-            "exec",
+            "run",
+            "--rm",
             "mysql",
+            "mysql",
+            "-h",
             "mysql",
             "-u",
             MYSQL_ROOT_USER,

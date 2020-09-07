@@ -1,4 +1,6 @@
 from pathlib import Path
+from rich.console import Console
+from rich.table import Table
 from typing import Any
 from typing import List
 from typing import Optional
@@ -86,3 +88,11 @@ def abspath_from_egg(egg: str, path: str) -> Optional[Path]:
         if str(file) == path:
             return file.locate()
     return None
+
+
+def get_rich_console(*args, **kwargs):
+    return Console(*args, **kwargs)
+
+
+def get_rich_table(*args, **kwargs):
+    return Table(*args, show_header=True, **kwargs)

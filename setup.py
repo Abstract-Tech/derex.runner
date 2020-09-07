@@ -22,7 +22,6 @@ requirements = [
     "pymysql",
     "pyyaml",
     "rich",
-    "tabulate",
 ]
 
 setup_requirements = ["setuptools"]

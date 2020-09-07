@@ -9,6 +9,9 @@ import sys
 import traceback
 
 
+DEREX_TEST_USER = "derex_test_user"
+
+
 # Do not trust the value of __file__ in this module: on Azure it's wrong
 
 

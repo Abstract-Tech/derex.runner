@@ -11,6 +11,8 @@ from derex.runner.project import Project
 from derex.runner.project import ProjectNotFound
 from derex.runner.project import ProjectRunMode
 from derex.runner.secrets import HAS_MASTER_SECRET
+from derex.runner.utils import get_rich_console
+from derex.runner.utils import get_rich_table
 from typing import Any
 from typing import Optional
 
@@ -55,12 +57,12 @@ def derex(ctx):
     if not container_names:
         return
 
-    console = rich.console.Console()
-    table = rich.table.Table(
+    console = get_rich_console()
+    table = get_rich_table(
+        "Name",
         title="[bold green]These containers are running and exposing an HTTP server on port 80",
         box=rich.box.SIMPLE,
     )
-    table.add_column("Name")
     for container in container_names:
         container = (f"[bold]{container[0]}",) + container[1:]
         table.add_row(*container)

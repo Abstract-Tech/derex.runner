@@ -53,8 +53,6 @@ def test_minimal_project(minimal_project):
 
 
 def test_runmode(minimal_project):
-    from derex.runner.utils import CONF_FILENAME
-
     with minimal_project:
         project = Project()
         # If no default is specified, the value should be debug
@@ -129,7 +127,7 @@ def test_settings_enum(minimal_project):
 
 def test_image_prefix(minimal_project):
     with minimal_project:
-        conf_file = Project().root / "derex.config.yaml"
+        conf_file = Project().root / CONF_FILENAME
         config = {
             "project_name": "minimal",
             "image_prefix": "registry.example.com/onlinecourses/edx-ironwood",
@@ -177,7 +175,7 @@ def test_populate_settings(minimal_project):
 
 def test_container_variables(minimal_project):
     with minimal_project:
-        conf_file = Project().root / "derex.config.yaml"
+        conf_file = Project().root / CONF_FILENAME
         config = {
             "project_name": "minimal",
             "variables": {
@@ -202,7 +200,7 @@ def test_container_variables(minimal_project):
 def test_project_name_constraints(minimal_project):
     with minimal_project:
         project_root = Project().root
-        conf_file = project_root / "derex.config.yaml"
+        conf_file = project_root / CONF_FILENAME
         config = {"project_name": ";invalid;"}
         conf_file.write_text(yaml.dump(config))
         create_settings_file(project_root, "production")
@@ -212,7 +210,7 @@ def test_project_name_constraints(minimal_project):
 
 def test_container_variables_json_serialized(minimal_project):
     with minimal_project:
-        conf_file = Project().root / "derex.config.yaml"
+        conf_file = Project().root / CONF_FILENAME
         config = {
             "project_name": "minimal",
             "variables": {
@@ -236,21 +234,36 @@ def test_container_variables_json_serialized(minimal_project):
         expected = config["variables"]["ALL_JWT_AUTH"]["base"]
         assert expected == json.loads(env["DEREX_JSON_ALL_JWT_AUTH"])
 
-        # Test secrets
-        with open(Path(projdir) / SECRETS_CONF_FILENAME, "w") as secrets_conf_file:
-            secrets_config = {
-                "variables": {
-                    "ALL_MYSQL_ROOT_PASSWORD": {
-                        "base": "base-secret-password",
-                        "production": "production-secret-password",
-                    },
+        project.settings = project._available_settings.production
+        env = project.get_container_env()
+        assert "DEREX_JSON_ALL_JWT_AUTH" in env
+        expected = config["variables"]["ALL_JWT_AUTH"]["production"]
+        assert expected == json.loads(env["DEREX_JSON_ALL_JWT_AUTH"])
+
+
+def test_secret_variables(complete_project):
+    with complete_project:
+        conf_file = Project().root / SECRETS_CONF_FILENAME
+        config = {
+            "variables": {
+                "ALL_MYSQL_ROOT_PASSWORD": {
+                    "base": "base-secret-password",
+                    "production": "production-secret-password",
                 },
-            }
-            secrets_conf_file.write(yaml.dump(secrets_config))
+            },
+        }
+        conf_file.write_text(yaml.dump(config))
+        create_settings_file(Project().root, "production")
         project = Project()
         env = project.get_container_env()
         assert "DEREX_ALL_MYSQL_ROOT_PASSWORD" in env
-        expected = secrets_config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["base"]
+        expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["base"]
+        assert expected == env["DEREX_ALL_MYSQL_ROOT_PASSWORD"]
+
+        project.settings = project._available_settings.production
+        env = project.get_container_env()
+        assert "DEREX_ALL_MYSQL_ROOT_PASSWORD" in env
+        expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["production"]
         assert expected == env["DEREX_ALL_MYSQL_ROOT_PASSWORD"]
 
 
