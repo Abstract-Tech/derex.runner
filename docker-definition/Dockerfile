@@ -57,8 +57,6 @@ ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
 
 RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ && \
     git clone ${EDX_PLATFORM_REPOSITORY} --branch ${EDX_PLATFORM_VERSION} --depth 1 /openedx/edx-platform && \
-    `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
-    sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /openedx/edx-platform/requirements/edx/base.txt && \
     `# sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html) ` \
     sed -e "s/.*sympy==0.7.1/sympy==1.5.1/" -i /openedx/edx-platform/requirements/edx/base.txt
 
@@ -96,6 +94,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     pip install numpy -c /tmp/derex.txt && \
+    `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
+    sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /openedx/edx-platform/requirements/edx/base.txt && \
     pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse gevent "whitenoise[brotli]<5"
 
