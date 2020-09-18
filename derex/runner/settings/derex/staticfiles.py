@@ -6,7 +6,6 @@ import django
 
 DJANGO_VERSION = version_parse(django.__version__)
 
-
 STATIC_ROOT_BASE = "/openedx/staticfiles"
 STATIC_ROOT = {
     "lms": Path(STATIC_ROOT_BASE),
