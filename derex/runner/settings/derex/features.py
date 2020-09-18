@@ -23,7 +23,8 @@ FEATURES.update(
 # Remove CSMH as discussed in
 # https://discuss.openedx.org/t/new-edxapp-csmh-mysql-database-in-juniper/2127
 FEATURES["ENABLE_CSMH_EXTENDED"] = False
-INSTALLED_APPS.remove("coursewarehistoryextended")
+if "coursewarehistoryextended" in INSTALLED_APPS:
+    INSTALLED_APPS.remove("coursewarehistoryextended")
 DATABASE_ROUTERS.remove(
     "openedx.core.lib.django_courseware_routers.StudentModuleHistoryExtendedRouter"
 )
