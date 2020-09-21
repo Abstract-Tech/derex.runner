@@ -1,3 +1,4 @@
+exclude: derex/runner/compose_files/openedx_customizations/.*
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.0.0
@@ -22,7 +23,9 @@ repos:
       - id: mypy
         args:
           - --ignore-missing-imports
-        exclude: tests/fixtures/.*|derex/runner/settings/derex/.*|derex_django/setup.py
+        exclude: "tests/fixtures/.*|\
+          derex/runner/settings/derex/.*|\
+          derex_django/setup.py"
 
   - repo: https://github.com/ambv/black
     rev: 19.10b0
