@@ -141,7 +141,7 @@ stages:
             displayName: Fix coverage result and publish it
             condition: succeededOrFailed()
 
-      - job: TestComplete
+      - job: TestIronwoodComplete
         timeoutInMinutes: 60
         pool:
           vmImage: "ubuntu-latest"
@@ -262,7 +262,7 @@ stages:
             condition: always()
             displayName: "Show ddc-project config"
 
-      - job: TestMinimal
+      - job: TestIronwoodMinimal
         timeoutInMinutes: 40
         pool:
           vmImage: "ubuntu-latest"
@@ -299,6 +299,45 @@ stages:
               while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
               curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@openedx.lms
               curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@openedx.cms
+            displayName: "Check flower"
+
+      - job: TestJuniperMinimal
+        timeoutInMinutes: 40
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
+
+          - script: ddc-services pull
+            displayName: "Pull edX services images"
+
+          - script: |
+              set -ex
+              export DEREX_ADMIN_SERVICES=False
+              ddc-services up -d
+              derex reset-mailslurper
+            displayName: "Start service daemons"
+
+          - script: |
+              set -ex
+              cd tests/fixtures/minimal-juniper
+              docker images
+              ddc-project config
+              derex mysql reset --force
+              derex reset-rabbitmq
+              derex create-bucket
+            displayName: "Prime Mysql DB"
+
+          - script: |
+              set -x
+              cd tests/fixtures/minimal-juniper
+              echo 127.0.0.1 localhost flower.minimal-juniper.localhost | sudo tee -a /etc/hosts
+              ddc-project up -d lms_worker cms_worker flower
+              while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
+              while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
+              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal-juniper.localhost/dashboard?json=1|grep celery@openedx.lms
+              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal-juniper.localhost/dashboard?json=1|grep celery@openedx.cms
             displayName: "Check flower"
 
       - job: CheckDocs
