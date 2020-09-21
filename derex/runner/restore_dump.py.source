@@ -42,7 +42,8 @@ def restore_dump():
     )
     sql = get_dump_file_contents()
     cursor = get_connection().cursor()
-    cursor.execute(sql)
+    cursor.execute(sql.decode("utf-8"))
+    cursor.execute("COMMIT")
 
 
 def run_fixtures():
