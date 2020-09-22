@@ -16,15 +16,11 @@ FIXTURES_DIR = "/openedx/fixtures/"
 
 def get_dump_file_contents():
     sql = bz2.BZ2File(DUMP_FILE_PATH).read()
-
-    # Convert to string if we have bytes
-    if type(sql) == bytes:
-        sql = str(sql)
-
-    # Add semicolon to prevent _mysql_exceptions.ProgrammingError:
-    # (2014, "Commands out of sync; you can't run this command now")
-    sql = "{};".format(sql)
-    return sql
+    if sys.version_info[0] < 3:
+        # Add semicolon to prevent _mysql_exceptions.ProgrammingError:
+        # (2014, "Commands out of sync; you can't run this command now")
+        sql = "{};".format(sql)
+    return sql.decode("utf-8")
 
 
 def get_connection(include_db=True):
@@ -51,6 +47,9 @@ def restore_dump():
     )
     cursor = get_connection().cursor()
     cursor.execute(get_dump_file_contents())
+    if sys.version_info[0] > 2:
+        # In python3 we need to explicitly commit the result for some reason
+        cursor.execute("COMMIT;")
 
 
 def run_fixtures():
