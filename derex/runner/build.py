@@ -50,6 +50,10 @@ def build_requirements_image(project: Project):
             "git clean -fdx common/static",
             # Make sure ./manage.py sets the SERVICE_VARIANT variable each time it's invoked
             "unset SERVICE_VARIANT",
+            # If DJANGO_SETTINGS_MODULE is defined settings will be initialized twice
+            # leading to a `RuntimeError: Settings already configured.` when paver
+            # calls `process_xmodule_assets`
+            "unset DJANGO_SETTINGS_MODULE",
             # XXX we only compile the `open-edx` theme. We could make this configurable per-project
             # but probably most people are only interested in their own theme
             "paver update_assets --settings derex.assets --themes open-edx",
