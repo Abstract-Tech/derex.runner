@@ -8,11 +8,13 @@ stages:
           vmImage: "ubuntu-18.04"
         steps:
           - template: prepare.yml
-          - template: test_pyinstaller_ubuntu.yml
+          - template: test_pyinstaller.yml
             parameters:
+              OS: ubuntu
               OPENEDX_RELEASE: ironwood
-          - template: test_pyinstaller_ubuntu.yml
+          - template: test_pyinstaller.yml
             parameters:
+              OS: ubuntu
               OPENEDX_RELEASE: juniper
 
       - job: PyInstallerBuildMacOs
@@ -20,11 +22,13 @@ stages:
           vmImage: "macOS-10.14"
         steps:
           - template: prepare.yml
-          - template: test_pyinstaller_macos.yml
+          - template: test_pyinstaller.yml
             parameters:
+              OS: macos
               OPENEDX_RELEASE: ironwood
-          - template: test_pyinstaller_macos.yml
+          - template: test_pyinstaller.yml
             parameters:
+              OS: macos
               OPENEDX_RELEASE: juniper
 
       - job: RunPytests
