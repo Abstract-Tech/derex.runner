@@ -117,8 +117,8 @@ stages:
             displayName: Fix coverage result and publish it
             condition: succeededOrFailed()
 
-      - job: TestIronwood
-        timeoutInMinutes: 60
+      - job: TestIronwoodMinimal
+        timeoutInMinutes: 40
         pool:
           vmImage: "ubuntu-latest"
         variables:
@@ -129,11 +129,22 @@ stages:
           - template: test_minimal_project.yml
             parameters:
               OPENEDX_RELEASE: ironwood
+
+      - job: TestIronwoodComplete
+        timeoutInMinutes: 40
+        dependsOn: TestIronwoodMinimal
+        pool:
+          vmImage: "ubuntu-latest"
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
           - template: test_complete_project.yml
             parameters:
               OPENEDX_RELEASE: ironwood
 
-      - job: TestJuniper
+      - job: TestJuniperMinimal
         timeoutInMinutes: 40
         pool:
           vmImage: "ubuntu-latest"
@@ -145,6 +156,17 @@ stages:
           - template: test_minimal_project.yml
             parameters:
               OPENEDX_RELEASE: juniper
+
+      - job: TestJuniperComplete
+        timeoutInMinutes: 40
+        dependsOn: TestJuniperMinimal
+        pool:
+          vmImage: "ubuntu-latest"
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
           - template: test_complete_project.yml
             parameters:
               OPENEDX_RELEASE: juniper
