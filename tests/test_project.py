@@ -24,9 +24,17 @@ def test_complete_project(workdir, complete_project):
     assert project.requirements_dir == project_path / "requirements"
     assert project.themes_dir == project_path / "themes"
     assert project.name == f"{project.openedx_version.name}-complete"
-    assert (
-        project.requirements_image_name == f"{project.name}/openedx-requirements:6c92de"
-    )
+
+    if project.openedx_version.name == "ironwood":
+        assert (
+            project.requirements_image_name
+            == f"{project.name}/openedx-requirements:6c92de"
+        )
+    elif project.openedx_version.name == "juniper":
+        assert (
+            project.requirements_image_name
+            == f"{project.name}/openedx-requirements:27703b"
+        )
 
 
 def test_minimal_project(minimal_project):
