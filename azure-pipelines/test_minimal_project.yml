@@ -26,10 +26,10 @@ steps:
   - script: |
       set -x
       cd examples/${{ parameters.OPENEDX_RELEASE }}/minimal
-      echo 127.0.0.1 localhost flower.minimal.localhost | sudo tee -a /etc/hosts
+      echo 127.0.0.1 localhost flower.${{ parameters.OPENEDX_RELEASE }}-minimal.localhost | sudo tee -a /etc/hosts
       ddc-project up -d lms_worker cms_worker flower
       while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
       while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
-      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@openedx.lms
-      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@openedx.cms
+      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.OPENEDX_RELEASE }}-minimal.localhost/dashboard?json=1|grep celery@openedx.lms
+      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.OPENEDX_RELEASE }}-minimal.localhost/dashboard?json=1|grep celery@openedx.cms
     displayName: "Check flower"
