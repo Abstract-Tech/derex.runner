@@ -26,6 +26,17 @@ steps:
 
   - ${{ if eq(parameters.OS, 'macos') }}:
       - script: |
+          brew cask install docker
+          sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
+          /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+
+          while ! docker info 2>/dev/null ; do
+            sleep 5
+            echo "Waiting for Docker service to be in the running state"
+          done
+        displayName: "Setup Docker"
+
+      - script: |
           pip install pyinstaller scrypt
           # The Openssl version on MacOS 10.14 does not support scrypt
           # so we pip install it and leave a trace to pyinstaller to pick it up
