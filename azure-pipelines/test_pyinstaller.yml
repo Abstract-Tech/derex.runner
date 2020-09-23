@@ -1,4 +1,6 @@
 parameters:
+  - name: OS
+    type: string
   - name: OPENEDX_RELEASE
     type: string
 
