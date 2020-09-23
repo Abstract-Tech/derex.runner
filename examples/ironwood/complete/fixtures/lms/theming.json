@@ -1,0 +1,18 @@
+[
+  {
+    "model": "sites.site",
+    "pk": 1,
+    "fields": {
+      "domain": "localhost",
+      "name": "localhost"
+    }
+  },
+  {
+    "model": "theming.sitetheme",
+    "pk": 1,
+    "fields": {
+      "site": 1,
+      "theme_dir_name": "demo-theme"
+    }
+  }
+]

@@ -302,14 +302,14 @@ class Project:
             if destination.is_file():
                 old_text = destination.read_text()
                 if old_text != new_text:
-                    logger.warn(f"Replacing file {destination} with newer version")
+                    logger.warning(f"Replacing file {destination} with newer version")
                     diff = tuple(
                         difflib.unified_diff(
                             old_text.splitlines(keepends=True),
                             new_text.splitlines(keepends=True),
                         )
                     )
-                    logger.warn("".join(diff))
+                    logger.warning("".join(diff))
             else:
                 if not destination.parent.is_dir():
                     destination.parent.mkdir(parents=True)

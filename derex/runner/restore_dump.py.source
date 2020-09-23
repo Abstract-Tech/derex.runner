@@ -16,11 +16,10 @@ FIXTURES_DIR = "/openedx/fixtures/"
 
 def get_dump_file_contents():
     sql = bz2.BZ2File(DUMP_FILE_PATH).read()
-    if sys.version_info[0] < 3:
-        # Add semicolon to prevent _mysql_exceptions.ProgrammingError:
-        # (2014, "Commands out of sync; you can't run this command now")
-        sql = "{};".format(sql)
-    return sql.decode("utf-8")
+    if sys.version_info[0] > 2:
+        # In python3 bz2 returns bytes instead of a string
+        sql = sql.decode("utf-8")
+    return sql
 
 
 def get_connection(include_db=True):

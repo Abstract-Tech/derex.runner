@@ -12,58 +12,56 @@ import pytest
 import yaml
 
 
-MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
-COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
-
-
-def test_complete_project(workdir):
-    with workdir(COMPLETE_PROJ / "themes"):
-        project = Project()
-
-    project_loaded_with_path = Project(COMPLETE_PROJ)
+def test_complete_project(workdir, complete_project):
+    with complete_project:
+        project_path = Project().root
+        project_loaded_with_path = Project(project_path)
+        with workdir(project_path / "themes"):
+            project = Project()
 
     assert project.root == project_loaded_with_path.root
-
     assert type(project.config) == dict
-    assert project.requirements_dir == COMPLETE_PROJ / "requirements"
-    assert project.themes_dir == COMPLETE_PROJ / "themes"
-    assert project.name == "complete"
-    assert project.requirements_image_name == "complete/openedx-requirements:6c92de"
-    # assert project.themes_image_name == "complete/openedx-themes:b276c6"
+    assert project.requirements_dir == project_path / "requirements"
+    assert project.themes_dir == project_path / "themes"
+    assert project.name == f"{project.openedx_version.name}-complete"
+    assert (
+        project.requirements_image_name == f"{project.name}/openedx-requirements:6c92de"
+    )
 
 
-def test_minimal_project(workdir_copy):
-    with workdir_copy(MINIMAL_PROJ):
+def test_minimal_project(minimal_project):
+    with minimal_project:
         project = Project()
 
     assert type(project.config) == dict
     assert project.requirements_dir is None
     assert project.themes_dir is None
-    assert project.name == "minimal"
+    assert project.name == f"{project.openedx_version.name}-minimal"
     assert project.requirements_image_name == project.image_name
     assert project.themes_image_name == project.image_name
     assert project.themes_image_name == project.base_image
 
 
-def test_runmode(testproj):
+def test_runmode(minimal_project):
     from derex.runner.utils import CONF_FILENAME
 
-    with testproj:
+    with minimal_project:
+        project = Project()
         # If no default is specified, the value should be debug
-        assert Project().runmode == ProjectRunMode.debug
+        assert project.runmode == ProjectRunMode.debug
 
         # If a default value is specified, it should be picked up
-        with (Path(testproj._tmpdir.name) / CONF_FILENAME).open("a") as fh:
+        with (project.root / CONF_FILENAME).open("a") as fh:
             fh.write("default_runmode: production\n")
         assert Project().runmode == ProjectRunMode.production
 
-        Project().runmode = ProjectRunMode.production
+        Project().runmode = ProjectRunMode.debug
         # Runmode changes should be persisted in the project directory
         # and picked up by a second Project instance
-        assert Project().runmode == ProjectRunMode.production
+        assert Project().runmode == ProjectRunMode.debug
 
 
-def test_ddc_project_addition(testproj, mocker, capsys):
+def test_ddc_project_addition(minimal_project, mocker, capsys):
     from derex.runner import hookimpl
 
     class CustomAdditional:
@@ -78,8 +76,8 @@ def test_ddc_project_addition(testproj, mocker, capsys):
                 "priority": ">local-derex",
             }
 
-    with testproj:
-        docker_compose_path = Path(testproj._tmpdir.name) / "docker-compose.yml"
+    with minimal_project:
+        docker_compose_path = Project().root / "docker-compose.yml"
         with docker_compose_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
@@ -89,11 +87,9 @@ def test_ddc_project_addition(testproj, mocker, capsys):
         assert output.endswith(f"-f {docker_compose_path}\n")
 
 
-def test_docker_compose_addition_per_runmode(testproj, mocker, capsys):
-    with testproj:
-        docker_compose_debug_path = (
-            Path(testproj._tmpdir.name) / "docker-compose-debug.yml"
-        )
+def test_docker_compose_addition_per_runmode(minimal_project, mocker, capsys):
+    with minimal_project:
+        docker_compose_debug_path = Project().root / "docker-compose-debug.yml"
         with docker_compose_debug_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
@@ -112,8 +108,8 @@ def test_docker_compose_addition_per_runmode(testproj, mocker, capsys):
         assert output.endswith(f"-f {default_project_docker_compose_file}\n")
 
 
-def test_settings_enum(testproj):
-    with testproj:
+def test_settings_enum(minimal_project):
+    with minimal_project:
         assert Project().settings == Project().get_available_settings().base
 
         create_settings_file(Project().root, "production")
@@ -121,9 +117,9 @@ def test_settings_enum(testproj):
         assert Project().settings == Project().get_available_settings().production
 
 
-def test_image_prefix(testproj):
-    with testproj as projdir:
-        conf_file = Path(projdir) / "derex.config.yaml"
+def test_image_prefix(minimal_project):
+    with minimal_project:
+        conf_file = Project().root / "derex.config.yaml"
         config = {
             "project_name": "minimal",
             "image_prefix": "registry.example.com/onlinecourses/edx-ironwood",
@@ -131,19 +127,18 @@ def test_image_prefix(testproj):
         conf_file.write_text(yaml.dump(config))
         # Create a requirements directory to signal derex
         # that we're going to build images for this project
-        (Path(projdir) / "requirements").mkdir()
+        (Project().root / "requirements").mkdir()
         project = Project()
         assert project.image_prefix == config["image_prefix"]
         assert project.themes_image_name.startswith(project.image_prefix)
 
 
-def test_populate_settings(testproj):
-    with testproj as projdir:
-
+def test_populate_settings(minimal_project):
+    with minimal_project:
         default_settings_dir = Project().settings_directory_path()
         assert default_settings_dir.is_dir()
 
-        create_settings_file(Path(projdir), "production")
+        create_settings_file(Project().root, "production")
         project = Project(read_only=True)
 
         assert default_settings_dir != project.settings_directory_path()
@@ -170,9 +165,9 @@ def test_populate_settings(testproj):
         assert os.access(str(base_py), os.W_OK)
 
 
-def test_container_variables(testproj):
-    with testproj as projdir:
-        conf_file = Path(projdir) / "derex.config.yaml"
+def test_container_variables(minimal_project):
+    with minimal_project:
+        conf_file = Project().root / "derex.config.yaml"
         config = {
             "project_name": "minimal",
             "variables": {
@@ -183,7 +178,7 @@ def test_container_variables(testproj):
             },
         }
         conf_file.write_text(yaml.dump(config))
-        create_settings_file(Path(projdir), "production")
+        create_settings_file(Project().root, "production")
         project = Project()
         env = project.get_container_env()
         assert "DEREX_LMS_SITE_NAME" in env
@@ -194,19 +189,20 @@ def test_container_variables(testproj):
         assert env["DEREX_LMS_SITE_NAME"] == "onlinecourses.example"
 
 
-def test_project_name_constraints(testproj):
-    with testproj as projdir:
-        conf_file = Path(projdir) / "derex.config.yaml"
+def test_project_name_constraints(minimal_project):
+    with minimal_project:
+        project_root = Project().root
+        conf_file = project_root / "derex.config.yaml"
         config = {"project_name": ";invalid;"}
         conf_file.write_text(yaml.dump(config))
-        create_settings_file(Path(projdir), "production")
+        create_settings_file(project_root, "production")
         with pytest.raises(ValueError):
             Project()
 
 
-def test_container_variables_json_serialized(testproj):
-    with testproj as projdir:
-        conf_file = Path(projdir) / "derex.config.yaml"
+def test_container_variables_json_serialized(minimal_project):
+    with minimal_project:
+        conf_file = Project().root / "derex.config.yaml"
         config = {
             "project_name": "minimal",
             "variables": {
@@ -223,7 +219,7 @@ def test_container_variables_json_serialized(testproj):
             },
         }
         conf_file.write_text(yaml.dump(config))
-        create_settings_file(Path(projdir), "production")
+        create_settings_file(Project().root, "production")
         project = Project()
         env = project.get_container_env()
         assert "DEREX_JSON_LMS_ALL_JWT_AUTH" in env

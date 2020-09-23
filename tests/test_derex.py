@@ -7,28 +7,25 @@ from derex.runner.cli import derex as derex_cli_group
 from derex.runner.ddc import ddc_services
 from derex.runner.project import Project
 from itertools import repeat
-from pathlib import Path
 from types import SimpleNamespace
 
 import os
 import pytest
 
 
-MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
-COMPLETE_PROJ = Path(__file__).with_name("fixtures") / "complete"
 runner = CliRunner(mix_stderr=False)
 
 
 @pytest.mark.slowtest
-def test_derex_compile_theme(workdir_copy, sys_argv):
-    with workdir_copy(COMPLETE_PROJ):
+def test_derex_compile_theme(complete_project):
+    with complete_project:
         result = runner.invoke(derex_cli_group, ["compile-theme"])
         assert_result_ok(result)
         assert os.path.isdir(Project().root / ".derex")
 
 
 @pytest.mark.slowtest
-def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
+def test_derex_reset_mysql(sys_argv, mocker, minimal_project):
     """Test the open edx ironwood docker compose shortcut."""
     mocker.patch("derex.runner.ddc.check_services", return_value=True)
     client = mocker.patch("derex.runner.docker_utils.client")
@@ -38,14 +35,14 @@ def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
 
     with sys_argv(["ddc-services", "up", "-d"]):
         ddc_services()
-    with workdir_copy(MINIMAL_PROJ):
+    with minimal_project:
         result = runner.invoke(derex_cli_group, ["mysql", "reset"])
     assert_result_ok(result)
     assert result.exit_code == 0
 
 
-def test_derex_runmode(testproj, mocker):
-    with testproj:
+def test_derex_runmode(minimal_project, mocker):
+    with minimal_project:
         result = runner.invoke(derex_cli_group, ["runmode"])
         assert result.exit_code == 0, result.output
         assert result.output == "debug\n"
@@ -78,8 +75,8 @@ def test_derex_runmode(testproj, mocker):
         assert result.stderr_bytes == b""
 
 
-def test_derex_runmode_wrong(testproj):
-    with testproj:
+def test_derex_runmode_wrong(minimal_project):
+    with minimal_project:
         project = Project()
         # Use low level API to inject invalid value
         project._set_status("runmode", "garbage-not-a-valid-runmode")

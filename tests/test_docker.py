@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 from derex.runner.project import Project
-from pathlib import Path
 from types import SimpleNamespace
 
 import docker
-
-
-MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 
 
 def test_ensure_volumes_present(mocker):
@@ -55,7 +51,7 @@ def test_wait_for_service(mocker):
     container.exec_run.assert_called_with('mysql -psecret -e "SHOW DATABASES"')
 
 
-def test_get_final_image(mocker):
+def test_get_final_image(mocker, minimal_project):
     from derex.runner.docker_utils import image_exists
 
     mocker.patch(
@@ -64,8 +60,9 @@ def test_get_final_image(mocker):
             images=mocker.Mock(return_value=DOCKER_DAEMON_IMAGES_RESPONSE)
         ),
     )
-    project = Project(MINIMAL_PROJ)
-    image_exists(project)
+    with minimal_project:
+        project = Project()
+        image_exists(project)
 
 
 DOCKER_DAEMON_IMAGES_RESPONSE = [
