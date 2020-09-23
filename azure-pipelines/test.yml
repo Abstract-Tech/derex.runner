@@ -131,7 +131,7 @@ stages:
               OPENEDX_RELEASE: ironwood
 
       - job: TestIronwoodComplete
-        timeoutInMinutes: 40
+        timeoutInMinutes: 60
         dependsOn: TestIronwoodMinimal
         pool:
           vmImage: "ubuntu-latest"
@@ -158,7 +158,7 @@ stages:
               OPENEDX_RELEASE: juniper
 
       - job: TestJuniperComplete
-        timeoutInMinutes: 40
+        timeoutInMinutes: 60
         dependsOn: TestJuniperMinimal
         pool:
           vmImage: "ubuntu-latest"
