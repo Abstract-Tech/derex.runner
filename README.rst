@@ -55,7 +55,7 @@ Run the following commands:
     cd derex.runner
     direnv allow
     pip install -r requirements.txt -e .
-    cd tests/fixtures/minimal/
+    cd examples/juniper/minimal/
     ddc-services up -d  # Start mysql, mongodb, rabbitmq and admin tools
     derex reset-mailslurper  # Prime the mailslurper mysql database
     derex reset-rabbitmq  # Create rabbitmq user and queue
