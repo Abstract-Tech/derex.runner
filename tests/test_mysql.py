@@ -3,22 +3,18 @@ from click.testing import CliRunner
 from derex.runner.mysql import get_mysql_client
 from derex.runner.mysql import show_databases
 from itertools import repeat
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 import uuid
 
 
-MINIMAL_PROJ = Path(__file__).with_name("fixtures") / "minimal"
 runner = CliRunner(mix_stderr=False)
 
 
 @pytest.fixture(scope="session")
 def start_mysql(sys_argv):
-    """Start the mysql container on setup,
-    stop and remove it on teardown.
-    """
+    """Ensure the mysql service is up"""
     from derex.runner.ddc import ddc_services
 
     with sys_argv(["ddc-services", "up", "-d", "mysql"]):
@@ -43,6 +39,7 @@ def cleanup_mysql(start_mysql):
     client.connection.close()
 
 
+@pytest.mark.slowtest
 def test_derex_mysql(start_mysql):
     """Test the `derex mysql copy` cli command """
     from derex.runner.cli.mysql import copy_database_cmd
@@ -74,7 +71,8 @@ def test_derex_mysql(start_mysql):
     assert test_db_copy_name not in [database[0] for database in show_databases()]
 
 
-def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
+@pytest.mark.slowtest
+def test_derex_reset_mysql(sys_argv, mocker, minimal_project):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli.mysql import reset_mysql_cmd
     from derex.runner.ddc import ddc_services
@@ -87,7 +85,7 @@ def test_derex_reset_mysql(sys_argv, mocker, workdir_copy):
 
     with sys_argv(["ddc-services", "up", "-d"]):
         ddc_services()
-    with workdir_copy(MINIMAL_PROJ):
+    with minimal_project:
         result = runner.invoke(reset_mysql_cmd, input="y")
     assert_result_ok(result)
     assert result.exit_code == 0

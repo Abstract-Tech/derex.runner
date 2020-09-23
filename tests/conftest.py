@@ -13,6 +13,23 @@ import traceback
 
 
 @pytest.fixture
+def workdir():
+    @contextlib.contextmanager
+    def workdir_decorator(path: Path):
+        """Creates a copy of the given directory's parent, changes working directory
+        to be the copy of the given one and returns to the previous working
+        directory on exit."""
+        prev_cwd = Path.cwd()
+        os.chdir(path)
+        try:
+            yield path
+        finally:
+            os.chdir(prev_cwd)
+
+    return workdir_decorator
+
+
+@pytest.fixture
 def workdir_copy():
     @contextlib.contextmanager
     def workdir_decorator(path: Path):
@@ -35,21 +52,24 @@ def workdir_copy():
     return workdir_decorator
 
 
-@pytest.fixture
-def workdir():
-    @contextlib.contextmanager
-    def workdir_decorator(path: Path):
-        """Creates a copy of the given directory's parent, changes working directory
-        to be the copy of the given one and returns to the previous working
-        directory on exit."""
-        prev_cwd = Path.cwd()
-        os.chdir(path)
-        try:
-            yield path
-        finally:
-            os.chdir(prev_cwd)
+@pytest.fixture(params=["ironwood", "juniper"])
+def minimal_project(request, workdir_copy):
+    """Return a context manager that can be used to work inside
+    a complete project.
+    """
+    return workdir_copy(
+        Path(__file__).parent.with_name("examples") / request.param / "minimal"
+    )
 
-    return workdir_decorator
+
+@pytest.fixture(params=["ironwood", "juniper"])
+def complete_project(request, workdir_copy):
+    """Return a context manager that can be used to work inside
+    a complete project.
+    """
+    return workdir_copy(
+        Path(__file__).parent.with_name("examples") / request.param / "complete"
+    )
 
 
 @pytest.fixture(scope=("session"))
@@ -64,24 +84,6 @@ def sys_argv(session_mocker):
                     raise
 
     return my_cm
-
-
-@pytest.fixture
-def testproj(workdir):
-    """Return a context manager that can be used to work inside
-    a test project.
-    """
-    from derex.runner.utils import CONF_FILENAME
-
-    directory = TemporaryDirectory("-derex-project")
-    with open(f"{directory.name}/{CONF_FILENAME}", "w") as fh:
-        fh.write("project_name: testminimal\n")
-    result = workdir(Path(directory.name))
-    # TemporaryDirectory will do its cleanup when it's garbage collected.
-    # We attach it to the workdir context manager so that it will be garbage collected
-    # together with it.
-    result._tmpdir = directory
-    return result
 
 
 def assert_result_ok(result):

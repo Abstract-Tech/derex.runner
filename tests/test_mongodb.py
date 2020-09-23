@@ -11,9 +11,7 @@ runner = CliRunner(mix_stderr=False)
 
 @pytest.fixture(scope="session")
 def start_mongodb(sys_argv):
-    """Start the mongodb container on setup,
-    stop and remove it on teardown.
-    """
+    """Ensure the mongodb service is up"""
     with sys_argv(["ddc-services", "up", "-d", "mongodb"]):
         ddc_services()
 
