@@ -162,7 +162,7 @@ RUN --mount=type=cache,target=/root/.npm \
     --mount=type=cache,target=/root/.cache/pip \
     apk add g++ make coreutils vim mariadb-client && \
     wget ${NODE_URL} -O - | tar --directory / -xJf - && ln -s /node-*/bin/* /usr/local/bin/ && \
-    npm --unsafe-perm install -g yarn@latest && ln -sf /node-*/bin/* /usr/local/bin/ && yarn install --unsafe-perm && \
+    npm install --unsafe-perm && \
     pip install pdbpp ipython ipdb
 
 FROM nostatic-dev as dev-nodump
