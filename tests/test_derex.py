@@ -4,10 +4,7 @@
 from .conftest import assert_result_ok
 from click.testing import CliRunner
 from derex.runner.cli import derex as derex_cli_group
-from derex.runner.ddc import ddc_services
 from derex.runner.project import Project
-from itertools import repeat
-from types import SimpleNamespace
 
 import os
 import pytest
@@ -22,23 +19,6 @@ def test_derex_compile_theme(complete_project):
         result = runner.invoke(derex_cli_group, ["compile-theme"])
         assert_result_ok(result)
         assert os.path.isdir(Project().root / ".derex")
-
-
-@pytest.mark.slowtest
-def test_derex_reset_mysql(sys_argv, mocker, minimal_project):
-    """Test the open edx ironwood docker compose shortcut."""
-    mocker.patch("derex.runner.ddc.check_services", return_value=True)
-    client = mocker.patch("derex.runner.docker_utils.client")
-    client.containers.get.return_value.exec_run.side_effect = [
-        SimpleNamespace(exit_code=-1)
-    ] + list(repeat(SimpleNamespace(exit_code=0), 10))
-
-    with sys_argv(["ddc-services", "up", "-d"]):
-        ddc_services()
-    with minimal_project:
-        result = runner.invoke(derex_cli_group, ["mysql", "reset"])
-    assert_result_ok(result)
-    assert result.exit_code == 0
 
 
 def test_derex_runmode(minimal_project, mocker):

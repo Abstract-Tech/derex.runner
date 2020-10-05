@@ -74,10 +74,9 @@ def test_derex_mysql(start_mysql):
 
 
 @pytest.mark.slowtest
-def test_derex_mysql_reset(sys_argv, mocker, minimal_project):
+def test_derex_mysql_reset(start_mysql, mocker, minimal_project):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli.mysql import reset_mysql_cmd
-    from derex.runner.ddc import ddc_services
 
     mocker.patch("derex.runner.ddc.check_services", return_value=True)
     client = mocker.patch("derex.runner.docker_utils.client")
@@ -85,8 +84,6 @@ def test_derex_mysql_reset(sys_argv, mocker, minimal_project):
         SimpleNamespace(exit_code=-1)
     ] + list(repeat(SimpleNamespace(exit_code=0), 10))
 
-    with sys_argv(["ddc-services", "up", "-d"]):
-        ddc_services()
     with minimal_project:
         result = runner.invoke(reset_mysql_cmd, input="y")
     assert_result_ok(result)
