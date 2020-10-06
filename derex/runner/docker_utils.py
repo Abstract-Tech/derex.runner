@@ -89,13 +89,19 @@ def wait_for_service(service: str, check_command: str, max_seconds: int = 20):
 def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
+    from derex.runner.mysql import MYSQL_ROOT_PASSWORD
+
     dump_path = abspath_from_egg("derex.runner", relpath)
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")
     try:
         client.containers.run(
             image.tags[0],
-            ["sh", "-c", f"mysql -h mysql -psecret < /dump/{dump_path.name}"],
+            [
+                "sh",
+                "-c",
+                f"mysql -h mysql -p{MYSQL_ROOT_PASSWORD} < /dump/{dump_path.name}",
+            ],
             network="derex",
             volumes={dump_path.parent: {"bind": "/dump"}},
             auto_remove=True,
