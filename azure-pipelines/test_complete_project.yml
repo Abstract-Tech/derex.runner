@@ -26,7 +26,7 @@ steps:
       ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
       # ...and then the actual run
       DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
-      ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+      ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -p$(derex debug print-secret mysql) ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
     displayName: "Test ${{ parameters.OPENEDX_RELEASE }} complete project fixtures"
 
   - script: cd examples/${{ parameters.OPENEDX_RELEASE }}/complete && derex build requirements
