@@ -1,0 +1,71 @@
+parameters:
+  - name: PROJECT_TYPE
+    type: string
+  - name: PROJECT_PATH
+    type: string
+  - name: PROJECT_NAME
+    type: string
+
+steps:
+  - script: |
+      cd ${{ parameters.PROJECT_PATH }}; ddc-project config
+    condition: always()
+    displayName: "Show ddc-project config"
+
+  - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      derex mysql reset --force
+    displayName: "Prime Mysql DB"
+
+  - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      derex update-minio
+      derex create-bucket
+    displayName: "Prime MinIO bucket"
+
+  - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      derex reset-rabbitmq
+    displayName: "Prime Rabbitmq"
+
+  - script: cd ${{ parameters.PROJECT_PATH }} && derex build requirements
+    displayName: "Build requirements image for project ${{ parameters.PROJECT_NAME }}"
+
+  - script: cd ${{ parameters.PROJECT_PATH }}; ddc-project up -d; sleep 3
+    displayName: "Start project docker containers"
+
+  - script: echo 127.0.0.1 localhost studio.${{ parameters.PROJECT_NAME }}.localhost ${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
+    displayName: Add studio.${{ parameters.PROJECT_NAME }}.localhost and ${{ parameters.PROJECT_NAME }}.localhost to /etc/hosts
+
+  - script: cd ${{ parameters.PROJECT_PATH }}; ddc-project logs lms cms
+    condition: always()
+    displayName: Show LMS/CMS logs
+
+  - script: cd ${{ parameters.PROJECT_PATH }} && derex compile-theme
+    condition: eq(parameters.PROJECT_TYPE, 'complete')
+    displayName: Compile theme
+
+  - script: cd ${{ parameters.PROJECT_PATH }} && derex build final
+    displayName: Build final image
+
+  - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      docker images
+
+      # This should not be needed, but for some reason Azure does not tag the image
+      docker tag $(docker images -q|head -n1) ${{ parameters.PROJECT_NAME }}/openedx-themes
+      docker images
+
+      echo Installing dive
+      wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
+      DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
+
+      echo Analyzing image
+      dive --ci ${{ parameters.PROJECT_NAME }}/openedx-themes
+    condition: always()
+    displayName: Test the ${{ parameters.PROJECT_NAME }} image with dive
+    timeoutInMinutes: 40

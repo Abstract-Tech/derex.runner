@@ -1,0 +1,19 @@
+steps:
+  - script: |
+      cd ${{ parameters.PROJECT_PATH }}; ddc-services config
+    condition: always()
+    displayName: "Show ddc-services config"
+
+  - script: ddc-services pull
+    displayName: "Pull edX services images"
+
+  - script: |
+      set -ex
+      export DEREX_ADMIN_SERVICES=False
+      ddc-services up -d
+    displayName: "Start services docker containers"
+
+  - script: |
+      set -ex
+      derex reset-mailslurper
+    displayName: "Prime Mailslurper database"
