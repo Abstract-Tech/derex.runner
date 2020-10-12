@@ -45,7 +45,7 @@ steps:
     displayName: Show LMS/CMS logs
 
   - script: cd ${{ parameters.PROJECT_PATH }} && derex compile-theme
-    condition: eq(parameters.PROJECT_TYPE, 'complete')
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: Compile theme
 
   - script: cd ${{ parameters.PROJECT_PATH }} && derex build final

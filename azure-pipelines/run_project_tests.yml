@@ -18,15 +18,17 @@ steps:
       # ...and then the actual run
       DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
       ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -p$(derex debug print-secret mysql) ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
-    condition: eq(parameters.PROJECT_TYPE, 'complete')
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Test ${{ parameters.PROJECT_NAME }} project fixtures"
 
-  - script: |
-      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/)
-      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost
     displayName: Curl the LMS
 
-  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/)
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
+    displayName: Curl the LMS plugin view
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+
+  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost
     displayName: Curl the CMS
 
   - script: |
@@ -35,19 +37,22 @@ steps:
       derex runmode production --force
       ddc-project up -d
       sleep 5  # Give it time to start up
-    displayName: "Start production image lms/cms"
+    displayName: "Start LMS and CMS in producion mode"
 
   - script: |
       cd ${{ parameters.PROJECT_PATH }}
       ddc-project config
-      ddc-project logs cms lms
+      ddc-project logs lms cms
     condition: always()
-    displayName: "Show CMS/LMS logs (production runmode)"
+    displayName: "Show LMS/CMS logs (production runmode)"
 
   - script: |
       $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/)
-      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
     displayName: "Curl the LMS (production runmode)"
+
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
+    displayName: "Curl the LMS (production runmode)"
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
 
   - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/)
     displayName: "Curl the CMS (production runmode)"
@@ -56,12 +61,12 @@ steps:
       set -ex
       $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/|grep static/demo-theme/css/lms-main-v1.css
       $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
-    condition: eq(parameters.PROJECT_TYPE, 'complete')
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Curl the LMS CSS and make sure our theme CSS is in"
 
   - script: |
       ddc-services logs
-      cd ${project_pat(); ddc-project logs
+      cd ${{ parameters.PROJECT_PATH }}; ddc-project logs
     condition: always()
     displayName: "Show logs"
 
