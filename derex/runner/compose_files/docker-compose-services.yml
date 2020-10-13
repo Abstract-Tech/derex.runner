@@ -64,7 +64,7 @@ services:
       - derex
 
   mailslurper:
-    image: derex/mailslurper
+    image: derex/mailslurper:1.14.1
     restart: unless-stopped
     container_name: smtp
     volumes:
