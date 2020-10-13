@@ -39,6 +39,8 @@ WSGI_PY_PATH = derex_path("derex/runner/compose_files/wsgi.py")
 DDC_SERVICES_YML_PATH = derex_path(
     "derex/runner/compose_files/docker-compose-services.yml"
 )
+MAILSLURPER_JSON_TEMPLATE = derex_path("derex/runner/compose_files/mailslurper.json.j2")
+
 DDC_ADMIN_PATH = derex_path("derex/runner/compose_files/docker-compose-admin.yml")
 DDC_PROJECT_TEMPLATE_PATH = derex_path(
     "derex/runner/templates/docker-compose-project.yml.j2"
@@ -188,19 +190,29 @@ def generate_ddc_services_file() -> str:
     ddc-services and return its path.
     """
     local_path = DEREX_DIR / "services" / DDC_SERVICES_YML_PATH.name
+    # Copy all files
     dir_util.copy_tree(
         str(DDC_SERVICES_YML_PATH.parent),
         str(local_path.parent),
         update=1,  # Do not copy files more than once
         verbose=1,
     )
+    # Compile the mailslurper template to include the mysql password
+    tmpl = Template(MAILSLURPER_JSON_TEMPLATE.read_text())
+    MYSQL_ROOT_PASSWORD = get_secret(DerexSecrets.mysql)
+    text = tmpl.render(MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PASSWORD)
+    (local_path.parent / MAILSLURPER_JSON_TEMPLATE.name.replace(".j2", "")).write_text(
+        text
+    )
+
+    # Compile the docker compose yaml template
     ensure_dir(local_path)
     tmpl = Template(DDC_SERVICES_YML_PATH.read_text())
     text = tmpl.render(
         MINIO_SECRET_KEY=get_secret(DerexSecrets.minio),
         MONGODB_ROOT_USERNAME=MONGODB_ROOT_USER,
         MONGODB_ROOT_PASSWORD=get_secret(DerexSecrets.mongodb),
-        MYSQL_ROOT_PASSWORD=get_secret(DerexSecrets.mysql),
+        MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PASSWORD,
     )
     local_path.write_text(text)
     return str(local_path)
