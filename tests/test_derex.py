@@ -64,7 +64,7 @@ def test_derex_runmode_wrong(minimal_project):
         result = runner.invoke(derex_cli_group, "runmode")
         # Ensure presence of error message
         assert "garbage-not-a-valid-runmode" in result.stderr
-        assert "valid as runmode" in result.stderr
+        assert "is not valid as" in result.stderr
 
 
 def test_derex_cli_group_no_containers_running(monkeypatch):
