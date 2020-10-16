@@ -85,13 +85,14 @@ services:
 
   minio:
     image: minio/minio:RELEASE.2020-06-03T22-13-49Z
+    restart: unless-stopped
+    container_name: minio
     volumes:
       - derex_minio:/data
     environment:
       MINIO_ACCESS_KEY: minio_derex
       MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"
     command: server --address :80 /data
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/minio/health/live"]
       interval: 30s
