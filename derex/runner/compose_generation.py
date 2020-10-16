@@ -14,6 +14,7 @@ from derex.runner.constants import DDC_SERVICES_YML_PATH
 from derex.runner.constants import DEREX_DJANGO_PATH
 from derex.runner.constants import DEREX_ETC_PATH
 from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
+from derex.runner.constants import MAILSLURPER_JSON_TEMPLATE
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import WSGI_PY_PATH
 from derex.runner.docker_utils import image_exists
@@ -36,27 +37,6 @@ import os
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
-DEREX_ETC_PATH = Path("/etc/derex")
-derex_path = partial(abspath_from_egg, "derex.runner")
-
-WSGI_PY_PATH = derex_path("derex/runner/compose_files/wsgi.py")
-
-DDC_SERVICES_YML_PATH = derex_path(
-    "derex/runner/compose_files/docker-compose-services.yml"
-)
-MAILSLURPER_JSON_TEMPLATE = derex_path("derex/runner/compose_files/mailslurper.json.j2")
-
-DDC_ADMIN_PATH = derex_path("derex/runner/compose_files/docker-compose-admin.yml")
-DDC_PROJECT_TEMPLATE_PATH = derex_path(
-    "derex/runner/templates/docker-compose-project.yml.j2"
-)
-assert all(
-    (WSGI_PY_PATH, DDC_SERVICES_YML_PATH, DDC_ADMIN_PATH, DDC_PROJECT_TEMPLATE_PATH,)
-), "Some distribution files were not found"
-
-=======
->>>>>>> Rewritten update minio key procedure
 
 class BaseServices:
     @staticmethod

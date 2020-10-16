@@ -6,7 +6,7 @@ apk add expect --no-cache
 #We need to make sure the current credentials are not working...
 RESULT="$(expect -c 'spawn /usr/bin/minio server /data; expect "SecretKey:";')"
 if [[ $(echo $RESULT | grep -c $MINIO_SECRET_KEY) -gt 0 ]]; then
-    echo "Credentials already updated, nothing do here!"
+    echo "Credentials already updated, nothing to do here!"
     exit 1
 fi
 
