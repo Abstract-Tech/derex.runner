@@ -1,10 +1,7 @@
-from packaging.version import parse as version_parse
 from path import Path
 
-import django
+import sys
 
-
-DJANGO_VERSION = version_parse(django.__version__)
 
 STATIC_ROOT_BASE = "/openedx/staticfiles"
 STATIC_ROOT = {
@@ -23,7 +20,7 @@ if "runserver" in sys.argv:
     # Load development webpack donfiguration
     WEBPACK_CONFIG_PATH = "webpack.dev.config.js"
 
-    if DJANGO_VERSION < version_parse("2"):
+    if sys.version_info.major < 3:
         PIPELINE_ENABLED = False
         # Disable JavaScript compression in development
         PIPELINE_JS_COMPRESSOR = None
