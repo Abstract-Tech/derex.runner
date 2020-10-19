@@ -56,16 +56,9 @@ stages:
         steps:
           - template: prepare.yml
           - template: load_images.yml
-
-          - script: ddc-services pull
-            displayName: "Pull edX services images"
-
-          - script: |
-              set -ex
-              export DEREX_ADMIN_SERVICES=False
-              ddc-services up -d
-              derex reset-mailslurper
-            displayName: "Start service daemons"
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
+          - template: provision_services.yml
 
           - script: |
               set -ex
@@ -117,8 +110,8 @@ stages:
             displayName: Fix coverage result and publish it
             condition: succeededOrFailed()
 
-      - job: TestIronwood
-        timeoutInMinutes: 100
+      - job: TestIronwoodMinimalProject
+        timeoutInMinutes: 40
         pool:
           vmImage: "ubuntu-latest"
         variables:
@@ -126,17 +119,31 @@ stages:
         steps:
           - template: prepare.yml
           - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
           - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: ironwood
               PROJECT_TYPE: minimal
+
+      - job: TestIronwoodCompleteProject
+        timeoutInMinutes: 60
+        pool:
+          vmImage: "ubuntu-latest"
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
           - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: ironwood
               PROJECT_TYPE: complete
 
-      - job: TestJuniper
-        timeoutInMinutes: 100
+      - job: TestJuniperMinimalProject
+        timeoutInMinutes: 40
         pool:
           vmImage: "ubuntu-latest"
         variables:
@@ -144,10 +151,24 @@ stages:
         steps:
           - template: prepare.yml
           - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
           - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: juniper
               PROJECT_TYPE: minimal
+
+      - job: TestJuniperCompleteProject
+        timeoutInMinutes: 60
+        pool:
+          vmImage: "ubuntu-latest"
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
           - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: juniper

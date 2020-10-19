@@ -1,6 +1,5 @@
 steps:
-  - script: |
-      cd ${{ parameters.PROJECT_PATH }}; ddc-services config
+  - script: ddc-services config
     condition: always()
     displayName: "Show ddc-services config"
 
