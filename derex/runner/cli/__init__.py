@@ -275,33 +275,60 @@ def print_secret(secret):
     return 0
 
 
-@derex.command()
+@derex.command("minio-update-key")
 @click.option(
     "--old-key",
     # This is the key that the current default master secret generates
     default="ICDTE0ZnlbIR7r6/qE81nkF7Kshc2gXYv6fJR4I/HKPeTbxEeB3nxC85Ne6C844hEaaC2+KHBRIOzGou9leulZ7t",
     help="The old key to use for the update",
 )
-def update_minio(old_key: str):
-    """Run minio to re-key data with the new secret. The output is very confusing, but it works.
-    If you read a red warning and "Rotation complete" at the end, it means rekeying has worked.
-    If your read your current SecretKey, it means the current credentials are correct and you don't need
-    to update your keys.
-    """
+def minio_update_key(old_key: str):
+    """Run minio to re-key data with the new secret"""
     from derex.runner.ddc import run_ddc_services
+    from derex.runner.docker_utils import check_services, wait_for_service
+    from derex.runner.utils import derex_path
 
-    # We need to stop minio after it's done re-keying. To this end, we use the expect package
-    script = "apk add expect --no-cache "
-    # We need to make sure the current credentials are not working...
-    script += ' && expect -c "spawn /usr/bin/minio server /data; expect "Endpoint" { close; exit 1 }"'
-    # ..but the old ones are
-    script += f' && if MINIO_SECRET_KEY="{old_key}" expect -c \'spawn /usr/bin/minio server /data; expect "Endpoint" {{ close; exit 1 }}\'; then exit 1; fi'
-    script += f' && export MINIO_ACCESS_KEY_OLD="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY_OLD="{old_key}"'
-    expected_string = "Rotation complete, please make sure to unset MINIO_ACCESS_KEY_OLD and MINIO_SECRET_KEY_OLD envs"
-    script += f" && expect -c 'spawn /usr/bin/minio server /data; expect \"{expected_string}\" {{ close; exit 0 }}'"
-    args = ["run", "--rm", "--entrypoint", "/bin/sh", "-T", "minio", "-c", script]
-    run_ddc_services(args, exit_afterwards=False)
-    click.echo("Minio server rekeying finished")
+    MINIO_SCRIPT_PATH = derex_path("derex/runner/compose_files/minio-update-key.sh")
+
+    if not check_services(["minio"]):
+        click.echo(
+            "MinIO service not found.\nMaybe you forgot to run\nddc-services up -d"
+        )
+        return 1
+
+    click.echo("Updating MinIO secret key...")
+    args = [
+        "run",
+        "--rm",
+        "-v",
+        f"{MINIO_SCRIPT_PATH}:/minio-update-key.sh",
+        "-e",
+        f"MINIO_SECRET_KEY_OLD={old_key}",
+        "--entrypoint",
+        "/bin/sh",
+        "-T",
+        "minio",
+        "/minio-update-key.sh",
+    ]
+    try:
+        run_ddc_services(args)
+    except RuntimeError:
+        return 1
+
+    # We need to recreate the minio container since we can't set
+    # the new key in the running one
+    # https://github.com/moby/moby/issues/8838
+    # We'll let `docker-compose up` recreate it for us, if needed
+    click.echo("\nRecreating MinIO container...")
+    args = ["up", "-d", "minio"]
+    run_ddc_services(args)
+
+    wait_for_service(
+        "minio",
+        'curl -i http://localhost:80/minio/health/live | grep -c "200 OK" && exit 0',
+    )
+    click.echo("\nMinIO secret key updated successfully!")
+    return 0
 
 
 def red(string: str) -> str:

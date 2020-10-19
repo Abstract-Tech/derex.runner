@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
@@ -96,3 +97,6 @@ def get_rich_console(*args, **kwargs):
 
 def get_rich_table(*args, **kwargs):
     return Table(*args, show_header=True, **kwargs)
+
+
+derex_path = partial(abspath_from_egg, "derex.runner")

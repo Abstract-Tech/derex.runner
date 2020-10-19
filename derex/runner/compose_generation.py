@@ -8,17 +8,23 @@ The functions have to be reachable under the common name `ddc_project_options`
 so a class is put in place to hold each of them.
 """
 from derex.runner import hookimpl
+from derex.runner.constants import DDC_ADMIN_PATH
+from derex.runner.constants import DDC_PROJECT_TEMPLATE_PATH
+from derex.runner.constants import DDC_SERVICES_YML_PATH
+from derex.runner.constants import DEREX_DJANGO_PATH
+from derex.runner.constants import DEREX_ETC_PATH
+from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
+from derex.runner.constants import MAILSLURPER_JSON_TEMPLATE
 from derex.runner.constants import MONGODB_ROOT_USER
+from derex.runner.constants import WSGI_PY_PATH
 from derex.runner.docker_utils import image_exists
 from derex.runner.local_appdir import DEREX_DIR
 from derex.runner.local_appdir import ensure_dir
 from derex.runner.project import Project
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
-from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import asbool
 from distutils import dir_util
-from functools import partial
 from jinja2 import Template
 from pathlib import Path
 from typing import Dict
@@ -30,24 +36,6 @@ import os
 
 
 logger = logging.getLogger(__name__)
-
-DEREX_ETC_PATH = Path("/etc/derex")
-derex_path = partial(abspath_from_egg, "derex.runner")
-
-WSGI_PY_PATH = derex_path("derex/runner/compose_files/wsgi.py")
-
-DDC_SERVICES_YML_PATH = derex_path(
-    "derex/runner/compose_files/docker-compose-services.yml"
-)
-MAILSLURPER_JSON_TEMPLATE = derex_path("derex/runner/compose_files/mailslurper.json.j2")
-
-DDC_ADMIN_PATH = derex_path("derex/runner/compose_files/docker-compose-admin.yml")
-DDC_PROJECT_TEMPLATE_PATH = derex_path(
-    "derex/runner/templates/docker-compose-project.yml.j2"
-)
-assert all(
-    (WSGI_PY_PATH, DDC_SERVICES_YML_PATH, DDC_ADMIN_PATH, DDC_PROJECT_TEMPLATE_PATH,)
-), "Some distribution files were not found"
 
 
 class BaseServices:
@@ -146,20 +134,10 @@ def generate_ddc_project_file(project: Project) -> Path:
             f"Image {project.requirements_image_name} not found\n"
             "Run\nderex build requirements\n to build it"
         )
-    derex_django_path = abspath_from_egg(
-        "derex.runner", "derex_django/README.rst"
-    ).parent
 
-    derex_openedx_customizations_dir = (
-        abspath_from_egg(
-            "derex.runner",
-            "derex/runner/compose_files/openedx_customizations/README.rst",
-        ).parent
-        / project.openedx_version.name
-    )
     openedx_customizations = []
     for openedx_customizations_dir in [
-        derex_openedx_customizations_dir,
+        DEREX_OPENEDX_CUSTOMIZATIONS_PATH / project.openedx_version.name,
         project.openedx_customizations_dir,
     ]:
         if openedx_customizations_dir and openedx_customizations_dir.exists():
@@ -178,7 +156,7 @@ def generate_ddc_project_file(project: Project) -> Path:
         project=project,
         final_image=final_image,
         wsgi_py_path=WSGI_PY_PATH,
-        derex_django_path=derex_django_path,
+        derex_django_path=DEREX_DJANGO_PATH,
         openedx_customizations=openedx_customizations,
     )
     project_compose_path.write_text(text)
