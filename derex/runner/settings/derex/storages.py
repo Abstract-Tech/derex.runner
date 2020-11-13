@@ -53,24 +53,24 @@ MEDIA_ROOT = "http://minio.localhost/{}/openedx/media".format(AWS_STORAGE_BUCKET
 VIDEO_TRANSCRIPTS_SETTINGS.update(
     {
         "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+        "DIRECTORY_PREFIX": "video-transcripts/",
         "STORAGE_KWARGS": {
             "bucket": AWS_STORAGE_BUCKET_NAME,
-            "ROOT_PATH": "/video-transcripts",
             "STORAGE_TYPE": "s3",
             "base_url": "not-used-but-need-to-define",
-            "location": "not-used-but-need-to-define",
+            "location": "uploads",
         },
     }
 )
 VIDEO_IMAGE_SETTINGS.update(
     {
         "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+        "DIRECTORY_PREFIX": "video-images/",
         "STORAGE_KWARGS": {
             "bucket": AWS_STORAGE_BUCKET_NAME,
-            "ROOT_PATH": "/video-images",
             "STORAGE_TYPE": "s3",
             "base_url": "not-used-but-need-to-define",
-            "location": "not-used-but-need-to-define",
+            "location": "uploads",
         },
     }
 )
@@ -79,7 +79,7 @@ PROFILE_IMAGE_BACKEND.update(
     {
         "class": DEFAULT_FILE_STORAGE,
         "options": {
-            "location": "/profile-images",
+            "location": "profile-images",
             "base_url": "not-used-but-need-to-define",
             "querystring_auth": False,
         },
