@@ -37,3 +37,15 @@ if "runserver" in sys.argv:
         PIPELINE["JS_COMPRESSOR"] = None
         PIPELINE["PIPELINE_ENABLED"] = False
         PIPELINE["SASS_ARGUMENTS"] = "--debug-info"
+
+if sys.version_info.major > 2:
+    # django-pipeline may try to set mimetypes
+    # as bytes in python3 causing errors when uploading
+    # to MinIO
+    PIPELINE["MIMETYPES"] = (
+        ("text/coffeescript", ".coffee"),
+        ("text/less", ".less"),
+        ("text/javascript", ".js"),
+        ("text/x-sass", ".sass"),
+        ("text/x-scss", ".scss"),
+    )
