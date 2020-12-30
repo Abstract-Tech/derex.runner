@@ -102,7 +102,7 @@ def compile_theme(project):
         return
     themes = ",".join(el.name for el in project.themes_dir.iterdir())
     uid = os.getuid()
-    args = [
+    compose_args = [
         "run",
         "--rm",
         "lms",
@@ -113,7 +113,7 @@ def compile_theme(project):
             paver compile_sass --theme-dirs /openedx/themes --themes {themes}
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
-    run_ddc_project(args, DebugBaseImageProject(), exit_afterwards=True)
+    run_ddc_project(compose_args, DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command()
@@ -139,8 +139,8 @@ def reindex_courses(project, course_ids):
         # the confirmation prompt
         django_cmd.append("--setup")
 
-    args = ["run", "--rm", "cms", "sh", "-c", " ".join(django_cmd)]
-    run_ddc_project(args, DebugBaseImageProject(), exit_afterwards=True)
+    compose_args = ["run", "--rm", "cms", "sh", "-c", " ".join(django_cmd)]
+    run_ddc_project(compose_args, DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command()
@@ -164,7 +164,7 @@ def reset_rabbitmq(project):
     from derex.runner.ddc import run_ddc_services
 
     vhost = f"{project.name}_edxqueue"
-    args = [
+    compose_args = [
         "exec",
         "-T",
         "rabbitmq",
@@ -174,7 +174,7 @@ def reset_rabbitmq(project):
         rabbitmqctl set_permissions -p {vhost} guest ".*" ".*" ".*"
         """,
     ]
-    run_ddc_services(args, exit_afterwards=True)
+    run_ddc_services(compose_args, exit_afterwards=True)
     click.echo(f"Rabbitmq vhost {vhost} created")
     return 0
 
@@ -297,7 +297,7 @@ def minio_update_key(old_key: str):
         return 1
 
     click.echo("Updating MinIO secret key...")
-    args = [
+    compose_args = [
         "run",
         "--rm",
         "-v",
@@ -311,7 +311,7 @@ def minio_update_key(old_key: str):
         "/minio-update-key.sh",
     ]
     try:
-        run_ddc_services(args)
+        run_ddc_services(compose_args)
     except RuntimeError:
         return 1
 
@@ -320,8 +320,8 @@ def minio_update_key(old_key: str):
     # https://github.com/moby/moby/issues/8838
     # We'll let `docker-compose up` recreate it for us, if needed
     click.echo("\nRecreating MinIO container...")
-    args = ["up", "-d", "minio"]
-    run_ddc_services(args)
+    compose_args = ["up", "-d", "minio"]
+    run_ddc_services(compose_args)
 
     wait_for_service(
         "minio",

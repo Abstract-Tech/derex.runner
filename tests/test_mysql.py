@@ -110,7 +110,6 @@ def test_derex_mysql_reset_password(start_mysql, mocker):
     # This is expected to fail since we set a custom password for the root user
     result = runner.invoke(shell, ["SHOW DATABASES;"])
     assert result.exit_code == 1
-    assert isinstance(result.exception, RuntimeError)
 
     # We reset the password to the derex generated one
     assert_result_ok(runner.invoke(reset_mysql_password_cmd, ["secret"], input="y"))

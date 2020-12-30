@@ -26,17 +26,16 @@ def mysql(context: click.core.Context):
         if isinstance(context.obj, Project):
             click.echo()
             project = context.obj
-            databases = show_databases()
-            database = [db for db in databases if db[0] == project.mysql_db_name]
-            if database:
-                database = database.pop()
-                click.echo(f'Current MySQL databases for project "{project.name}"')
-                console = get_rich_console()
-                table = get_rich_table(
-                    "Database", "Tables", "Django users", show_lines=True
-                )
-                table.add_row(database[0], str(database[1]), str(database[2]))
-                console.print(table)
+            for db in show_databases():
+                if db[0] == project.mysql_db_name:
+                    click.echo(f'Current MySQL databases for project "{project.name}"')
+                    console = get_rich_console()
+                    table = get_rich_table(
+                        "Database", "Tables", "Django users", show_lines=True
+                    )
+                    table.add_row(db[0], str(db[1]), str(db[2]))
+                    console.print(table)
+                    break
             else:
                 click.echo(
                     f'No MySQL database "{project.mysql_db_name}" found for project "{project.name}"'

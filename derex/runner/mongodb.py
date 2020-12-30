@@ -55,16 +55,14 @@ def ensure_mongodb(func):
     return inner
 
 
+@ensure_mongodb
 def execute_root_shell(command: Optional[str]):
     """Open a root shell on the MongoDB database. If a command is given
     it is executed."""
-    args = [
-        "run",
-        "--rm",
+    compose_args = [
+        "exec",
         "mongodb",
         "mongo",
-        "--host",
-        "mongodb",
         "--authenticationDatabase",
         "admin",
         "-u",
@@ -72,8 +70,9 @@ def execute_root_shell(command: Optional[str]):
         f"-p{MONGODB_ROOT_PASSWORD}",
     ]
     if command:
-        args.extend(["--eval", command])
-    run_ddc_services(args)
+        compose_args.insert(1, "-T")
+        compose_args.extend(["--eval", command])
+    run_ddc_services(compose_args, exit_afterwards=True)
 
 
 @ensure_mongodb
@@ -129,8 +128,6 @@ def reset_mongodb_password(current_password: str = None):
     """Reset the mongodb root user password"""
     mongo_command_args = [
         "mongo",
-        "--host",
-        "mongodb",
         "--authenticationDatabase",
         "admin",
         "admin",
@@ -142,7 +139,7 @@ def reset_mongodb_password(current_password: str = None):
         mongo_command_args.extend(["-u", MONGODB_ROOT_USER, f"-p{current_password}"])
 
     mongo_command = " ".join(mongo_command_args)
-    args = ["run", "--rm", "mongodb", "bash", "-c", f"{mongo_command}"]
+    compose_args = ["exec", "-T", "mongodb", "bash", "-c", f"{mongo_command}"]
 
-    run_ddc_services(args)
+    run_ddc_services(compose_args, exit_afterwards=True)
     return 0

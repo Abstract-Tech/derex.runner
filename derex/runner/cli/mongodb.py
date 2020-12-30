@@ -12,27 +12,26 @@ import click
 def mongodb(context: click.core.Context):
     """Commands to operate on the mongodb database"""
     if context.invoked_subcommand is None:
-        from derex.runner.mongodb import list_databases
-
         click.echo(mongodb.get_help(context))
-        databases = [
-            [database["name"], database["sizeOnDisk"], database["empty"]]
-            for database in list_databases()
-        ]
         if isinstance(context.obj, Project):
+            from derex.runner.mongodb import list_databases
+
             click.echo()
             project = context.obj
-            databases = list_databases()
-            database = [db for db in databases if db[0] == project.mongodb_db_name]
-            if database:
-                database = database.pop()
-                click.echo(f'Current MongoDB databases for project "{project.name}"')
-                console = get_rich_console()
-                table = get_rich_table(
-                    "Database", "Tables", "Django users", show_lines=True
-                )
-                table.add_row(database[0], str(database[1]), str(database[2]))
-                console.print(table)
+            for db in list_databases():
+                if db["name"] == project.mongodb_db_name:
+                    click.echo(
+                        f'Current MongoDB databases for project "{project.name}"'
+                    )
+                    console = get_rich_console()
+                    table = get_rich_table(
+                        "Database", "Tables", "Django users", show_lines=True
+                    )
+                    table.add_row(
+                        db["name"], str(db["sizeOnDisk"]), str(db["empty"]),
+                    )
+                    console.print(table)
+                    break
             else:
                 click.echo(
                     f'No MongoDB database "{project.mongodb_db_name}" found for project "{project.name}"'
@@ -80,7 +79,7 @@ def drop_mongodb(project: Optional[Project], db_name: str):
 @listing.command(name="databases")
 @click.pass_obj
 @click.argument("db_name", type=str, required=False)
-def list_databases(project: Optional[Project], db_name: str):
+def list_databases_cmd(project: Optional[Project], db_name: str):
     """List all MongoDB databases"""
     from derex.runner.mongodb import list_databases
 

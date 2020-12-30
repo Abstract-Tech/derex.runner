@@ -24,18 +24,18 @@ import os
 import sys
 
 
-def ddc_parse_args(args: List[str]) -> Tuple[List[str], bool]:
-    """Given a list of args, extract the ones to be passed to docker-compose
+def ddc_parse_args(compose_args: List[str]) -> Tuple[List[str], bool]:
+    """Given a list of arguments, extract the ones to be passed to docker-compose
     (basically just omit the first one) and return the adjusted list.
 
     Also checks if the `--dry-run` flag is present, removes it from the
-    list of args if it is and returns a 2-tuple like `(args, dry_run)`
+    list of arguments if it is and returns a 2-tuple like `(compose_args, dry_run)`
     """
     dry_run = False
-    if "--dry-run" in args:
+    if "--dry-run" in compose_args:
         dry_run = True
-        args = [el for el in args if el != "--dry-run"]
-    return args[1:], dry_run
+        compose_args = [el for el in compose_args if el != "--dry-run"]
+    return compose_args[1:], dry_run
 
 
 def ddc_services():
@@ -135,7 +135,7 @@ def run_django_script(
     result_fp, result_path = mkstemp(".json", "derex-run-script-result")
     os.write(script_fp, script_text.encode("utf-8"))
     os.close(script_fp)
-    args = [
+    compose_args = [
         "run",
         "--rm",
         "-v",
@@ -149,7 +149,7 @@ def run_django_script(
     ]
 
     try:
-        run_ddc_project(args, project=DebugBaseImageProject())
+        run_ddc_project(compose_args, project=DebugBaseImageProject())
     finally:
         result_json = open(result_path).read()
         try:

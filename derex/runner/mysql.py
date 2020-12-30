@@ -1,13 +1,13 @@
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.ddc import run_ddc_project
 from derex.runner.ddc import run_ddc_services
-from derex.runner.docker_utils import check_services
 from derex.runner.docker_utils import client as docker_client
 from derex.runner.docker_utils import wait_for_service
 from derex.runner.project import Project
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
+from functools import wraps
 from typing import cast
 from typing import List
 from typing import Optional
@@ -25,12 +25,35 @@ def wait_for_mysql(max_seconds: int = 20):
     """With a freshly created container mysql might need a bit of time to prime
     its files. This functions waits up to max_seconds seconds.
     """
-    check_command = (
-        f'mysql -u {MYSQL_ROOT_USER} -p{MYSQL_ROOT_PASSWORD} -e "SHOW DATABASES"'
-    )
-    return wait_for_service("mysql", check_command, max_seconds)
+    # We use "mysqladmin ping" here since it doesn't depend on authentication.
+    # From mysqladmin docs:
+    #
+    #   Check whether the server is available. The return status from mysqladmin is 0
+    #   if the server is running, 1 if it is not. This is 0 even in case of an error
+    #   such as Access denied, because this means that the server is running but
+    #   refused the connection, which is different from the server not running.
+    return wait_for_service("mysql", "mysqladmin ping", max_seconds)
 
 
+def ensure_mysql(func):
+    """Decorator to raise an exception before running a function in case the MySQL
+    server is not available.
+    """
+
+    @wraps(func)
+    def inner(*args, **kwargs):
+        try:
+            wait_for_mysql(5)
+            return func(*args, **kwargs)
+        except TimeoutError:
+            raise RuntimeError(
+                "MySQL service not found.\nMaybe you forgot to run\nddc-services up -d"
+            )
+
+    return inner
+
+
+@ensure_mysql
 def get_system_mysql_client() -> pymysql.cursors.Cursor:
     container = docker_client.containers.get("mysql")
     mysql_host = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
@@ -39,6 +62,7 @@ def get_system_mysql_client() -> pymysql.cursors.Cursor:
     )
 
 
+@ensure_mysql
 def get_project_mysql_client(project: Project) -> pymysql.cursors.Cursor:
     return get_mysql_client(
         host=project.mysql_db_host,
@@ -48,6 +72,7 @@ def get_project_mysql_client(project: Project) -> pymysql.cursors.Cursor:
     )
 
 
+@ensure_mysql
 def get_mysql_client(
     host: str,
     user: str,
@@ -64,13 +89,6 @@ def get_mysql_client(
         mysql_client = get_mysql_client()
         mysql_client.connection.autocommit(True)
     """
-
-    if not check_services(["mysql"]):
-        raise RuntimeError(
-            "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
-        )
-
-    wait_for_mysql()
     connection = pymysql.connect(
         host=host, port=port, user=user, passwd=password, db=database, **kwargs
     )
@@ -146,25 +164,25 @@ def drop_user(user: str, host: str):
     logger.info(f"Successfully dropped user '{user}'@'{host}'")
 
 
+@ensure_mysql
 def execute_root_shell(command: Optional[str]):
     """Open a root shell on the mysql database. If a command is given
     it is executed."""
-    args = [
-        "run",
-        "--rm",
+    compose_args = [
+        "exec",
         "mysql",
-        "mysql",
-        "-h",
         "mysql",
         "-u",
         MYSQL_ROOT_USER,
         f"-p{MYSQL_ROOT_PASSWORD}",
     ]
     if command:
-        args.extend(["-e", command])
-    run_ddc_services(args)
+        compose_args.insert(1, "-T")
+        compose_args.extend(["-e", command])
+    run_ddc_services(compose_args, exit_afterwards=True)
 
 
+@ensure_mysql
 def copy_database(source_db_name: str, destination_db_name: str):
     """Copy an existing MySQL database. This actually involves exporting and importing back
     the database with a different name."""
@@ -172,14 +190,14 @@ def copy_database(source_db_name: str, destination_db_name: str):
     logger.info(f"Copying database {source_db_name} to {destination_db_name}")
     run_ddc_services(
         [
-            "run",
-            "--rm",
+            "exec",
+            "-T",
             "mysql",
             "sh",
             "-c",
             f"""set -ex
-                mysqldump -h mysql -u root -p{MYSQL_ROOT_PASSWORD} {source_db_name} --no-create-db |
-                mysql -h mysql --user=root -p{MYSQL_ROOT_PASSWORD} {destination_db_name}
+                mysqldump -u root -p{MYSQL_ROOT_PASSWORD} {source_db_name} --no-create-db |
+                mysql --user=root -p{MYSQL_ROOT_PASSWORD} {destination_db_name}
             """,
         ]
     )
@@ -188,6 +206,7 @@ def copy_database(source_db_name: str, destination_db_name: str):
     )
 
 
+@ensure_mysql
 def reset_mysql_openedx(project: Project, dry_run: bool = False):
     """Run script from derex/openedx image to reset the mysql db."""
     restore_dump_path = abspath_from_egg(
@@ -211,21 +230,15 @@ def reset_mysql_openedx(project: Project, dry_run: bool = False):
     )
 
 
+@ensure_mysql
 def reset_mysql_password(current_password: str):
     """Reset the mysql root user password."""
-    if not check_services(["mysql"]):
-        raise RuntimeError(
-            "Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"
-        )
     logger.info(f'Resetting password for mysql user "{MYSQL_ROOT_USER}"')
 
     run_ddc_services(
         [
-            "run",
-            "--rm",
+            "exec",
             "mysql",
-            "mysql",
-            "-h",
             "mysql",
             "-u",
             MYSQL_ROOT_USER,
@@ -235,5 +248,6 @@ def reset_mysql_password(current_password: str):
             SET PASSWORD FOR '{MYSQL_ROOT_USER}'@'%' = PASSWORD('{MYSQL_ROOT_PASSWORD}');
             GRANT ALL PRIVILEGES ON *.* TO '{MYSQL_ROOT_USER}'@'%' WITH GRANT OPTION;
             FLUSH PRIVILEGES;""",
-        ]
+        ],
+        exit_afterwards=True,
     )
