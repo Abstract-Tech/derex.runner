@@ -3,6 +3,7 @@ from derex.runner.project import Project
 from types import SimpleNamespace
 
 import docker
+import pytest
 
 
 def test_ensure_volumes_present(mocker):
@@ -40,15 +41,23 @@ def test_check_services(mocker):
 def test_wait_for_service(mocker):
     from derex.runner.docker_utils import wait_for_service
 
+    with pytest.raises(RuntimeError):
+        wait_for_service("service", "command", 1)
+
     container = mocker.MagicMock()
+    container.status = "running"
     container.exec_run.return_value = mocker.MagicMock(exit_code=0)
 
     client = mocker.patch("derex.runner.docker_utils.client")
     client.containers.get.return_value = container
 
-    wait_for_service("mysql", 'mysql -psecret -e "SHOW DATABASES"', 1)
-    client.containers.get.assert_called_with("mysql")
-    container.exec_run.assert_called_with('mysql -psecret -e "SHOW DATABASES"')
+    wait_for_service("service", "command", 1)
+    client.containers.get.assert_called_with("service")
+    container.exec_run.assert_called_with("command")
+
+    container.status = "exited"
+    with pytest.raises(TimeoutError):
+        wait_for_service("service", "command", 1)
 
 
 def test_get_final_image(mocker, minimal_project):

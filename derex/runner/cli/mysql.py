@@ -12,13 +12,6 @@ import click
 @click.pass_context
 def mysql(context: click.core.Context):
     """Commands to operate on the mysql database"""
-    from derex.runner.docker_utils import check_services
-
-    if not check_services(["mysql"]):
-        raise click.exceptions.ClickException(
-            'Mysql service not found.\nMaybe you forgot to run\nddc-services up -d"'
-        )
-
     if context.invoked_subcommand is None:
         from derex.runner.mysql import show_databases
 

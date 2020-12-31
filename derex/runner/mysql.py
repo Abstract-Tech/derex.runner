@@ -42,13 +42,8 @@ def ensure_mysql(func):
 
     @wraps(func)
     def inner(*args, **kwargs):
-        try:
-            wait_for_mysql(5)
-            return func(*args, **kwargs)
-        except TimeoutError:
-            raise RuntimeError(
-                "MySQL service not found.\nMaybe you forgot to run\nddc-services up -d"
-            )
+        wait_for_mysql(5)
+        return func(*args, **kwargs)
 
     return inner
 

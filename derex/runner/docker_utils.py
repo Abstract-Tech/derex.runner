@@ -76,13 +76,21 @@ def wait_for_service(service: str, check_command: str, max_seconds: int = 20):
     """With a freshly created container services might need a bit of time to start.
     This functions waits up to max_seconds seconds.
     """
-    container = client.containers.get(service)
+    try:
+        container = client.containers.get(service)
+    except docker.errors.NotFound:
+        raise RuntimeError(
+            f"{service} service not found.\n"
+            "Maybe you forgot to run\n"
+            "ddc-services up -d"
+        )
     for i in range(max_seconds):
-        res = container.exec_run(check_command)
-        if res.exit_code == 0:
-            return 0
-        time.sleep(1)
-        logger.warning(f"Waiting for {service} to be ready")
+        if container.status == "running":
+            res = container.exec_run(check_command)
+            if res.exit_code == 0:
+                return 0
+            time.sleep(1)
+            logger.warning(f"Waiting for {service} to be ready")
     raise TimeoutError(f"Can't connect to {service} service")
 
 
