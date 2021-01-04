@@ -90,6 +90,7 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
 COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
+    pip install --upgrade "pip<20.3" && \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     pip install numpy -c /tmp/derex.txt && \
     `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
