@@ -98,7 +98,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     `# sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html) ` \
     sed -e "s|.*sympy==0.7.1*|sympy==1.5.1|" -i /tmp/derex.txt && \
     pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse gevent "whitenoise[brotli]<5"
+    pip wheel --wheel-dir=/wheelhouse gevent "whitenoise<5"
 
 FROM wheels as rmlint
 RUN pip install scons && \
@@ -117,7 +117,9 @@ COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 # TODO: extract these package list and put it in a file external to the Dockerfile
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install "whitenoise[brotli]<5" flower gevent packaging --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
+    pip install --upgrade "pip<20.3" && \
+    pip install "whitenoise<5" flower gevent packaging --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
+
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt && \
     `# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option` \
