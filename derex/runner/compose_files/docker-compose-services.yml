@@ -75,6 +75,7 @@ services:
   rabbitmq:
     image: rabbitmq:3.6.16-alpine
     restart: unless-stopped
+    hostname: rabbitmq
     container_name: rabbitmq
     healthcheck:
       test: rabbitmqctl node_health_check | grep "Health check passed" -q
@@ -83,7 +84,9 @@ services:
       retries: 3
       start_period: 10s
     volumes:
+      - derex_rabbitmq:/etc/rabbitmq/
       - derex_rabbitmq:/var/lib/rabbitmq
+      - derex_rabbitmq:/var/log/rabbitmq/
     networks:
       - derex
 
