@@ -11,6 +11,12 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: "{{ MONGODB_ROOT_USERNAME }}"
       MONGO_INITDB_ROOT_PASSWORD: "{{ MONGODB_ROOT_PASSWORD }}"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
     volumes:
       - derex_mongodb:/data/db
     networks:
@@ -23,6 +29,12 @@ services:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
     environment:
       MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
+    healthcheck:
+      test: mysqladmin ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
     volumes:
       - derex_mysql:/var/lib/mysql
     networks:
@@ -42,6 +54,12 @@ services:
       # sudo systemctl daemon-reload
       # sudo systemctl restart docker
       - "bootstrap.memory_lock=true"
+    healthcheck:
+      test: curl --silent --fail localhost:9200/_cluster/health || exit 1
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
     ulimits:
       memlock:
         soft: -1
@@ -58,6 +76,12 @@ services:
     image: rabbitmq:3.6.16-alpine
     restart: unless-stopped
     container_name: rabbitmq
+    healthcheck:
+      test: rabbitmqctl node_health_check | grep "Health check passed" -q
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
     volumes:
       - derex_rabbitmq:/var/lib/rabbitmq
     networks:
@@ -80,6 +104,12 @@ services:
     image: memcached:1.6.3-alpine
     restart: unless-stopped
     container_name: memcached
+    healthcheck:
+      test: nc -z 127.0.0.1 11211
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
     networks:
       - derex
 
@@ -94,7 +124,7 @@ services:
       MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"
     command: server --address :80 /data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/minio/health/live"]
+      test: curl --silent --fail http://localhost:80/minio/health/live
       interval: 30s
       timeout: 20s
       retries: 3
@@ -109,11 +139,11 @@ services:
     ports:
       - 127.0.0.1:80:80
       - 127.0.0.1:81:81
-      - 127.0.0.1:4301:4301
+      - 127.0.0.1:4301:4301 # Mailslurper port
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080"]
+      test: wget -q -O - http://localhost:8080
       interval: 30s
       timeout: 20s
       retries: 3
