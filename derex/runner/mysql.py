@@ -21,20 +21,6 @@ logger = logging.getLogger(__name__)
 MYSQL_ROOT_PASSWORD = get_secret(DerexSecrets.mysql)
 
 
-def wait_for_mysql(max_seconds: int = 20):
-    """With a freshly created container mysql might need a bit of time to prime
-    its files. This functions waits up to max_seconds seconds.
-    """
-    # We use "mysqladmin ping" here since it doesn't depend on authentication.
-    # From mysqladmin docs:
-    #
-    #   Check whether the server is available. The return status from mysqladmin is 0
-    #   if the server is running, 1 if it is not. This is 0 even in case of an error
-    #   such as Access denied, because this means that the server is running but
-    #   refused the connection, which is different from the server not running.
-    return wait_for_service("mysql", "mysqladmin ping", max_seconds)
-
-
 def ensure_mysql(func):
     """Decorator to raise an exception before running a function in case the MySQL
     server is not available.
@@ -42,7 +28,7 @@ def ensure_mysql(func):
 
     @wraps(func)
     def inner(*args, **kwargs):
-        wait_for_mysql(5)
+        wait_for_service("mysql")
         return func(*args, **kwargs)
 
     return inner

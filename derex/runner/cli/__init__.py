@@ -285,17 +285,11 @@ def print_secret(secret):
 def minio_update_key(old_key: str):
     """Run minio to re-key data with the new secret"""
     from derex.runner.ddc import run_ddc_services
-    from derex.runner.docker_utils import check_services, wait_for_service
+    from derex.runner.docker_utils import wait_for_service
     from derex.runner.utils import derex_path
 
+    wait_for_service("minio")
     MINIO_SCRIPT_PATH = derex_path("derex/runner/compose_files/minio-update-key.sh")
-
-    if not check_services(["minio"]):
-        click.echo(
-            "MinIO service not found.\nMaybe you forgot to run\nddc-services up -d"
-        )
-        return 1
-
     click.echo("Updating MinIO secret key...")
     compose_args = [
         "run",
@@ -323,10 +317,7 @@ def minio_update_key(old_key: str):
     compose_args = ["up", "-d", "minio"]
     run_ddc_services(compose_args)
 
-    wait_for_service(
-        "minio",
-        'curl -i http://localhost:80/minio/health/live | grep -c "200 OK" && exit 0',
-    )
+    wait_for_service("minio")
     click.echo("\nMinIO secret key updated successfully!")
     return 0
 

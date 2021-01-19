@@ -1,6 +1,5 @@
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.ddc import run_ddc_services
-from derex.runner.docker_utils import check_services
 from derex.runner.docker_utils import client as docker_client
 from derex.runner.docker_utils import wait_for_service
 from derex.runner.secrets import DerexSecrets
@@ -18,18 +17,8 @@ import urllib.parse
 logger = logging.getLogger(__name__)
 MONGODB_ROOT_PASSWORD = get_secret(DerexSecrets.mongodb)
 
-
-def wait_for_mongodb(max_seconds: int = 20):
-    """With a freshly created container mongodb might need a bit of time to prime
-    its files. This functions waits up to max_seconds seconds.
-    """
-    return wait_for_service("mongodb", "mongo", max_seconds)
-
-
-if not check_services(["mongodb"]):
-    MONGODB_CLIENT = None
-else:
-    wait_for_mongodb()
+try:
+    wait_for_service("mongodb")
     container = docker_client.containers.get("mongodb")
     mongo_address = container.attrs["NetworkSettings"]["Networks"]["derex"]["IPAddress"]
     user = urllib.parse.quote_plus(MONGODB_ROOT_USER)
@@ -37,6 +26,9 @@ else:
     MONGODB_CLIENT = MongoClient(
         f"mongodb://{user}:{password}@{mongo_address}:27017/", authSource="admin"
     )
+except RuntimeError as e:
+    MONGODB_CLIENT = None
+    logger.warning(e)
 
 
 def ensure_mongodb(func):
