@@ -36,7 +36,8 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     mariadb-connector-c \
     sqlite \
     xmlsec \
-    wget
+    wget \
+    bash
 
 COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
@@ -45,20 +46,27 @@ COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
 RUN /tmp/patch_ldconfig_to_fix_shapely.sh && \
      python -c "from  ctypes import CDLL; CDLL('$(echo /usr/lib/libgeos_c.so)').GEOSversion"
 
-
 # we want to use paver without remembering to specify these
 ENV NO_PREREQ_INSTALL=True
 ENV NO_PYTHON_UNINSTALL=True
 
-FROM base as sourceonly
-ARG EDX_PLATFORM_VERSION=open-release/juniper.alpha1
+# Upgrade pip to the latest version
+RUN pip install --upgrade pip
 
+# We want a modern terminal editor bundled in the image
+RUN curl https://getmic.ro | bash && mv micro /usr/bin/
+
+FROM base as sourceonly
+ARG EDX_PLATFORM_RELEASE=juniper
+ARG EDX_PLATFORM_VERSION=open-release/juniper.master
 ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
 
 RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ && \
     git clone ${EDX_PLATFORM_REPOSITORY} --branch ${EDX_PLATFORM_VERSION} --depth 1 /openedx/edx-platform
 
 WORKDIR /openedx/edx-platform
+COPY requirements/${EDX_PLATFORM_RELEASE}/derex.txt /tmp/derex.txt
+COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /tmp/overrides.txt
 
 FROM base as wheels
 
@@ -87,18 +95,15 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     `# From https://github.com/jfloff/alpine-python/issues/32` \
     sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i
 
-COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base.txt
+COPY --from=sourceonly /openedx/edx-platform/requirements/edx/development.txt /tmp/edx_development.txt
+COPY --from=sourceonly /tmp/derex.txt /tmp/derex.txt
+COPY --from=sourceonly /tmp/override.txt /tmp/override.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
-    cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
-    pip install --upgrade "pip<20.3" && \
+    cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/edx_development.txt && \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
-    pip install numpy -c /tmp/derex.txt && \
-    `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
-    sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /tmp/derex.txt && \
-    `# sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html) ` \
-    sed -e "s|.*sympy==0.7.1*|sympy==1.5.1|" -i /tmp/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse gevent "whitenoise<5"
+    pip wheel --wheel-dir=/wheelhouse -r /tmp/edx_development.txt && \
+    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt -c /tmp/edx_development.txt && \
+    pip wheel --wheel-dir=/wheelhouse -r /tmp/override.txt
 
 FROM wheels as rmlint
 RUN pip install scons && \
@@ -115,16 +120,10 @@ FROM sourceonly as notranslations
 
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
-# TODO: extract these package list and put it in a file external to the Dockerfile
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install --upgrade "pip<20.3" && \
-    pip install "whitenoise<5" flower gevent packaging --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
-
-RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt && \
-    `# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option` \
-    `# It s not very clear why it was pinned in the first place` \
-    pip install gunicorn==19.10.0
+    pip install -r /openedx/edx-platform/requirements/edx/base.txt --find-links /wheelhouse && \
+    pip install --upgrade -r /tmp/derex.txt --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt && \
+    pip install --upgrade -r /tmp/overrides.txt --find-links /wheelhouse
 
 COPY whitenoise_edx.py assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 
@@ -165,8 +164,7 @@ RUN --mount=type=cache,target=/root/.npm \
     --mount=type=cache,target=/root/.cache/pip \
     apk add g++ make coreutils vim mariadb-client && \
     wget ${NODE_URL} -O - | tar --directory / -xJf - && ln -s /node-*/bin/* /usr/local/bin/ && \
-    npm install --unsafe-perm && \
-    pip install pdbpp ipython ipdb
+    npm install --unsafe-perm
 
 FROM nostatic-dev as dev-nodump
 RUN /usr/local/bin/compile_assets.sh && \
