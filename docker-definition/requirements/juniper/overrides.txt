@@ -1,13 +1,10 @@
 # Those requirements will be installed last and won't be constrained
 # by base openedx requirements. Watch out!
 
-# Prior versions of edxval will break file upload to S3 object storage
-# on Python3
+# Prior versions of edxval will break file upload to S3 object storage on Python3
 edxval==1.4.4
 # sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html)
 sympy==1.5.1
-# scipy 1.4.1 has a problem and does not build. Our fork includes a fix
-https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy
-# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option \
-# It s not very clear why it was pinned in the first place \
-gunicorn==19.10.0
+# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option
+# It's not very clear why it was pinned in the first place
+gunicorn

@@ -37,7 +37,8 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     sqlite \
     xmlsec \
     wget \
-    bash
+    bash \
+    curl
 
 COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
@@ -61,14 +62,30 @@ ARG EDX_PLATFORM_RELEASE=juniper
 ARG EDX_PLATFORM_VERSION=open-release/juniper.master
 ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
 
-RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ && \
+RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ /openedx/requirements/ && \
     git clone ${EDX_PLATFORM_REPOSITORY} --branch ${EDX_PLATFORM_VERSION} --depth 1 /openedx/edx-platform
 
 WORKDIR /openedx/edx-platform
-COPY requirements/${EDX_PLATFORM_RELEASE}/derex.txt /tmp/derex.txt
-COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /tmp/overrides.txt
+COPY requirements/${EDX_PLATFORM_RELEASE}/derex.txt /openedx/requirements/derex.txt
+COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /openedx/requirements/overrides.txt
+# The following layer is going to produce 3 requirements file:
+# * edx base requirements with some fixes which will be installed (openedx_base_fixed.txt)
+# * edx base requirements with relative paths converted to absolute paths which will be
+#   used to create wheels (openedx_wheels.txt)
+# * edx base requirements without links and extras to be used as constraints (openedx_constraints.txt)
+RUN cp /openedx/edx-platform/requirements/edx/base.txt /openedx/requirements/openedx_base_fixed.txt && \
+    `# Without the following line pip produces an error` \
+    `# Generating metadata for package <package> produced metadata for project name django-ratelimit. Fix your #egg=ratelimit fragments.` \
+    sed -e "s|#egg=ratelimit|#egg=django-ratelimit|" -i /openedx/requirements/openedx_base_fixed.txt && \
+    sed -e "s|#egg=pystache_custom-dev|#egg=pystache-custom|" -i /openedx/requirements/openedx_base_fixed.txt && \
+    cat /openedx/requirements/openedx_base_fixed.txt | sed -e "/git+https/!s/-e /-e \/openedx\/edx-platform\//" > /openedx/requirements/openedx_wheels.txt && \
+    `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
+    sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /openedx/requirements/openedx_wheels.txt && \
+    `# From version 20.3 pip use a new dependency resolver which doesn t accept extras or links as constraints` \
+    `# Read more at https://github.com/pypa/pip/issues/8210` \
+    cat /openedx/requirements/openedx_wheels.txt | grep -v github | grep -v ^-e | sed -e "s|\[.*\]||" > /openedx/requirements/openedx_constraints.txt
 
-FROM base as wheels
+FROM sourceonly as wheels
 
 RUN --mount=type=cache,target=/var/cache/apk apk add \
     alpine-sdk \
@@ -95,15 +112,11 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     `# From https://github.com/jfloff/alpine-python/issues/32` \
     sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i
 
-COPY --from=sourceonly /openedx/edx-platform/requirements/edx/development.txt /tmp/edx_development.txt
-COPY --from=sourceonly /tmp/derex.txt /tmp/derex.txt
-COPY --from=sourceonly /tmp/override.txt /tmp/override.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
-    cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/edx_development.txt && \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
-    pip wheel --wheel-dir=/wheelhouse -r /tmp/edx_development.txt && \
-    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt -c /tmp/edx_development.txt && \
-    pip wheel --wheel-dir=/wheelhouse -r /tmp/override.txt
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/openedx_wheels.txt && \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/derex.txt -c /openedx/requirements/openedx_constraints.txt && \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/overrides.txt
 
 FROM wheels as rmlint
 RUN pip install scons && \
@@ -121,9 +134,10 @@ FROM sourceonly as notranslations
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install -r /openedx/edx-platform/requirements/edx/base.txt --find-links /wheelhouse && \
-    pip install --upgrade -r /tmp/derex.txt --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt && \
-    pip install --upgrade -r /tmp/overrides.txt --find-links /wheelhouse
+    export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
+    pip install -r /openedx/requirements/openedx_base_fixed.txt --find-links /wheelhouse && \
+    pip install --upgrade -r /openedx/requirements/derex.txt --find-links /wheelhouse -c /openedx/requirements/openedx_constraints.txt && \
+    pip install --upgrade -r /openedx/requirements/overrides.txt --find-links /wheelhouse
 
 COPY whitenoise_edx.py assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 
@@ -137,7 +151,7 @@ FROM notranslations as translations
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
-    pip install transifex-client -c /openedx/edx-platform/requirements/edx/development.txt && \
+    pip install transifex-client -c /openedx/requirements/openedx_constraints.txt && \
     /usr/local/bin/translations.sh
 
 FROM notranslations as nostatic
@@ -148,7 +162,6 @@ RUN --mount=type=bind,from=translations,target=/translations \
     cp -avu /translations/openedx/edx-platform/conf/locale/ conf/ && \
     `# Add a pth file to Python site packages to mimic derex_django installation` \
     echo /openedx/derex_django > $(python -c 'import site; print(site.getsitepackages()[0])')/derex.pth
-
 
 FROM nostatic as nostatic-dev
 # This image has node dependencies installed, and can be used to compile assets
