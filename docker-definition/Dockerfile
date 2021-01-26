@@ -37,8 +37,7 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     sqlite \
     xmlsec \
     wget \
-    bash \
-    curl
+    bash
 
 COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
@@ -53,9 +52,6 @@ ENV NO_PYTHON_UNINSTALL=True
 
 # Upgrade pip to the latest version
 RUN pip install --upgrade pip
-
-# We want a modern terminal editor bundled in the image
-RUN curl https://getmic.ro | bash && mv micro /usr/bin/
 
 FROM base as sourceonly
 ARG EDX_PLATFORM_RELEASE=juniper
