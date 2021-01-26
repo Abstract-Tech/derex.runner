@@ -130,7 +130,6 @@ FROM sourceonly as notranslations
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     pip install -r /openedx/requirements/openedx_base_fixed.txt --find-links /wheelhouse && \
     pip install --upgrade -r /openedx/requirements/derex.txt --find-links /wheelhouse -c /openedx/requirements/openedx_constraints.txt && \
     pip install --upgrade -r /openedx/requirements/overrides.txt --find-links /wheelhouse
