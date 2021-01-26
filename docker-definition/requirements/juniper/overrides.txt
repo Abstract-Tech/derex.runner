@@ -1,5 +1,5 @@
 # Those requirements will be installed last and won't be constrained
-# by base openedx requirements. Watch out!
+# by openedx base requirements. Watch out!
 
 # Prior versions of edxval will break file upload to S3 object storage on Python3
 edxval==1.4.4
