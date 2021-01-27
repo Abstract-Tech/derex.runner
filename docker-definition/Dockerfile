@@ -70,6 +70,8 @@ COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /openedx/requirements/ov
 #   used to create wheels (openedx_wheels.txt)
 # * edx base requirements without links and extras to be used as constraints (openedx_constraints.txt)
 RUN cp /openedx/edx-platform/requirements/edx/base.txt /openedx/requirements/openedx_base_fixed.txt && \
+    `# Versioning of this package is wrong at the pinned commit` \
+    sed -e "s|django-oauth-plus.git@01ec2a161dfc3465f9d35b9211ae790177418316|django-oauth-plus.git@6218624ef19aea37c5abec35b4ea2e049dc8ee4e|" -i /openedx/requirements/openedx_base_fixed.txt && \
     `# Without the following line pip produces an error` \
     `# Generating metadata for package <package> produced metadata for project name django-ratelimit. Fix your #egg=ratelimit fragments.` \
     sed -e "s|#egg=ratelimit|#egg=django-ratelimit|" -i /openedx/requirements/openedx_base_fixed.txt && \
