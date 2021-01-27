@@ -112,7 +112,9 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
-    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/openedx_wheels.txt && \
+    `# We need to add the --no-verify option due to django-oauth-plus metadata` \
+    `# violating PEP 440 (https://www.python.org/dev/peps/pep-0440/)` \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/openedx_wheels.txt --no-verify && \
     pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/derex.txt -c /openedx/requirements/openedx_constraints.txt && \
     pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/overrides.txt
 
