@@ -1,7 +1,8 @@
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
-from tabulate import tabulate
+from derex.runner.utils import get_rich_console
+from derex.runner.utils import get_rich_table
 from typing import Optional
 
 import click
@@ -15,25 +16,33 @@ def mysql(context: click.core.Context):
         from derex.runner.mysql import show_databases
 
         click.echo(mysql.get_help(context))
-        databases = show_databases()
         if isinstance(context.obj, Project):
-            project = context.obj
-            database = [
-                database
-                for database in databases
-                if database[0] == project.mysql_db_name
-            ]
             click.echo()
-            if database:
-                databases = database
-                click.echo(f'Current MySQL databases for project "{project.name}"')
+            project = context.obj
+            for db in show_databases():
+                if db[0] == project.mysql_db_name:
+                    click.echo(f'Current MySQL databases for project "{project.name}"')
+                    console = get_rich_console()
+                    table = get_rich_table(
+                        "Database", "Tables", "Django users", show_lines=True
+                    )
+                    table.add_row(db[0], str(db[1]), str(db[2]))
+                    console.print(table)
+                    break
             else:
                 click.echo(
                     f'No MySQL database "{project.mysql_db_name}" found for project "{project.name}"'
                 )
                 click.echo('You can prime it with "derex mysql reset"')
-        click.echo()
-        click.echo(tabulate(databases, headers=["Database", "Tables", "Django users"]))
+
+
+@mysql.command(name="shell")
+@click.argument("command", type=str, required=False)
+def shell(command: Optional[str]):
+    """Execute a root session of the mysql client"""
+    from derex.runner.mysql import execute_root_shell
+
+    execute_root_shell(command)
 
 
 @mysql.group("create")
@@ -46,12 +55,6 @@ def create(context: click.core.Context):
 @click.pass_context
 def drop(context: click.core.Context):
     """MySQL DROP predicate"""
-
-
-@mysql.group("grant")
-@click.pass_context
-def grant(context: click.core.Context):
-    """MySQL GRANT predicate (TODO)"""
 
 
 @mysql.group("list")
@@ -130,18 +133,24 @@ def show_databases_cmd():
     """List all MySQL databases"""
     from derex.runner.mysql import show_databases
 
-    click.echo(
-        tabulate(show_databases(), headers=["Databases", "Tables", "Django users"])
-    )
+    console = get_rich_console()
+    table = get_rich_table("Database", "Tables", "Django users", show_lines=True)
+    for database in show_databases():
+        table.add_row(database[0], str(database[1]), str(database[2]))
+    console.print(table)
     return 0
 
 
 @show.command(name="users")
 def show_users_cmd():
     """List all MySQL users"""
-    from derex.runner.mysql import show_users
+    from derex.runner.mysql import list_users
 
-    click.echo(tabulate(show_users(), headers=["User", "Host", "Password"]))
+    console = get_rich_console()
+    table = get_rich_table("User", "Host", "Password", show_lines=True)
+    for user in list_users():
+        table.add_row(user[0], user[1], user[2])
+    console.print(table)
     return 0
 
 
@@ -209,4 +218,25 @@ def reset_mysql_cmd(context, force):
         ):
             return 1
     reset_mysql_openedx(DebugBaseImageProject())
+    return 0
+
+
+@mysql.command(name="reset-root-password")
+@click.argument("current_password", type=str, required=True)
+@click.option(
+    "--force", is_flag=True, default=False, help="Do not ask for confirmation",
+)
+def reset_mysql_password_cmd(current_password: str, force: bool):
+    """Reset the mysql root user password with the one derived from
+    the Derex main secret."""
+    from derex.runner.constants import MYSQL_ROOT_USER
+
+    if click.confirm(
+        f'This is going to reset the password for the mysql "{MYSQL_ROOT_USER}" user '
+        "with the one computed by derex.\n"
+        "Are you sure you want to continue?"
+    ):
+        from derex.runner.mysql import reset_mysql_password
+
+        reset_mysql_password(current_password)
     return 0

@@ -1,7 +1,6 @@
 parameters:
   - name: DOCKER_IMAGES_SLUG
     type: string
-    default: ironwood
   - name: CONDITION
     type: string
     default: "true"

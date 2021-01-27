@@ -1,3 +1,5 @@
+from .conftest import assert_result_ok
+from .conftest import DEREX_TEST_USER
 from click.testing import CliRunner
 from derex.runner.ddc import ddc_services
 from importlib import reload
@@ -11,9 +13,7 @@ runner = CliRunner(mix_stderr=False)
 
 @pytest.fixture(scope="session")
 def start_mongodb(sys_argv):
-    """Start the mongodb container on setup,
-    stop and remove it on teardown.
-    """
+    """Ensure the mongodb service is up"""
     with sys_argv(["ddc-services", "up", "-d", "mongodb"]):
         ddc_services()
 
@@ -31,6 +31,10 @@ def cleanup_mongodb(start_mongodb):
         if "derex_test_db_" in database["name"]
     ]:
         MONGODB_CLIENT.drop_database(database_name)
+
+    for user in MONGODB_CLIENT.admin.command("usersInfo").get("users"):
+        if DEREX_TEST_USER in user["user"]:
+            MONGODB_CLIENT.admin.command("dropUser", DEREX_TEST_USER)
 
 
 def test_derex_mongodb(start_mongodb):
@@ -58,3 +62,27 @@ def test_derex_mongodb(start_mongodb):
     runner.invoke(drop_mongodb, test_db_copy_name, input="y")
     assert test_db_name not in [database["name"] for database in list_databases()]
     assert test_db_copy_name not in [database["name"] for database in list_databases()]
+
+
+def test_derex_mongodb_reset_password(mocker, start_mongodb):
+    from derex.runner.cli.mongodb import (
+        create_user_cmd,
+        reset_mongodb_password_cmd,
+        shell,
+    )
+
+    assert_result_ok(
+        runner.invoke(create_user_cmd, [DEREX_TEST_USER, "secret", "--role=root"])
+    )
+    mocker.patch("derex.runner.mongodb.MONGODB_ROOT_USER", new=DEREX_TEST_USER)
+
+    # This is expected to fail since we set a custom password for the root user
+    result = runner.invoke(shell)
+    assert result.exit_code == 1
+
+    # We reset the password to the derex generated one
+    assert_result_ok(runner.invoke(reset_mongodb_password_cmd, ["secret"], input="y"))
+
+    # If the password is still not resetted to the value of the derex generated password
+    # but still set to "secret" the next test will fail
+    assert_result_ok(runner.invoke(shell))

@@ -48,13 +48,14 @@ def write_boto_config_file():
     See http://docs.pythonboto.org/en/latest/boto_config_tut.html"""
     from django.conf import settings
 
-    os.environ["AWS_CREDENTIAL_FILE"] = "/tmp/boto.cfg"
-    with open("/tmp/boto.cfg", "w") as f:
-        f.write(
-            BOTO_CONFIG_TEMPLATE.format(
-                host=settings.AWS_S3_HOST, is_secure=str(settings.AWS_S3_USE_SSL)
+    if settings.DEFAULT_FILE_STORAGE == "storages.backends.s3boto.S3BotoStorage":
+        os.environ["AWS_CREDENTIAL_FILE"] = "/tmp/boto.cfg"
+        with open("/tmp/boto.cfg", "w") as f:
+            f.write(
+                BOTO_CONFIG_TEMPLATE.format(
+                    host=settings.AWS_S3_HOST, is_secure=str(settings.AWS_S3_USE_SSL)
+                )
             )
-        )
 
 
 BOTO_CONFIG_TEMPLATE = """[Boto]

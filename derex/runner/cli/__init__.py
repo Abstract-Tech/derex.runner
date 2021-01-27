@@ -11,9 +11,8 @@ from derex.runner.project import Project
 from derex.runner.project import ProjectNotFound
 from derex.runner.project import ProjectRunMode
 from derex.runner.secrets import HAS_MASTER_SECRET
-from rich import box
-from rich.console import Console
-from rich.table import Table
+from derex.runner.utils import get_rich_console
+from derex.runner.utils import get_rich_table
 from typing import Any
 from typing import Optional
 
@@ -21,6 +20,7 @@ import click
 import importlib_metadata
 import logging
 import os
+import rich
 import sys
 
 
@@ -57,12 +57,12 @@ def derex(ctx):
     if not container_names:
         return
 
-    console = Console()
-    table = Table(
+    console = get_rich_console()
+    table = get_rich_table(
+        "Name",
         title="[bold green]These containers are running and exposing an HTTP server on port 80",
-        box=box.SIMPLE,
+        box=rich.box.SIMPLE,
     )
-    table.add_column("Name")
     for container in container_names:
         container = (f"[bold]{container[0]}",) + container[1:]
         table.add_row(*container)
@@ -102,7 +102,7 @@ def compile_theme(project):
         return
     themes = ",".join(el.name for el in project.themes_dir.iterdir())
     uid = os.getuid()
-    args = [
+    compose_args = [
         "run",
         "--rm",
         "lms",
@@ -113,7 +113,7 @@ def compile_theme(project):
             paver compile_sass --theme-dirs /openedx/themes --themes {themes}
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
-    run_ddc_project(args, DebugBaseImageProject(), exit_afterwards=True)
+    run_ddc_project(compose_args, DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command()
@@ -139,8 +139,8 @@ def reindex_courses(project, course_ids):
         # the confirmation prompt
         django_cmd.append("--setup")
 
-    args = ["run", "--rm", "cms", "sh", "-c", " ".join(django_cmd)]
-    run_ddc_project(args, DebugBaseImageProject(), exit_afterwards=True)
+    compose_args = ["run", "--rm", "cms", "sh", "-c", " ".join(django_cmd)]
+    run_ddc_project(compose_args, DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command()
@@ -164,7 +164,7 @@ def reset_rabbitmq(project):
     from derex.runner.ddc import run_ddc_services
 
     vhost = f"{project.name}_edxqueue"
-    args = [
+    compose_args = [
         "exec",
         "-T",
         "rabbitmq",
@@ -174,7 +174,7 @@ def reset_rabbitmq(project):
         rabbitmqctl set_permissions -p {vhost} guest ".*" ".*" ".*"
         """,
     ]
-    run_ddc_services(args, exit_afterwards=True)
+    run_ddc_services(compose_args, exit_afterwards=True)
     click.echo(f"Rabbitmq vhost {vhost} created")
     return 0
 
@@ -261,33 +261,65 @@ def minio_shell():
     run_minio_shell()
 
 
-@derex.command()
+@debug.command("print-secret")
+@click.argument(
+    "secret", type=str, required=True,
+)
+def print_secret(secret):
+    from derex.runner.secrets import get_secret, DerexSecrets
+
+    derex_secret = getattr(DerexSecrets, secret, None)
+    if not derex_secret:
+        raise click.exceptions.ClickException(f'No secrets found for "{secret}"')
+    click.echo(get_secret(derex_secret))
+    return 0
+
+
+@derex.command("minio-update-key")
 @click.option(
     "--old-key",
     # This is the key that the current default master secret generates
     default="ICDTE0ZnlbIR7r6/qE81nkF7Kshc2gXYv6fJR4I/HKPeTbxEeB3nxC85Ne6C844hEaaC2+KHBRIOzGou9leulZ7t",
     help="The old key to use for the update",
 )
-def update_minio(old_key: str):
-    """Run minio to re-key data with the new secret. The output is very confusing, but it works.
-    If you read a red warning and "Rotation complete" at the end, it means rekeying has worked.
-    If your read your current SecretKey, it means the current credentials are correct and you don't need
-    to update your keys.
-    """
+def minio_update_key(old_key: str):
+    """Run minio to re-key data with the new secret"""
     from derex.runner.ddc import run_ddc_services
+    from derex.runner.docker_utils import wait_for_service
+    from derex.runner.utils import derex_path
 
-    # We need to stop minio after it's done re-keying. To this end, we use the expect package
-    script = "apk add expect --no-cache "
-    # We need to make sure the current credentials are not working...
-    script += ' && expect -c "spawn /usr/bin/minio server /data; expect "Endpoint" { close; exit 1 }"'
-    # ..but the old ones are
-    script += f' && if MINIO_SECRET_KEY="{old_key}" expect -c \'spawn /usr/bin/minio server /data; expect "Endpoint" {{ close; exit 1 }}\'; then exit 1; fi'
-    script += f' && export MINIO_ACCESS_KEY_OLD="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY_OLD="{old_key}"'
-    expected_string = "Rotation complete, please make sure to unset MINIO_ACCESS_KEY_OLD and MINIO_SECRET_KEY_OLD envs"
-    script += f" && expect -c 'spawn /usr/bin/minio server /data; expect \"{expected_string}\" {{ close; exit 0 }}'"
-    args = ["run", "--rm", "--entrypoint", "/bin/sh", "-T", "minio", "-c", script]
-    run_ddc_services(args, exit_afterwards=False)
-    click.echo("Minio server rekeying finished")
+    wait_for_service("minio")
+    MINIO_SCRIPT_PATH = derex_path("derex/runner/compose_files/minio-update-key.sh")
+    click.echo("Updating MinIO secret key...")
+    compose_args = [
+        "run",
+        "--rm",
+        "-v",
+        f"{MINIO_SCRIPT_PATH}:/minio-update-key.sh",
+        "-e",
+        f"MINIO_SECRET_KEY_OLD={old_key}",
+        "--entrypoint",
+        "/bin/sh",
+        "-T",
+        "minio",
+        "/minio-update-key.sh",
+    ]
+    try:
+        run_ddc_services(compose_args)
+    except RuntimeError:
+        return 1
+
+    # We need to recreate the minio container since we can't set
+    # the new key in the running one
+    # https://github.com/moby/moby/issues/8838
+    # We'll let `docker-compose up` recreate it for us, if needed
+    click.echo("\nRecreating MinIO container...")
+    compose_args = ["up", "-d", "minio"]
+    run_ddc_services(compose_args)
+
+    wait_for_service("minio")
+    click.echo("\nMinIO secret key updated successfully!")
+    return 0
 
 
 def red(string: str) -> str:

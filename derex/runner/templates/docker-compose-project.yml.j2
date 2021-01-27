@@ -18,7 +18,10 @@ x-common:
     - derex_{{ project.name }}_data:/openedx/data/
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/lms/envs/derex_project
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/cms/envs/derex_project
-    - {{ project._derex_django_path }}:/openedx/derex_django
+    - {{ derex_django_path }}:/openedx/derex_django
+    {%- if openedx_customizations %}{%- for src, dest in openedx_customizations %}
+    - {{ src }}:{{ dest }}
+    {%- endfor %}{%- endif %}
     {%- if project.requirements_dir and not project.requirements_volumes %}
     - {{ project.requirements_dir }}:/openedx/derex.requirements
     {%- endif -%}
@@ -40,7 +43,11 @@ x-common:
     DEREX_PROJECT: {{ project.name }}
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
+    MYSQL_USER: {{ project.mysql_user }}
+    MYSQL_PASSWORD: {{ project.secret("mysql") }}
     MONGODB_DB_NAME: {{ project.mongodb_db_name }}
+    MONGODB_USER: {{ project.mongodb_user }}
+    MONGODB_PASSWORD: {{ project.secret("mongodb") }}
     DEREX_MINIO_SECRET: {{ project.secret("minio") }}
     {%- for key, value in project.get_container_env().items() %}
     {{ key }}: {{ value | tojson }}
@@ -132,7 +139,7 @@ services:
     command:
       sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default'
     healthcheck:
-      test: celery inspect ping -A lms.celery:APP -d celery@lms.edx
+      test: celery inspect ping -A lms.celery:APP -d celery@openedx.lms
       interval: 15m
       timeout: 15s
       retries: 3
@@ -148,7 +155,7 @@ services:
     command:
       sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default'
     healthcheck:
-      test: celery inspect ping -A cms.celery:APP -d celery@cms.edx
+      test: celery inspect ping -A cms.celery:APP -d celery@openedx.cms
       interval: 15m
       timeout: 15s
       retries: 3

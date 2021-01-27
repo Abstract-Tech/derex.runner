@@ -1,3 +1,5 @@
+-c requirements.txt
+
 Sphinx
 sphinx-autoapi
 sphinx-press-theme

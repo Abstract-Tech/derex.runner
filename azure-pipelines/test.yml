@@ -5,60 +5,36 @@ stages:
     jobs:
       - job: PyInstallerBuildLinux
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
-
-          - script: |
-              pip install pyinstaller
-              make executable
-            displayName: "Build binary with pyinstaller"
-
-          - script: |
-              set -ex
-              ./bundle/dist/derex
-              ./bundle/dist/ddc-services ps
-              cd tests/fixtures/minimal
-              ../../../bundle/dist/ddc-project config
-            displayName: "Test pyinstaller created binary"
-
-          - task: PublishBuildArtifacts@1
-            inputs:
-              pathToPublish: ./bundle/dist/
-              artifactName: LinuxBinary
+          - template: test_pyinstaller.yml
+            parameters:
+              OS: ubuntu
+              OPENEDX_RELEASE: ironwood
+          - template: test_pyinstaller.yml
+            parameters:
+              OS: ubuntu
+              OPENEDX_RELEASE: juniper
 
       - job: PyInstallerBuildMacOs
         pool:
           vmImage: "macOS-10.14"
         steps:
           - template: prepare.yml
-
-          - script: |
-              pip install pyinstaller scrypt
-              # The Openssl version on MacOS 10.14 does not support scrypt
-              # so we pip install it and leave a trace to pyinstaller to pick it up
-              echo -e  "\nimport scrypt" >> bundle/executable.py
-              make executable
-            displayName: "Build binary with pyinstaller"
-
-          - script: |
-              #set -ex
-              ./bundle/dist/derex --help
-              ./bundle/dist/ddc-services --help
-              # cd tests/fixtures/minimal
-              # ../../../bundle/dist/ddc-project config
-              true
-            displayName: "Test pyinstaller created binary"
-
-          - task: PublishBuildArtifacts@1
-            inputs:
-              pathToPublish: ./bundle/dist/
-              artifactName: MacOSBinary
+          - template: test_pyinstaller.yml
+            parameters:
+              OS: macos
+              OPENEDX_RELEASE: ironwood
+          - template: test_pyinstaller.yml
+            parameters:
+              OS: macos
+              OPENEDX_RELEASE: juniper
 
       - job: RunPytests
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
 
@@ -76,20 +52,16 @@ stages:
       - job: RunSlowPytests
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - template: load_images.yml
-
-          - script: ddc-services pull
-            displayName: "Pull edX services images"
-
-          - script: |
-              set -ex
-              export DEREX_ADMIN_SERVICES=False
-              ddc-services up -d
-              derex reset-mailslurper
-            displayName: "Start service daemons"
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
+          - template: provision_services.yml
 
           - script: |
               set -ex
@@ -106,7 +78,7 @@ stages:
           - RunPytests
           - RunSlowPytests
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
 
@@ -141,170 +113,74 @@ stages:
             displayName: Fix coverage result and publish it
             condition: succeededOrFailed()
 
-      - job: TestComplete
-        timeoutInMinutes: 60
+      - job: TestIronwoodMinimalProject
+        timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
           - template: prepare.yml
           - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
+          - template: test_project.yml
+            parameters:
+              OPENEDX_RELEASE: ironwood
+              PROJECT_TYPE: minimal
 
-          - script: ddc-services pull
-            displayName: "Pull edX services images"
-
-          - script: |
-              set -ex
-              export DEREX_ADMIN_SERVICES=False
-              ddc-services up -d
-              derex reset-mailslurper
-            displayName: "Start service daemons"
-
-          - script: |
-              set -ex
-              cd tests/fixtures/complete
-              derex mysql reset --force
-              derex reset-rabbitmq
-              derex create-bucket
-              # Run a command to get the current database name. First run it with all output enabled
-              # so that in case of errors in the pipeline we have info about what went wrong
-              # We use the flower container because it always uses the base image regardless
-              # of requirements and themes
-              ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
-              # ...and then the actual run
-              DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
-              ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -psecret ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
-            displayName: "Test complete project fixtures"
-
-          - script: cd tests/fixtures/complete && derex build requirements
-            displayName: 'Build requirements image for project "complete"'
-
-          - script: cd tests/fixtures/complete; ddc-project up -d; sleep 3
-            displayName: "Start edX daemons"
-
-          - script: echo 127.0.0.1 localhost studio.complete.localhost complete.localhost | sudo tee -a /etc/hosts
-            displayName: Add studio.complete.localhost and complete.localhost to /etc/hosts
-
-          - script: cd tests/fixtures/complete; ddc-project logs cms lms
-            condition: always()
-            displayName: Show CMS/LMS logs
-
-          - script: |
-              $(CURL) http://complete.localhost/ || (sleep 10; $(CURL) http://complete.localhost/)
-              $(CURL) http://complete.localhost/example_view
-            displayName: Curl the LMS
-
-          - script: $(CURL) http://studio.complete.localhost/ || (sleep 10; $(CURL) http://studio.complete.localhost/)
-            displayName: Curl the CMS
-
-          - script: cd tests/fixtures/complete && derex compile-theme
-            displayName: Compile theme
-
-          - script: cd tests/fixtures/complete && derex build final
-            displayName: Build final image
-
-          - script: |
-              set -ex
-              cd tests/fixtures/complete
-              docker images
-              # This should not be needed, but for some reason Azure does not tag the image
-              docker tag $(docker images -q|head -n1) complete/openedx-themes
-              docker images
-
-              echo Installing dive
-              wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
-              DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
-              echo Analyzing image
-              dive --ci complete/openedx-themes
-            condition: always()
-            displayName: Test the complete image with dive
-            continueOnError: true # Do not make the build fail because of this step, for now
-            timeoutInMinutes: 40
-
-          - script: |
-              set -ex
-              cd tests/fixtures/complete
-              derex runmode production --force
-              ddc-project up -d
-              sleep 5  # Give it time to start up
-            displayName: "Start production image lms/cms"
-
-          - script: |
-              cd tests/fixtures/complete
-              ddc-project config
-              ddc-project logs cms lms
-            condition: always()
-            displayName: "Show CMS/LMS logs (prod mode)"
-
-          - script: |
-              $(CURL) http://complete.localhost/ || (sleep 10; $(CURL) http://complete.localhost/)
-              $(CURL) http://complete.localhost/example_view
-            displayName: "Curl the LMS (prod mode)"
-
-          - script: $(CURL) http://studio.complete.localhost/ || (sleep 10; $(CURL) http://studio.complete.localhost/)
-            displayName: "Curl the CMS (prod mode)"
-
-          - script: |
-              set -ex
-              $(CURL) http://complete.localhost/|grep static/demo-theme/css/lms-main-v1.css
-              $(CURL) http://complete.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
-            displayName: "Curl the LMS CSS and make sure our theme CSS is in"
-
-          - script: |
-              ddc-services logs
-              cd tests/fixtures/complete; ddc-project logs
-            condition: always()
-            displayName: "Show logs"
-
-          - script: |
-              cd tests/fixtures/complete; ddc-project config
-            condition: always()
-            displayName: "Show ddc-project config"
-
-      - job: TestMinimal
-        timeoutInMinutes: 40
+      - job: TestIronwoodCompleteProject
+        timeoutInMinutes: 60
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
           - template: prepare.yml
           - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
+          - template: test_project.yml
+            parameters:
+              OPENEDX_RELEASE: ironwood
+              PROJECT_TYPE: complete
 
-          - script: ddc-services pull
-            displayName: "Pull edX services images"
+      - job: TestJuniperMinimalProject
+        timeoutInMinutes: 40
+        pool:
+          vmImage: $(UBUNTU_VERSION)
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
+          - template: test_project.yml
+            parameters:
+              OPENEDX_RELEASE: juniper
+              PROJECT_TYPE: minimal
 
-          - script: |
-              set -ex
-              export DEREX_ADMIN_SERVICES=False
-              ddc-services up -d
-              derex reset-mailslurper
-            displayName: "Start service daemons"
-
-          - script: |
-              set -ex
-              cd tests/fixtures/minimal
-              docker images
-              ddc-project config
-              derex mysql reset --force
-              derex reset-rabbitmq
-              derex create-bucket
-            displayName: "Prime Mysql DB"
-
-          - script: |
-              set -x
-              cd tests/fixtures/minimal
-              echo 127.0.0.1 localhost flower.minimal.localhost | sudo tee -a /etc/hosts
-              ddc-project up -d lms_worker cms_worker flower
-              while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
-              while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
-              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@openedx.lms
-              curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.minimal.localhost/dashboard?json=1|grep celery@openedx.cms
-            displayName: "Check flower"
+      - job: TestJuniperCompleteProject
+        timeoutInMinutes: 60
+        pool:
+          vmImage: $(UBUNTU_VERSION)
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
+          - template: test_project.yml
+            parameters:
+              OPENEDX_RELEASE: juniper
+              PROJECT_TYPE: complete
 
       - job: CheckDocs
         timeoutInMinutes: 5
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - script: make docs
@@ -313,7 +189,7 @@ stages:
       - job: CheckPreCommit
         timeoutInMinutes: 5
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - script: pre-commit run -a

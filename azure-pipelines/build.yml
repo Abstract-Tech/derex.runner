@@ -7,37 +7,31 @@ stages:
       - job: hawthorn
         timeoutInMinutes: 180
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: hawthorn
-          - name: DOCKER_BASE_OPTS
-            value: --build-arg PYTHON_VERSION=2.7 --build-arg EDX_PLATFORM_VERSION=open-release/$(DOCKER_IMAGES_SLUG).master
         steps:
           - template: build_single_version.yml
 
       - job: ironwood
         timeoutInMinutes: 180
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
 
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: ironwood
-          - name: DOCKER_BASE_OPTS
-            value: --build-arg PYTHON_VERSION=2.7 --build-arg EDX_PLATFORM_VERSION=open-release/$(DOCKER_IMAGES_SLUG).master
         steps:
           - template: build_single_version.yml
 
       - job: juniper
         timeoutInMinutes: 180
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         continueOnError: true # bad translations currently cause errors
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: juniper
-          - name: DOCKER_BASE_OPTS
-            value:
         steps:
           - template: build_single_version.yml

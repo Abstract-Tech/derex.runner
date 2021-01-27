@@ -15,7 +15,11 @@ FIXTURES_DIR = "/openedx/fixtures/"
 
 
 def get_dump_file_contents():
-    return bz2.BZ2File(DUMP_FILE_PATH).read()
+    sql = bz2.BZ2File(DUMP_FILE_PATH).read()
+    if sys.version_info[0] > 2:
+        # In python3 bz2 returns bytes instead of a string
+        sql = sql.decode("utf-8")
+    return sql
 
 
 def get_connection(include_db=True):
@@ -40,9 +44,11 @@ def restore_dump():
             settings.DATABASES["default"]["NAME"]
         )
     )
-    sql = get_dump_file_contents()
     cursor = get_connection().cursor()
-    cursor.execute(sql)
+    cursor.execute(get_dump_file_contents())
+    if sys.version_info[0] > 2:
+        # In python3 we need to explicitly commit the result for some reason
+        cursor.execute("COMMIT;")
 
 
 def run_fixtures():

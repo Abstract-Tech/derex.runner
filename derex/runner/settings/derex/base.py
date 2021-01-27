@@ -15,7 +15,7 @@ SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 DEREX_PROJECT = os.environ["DEREX_PROJECT"]
 
 _settings_modules = [
-    "django",
+    "django_settings",
     "mysql",
     "mongo",
     "caches",
@@ -30,10 +30,11 @@ _settings_modules = [
     "search",
     "container_env",
     "plugins",
+    "auth",
 ]
 
 for setting_module in _settings_modules:
-    setting_module_path = str(Path(__file__).parent / setting_module + ".py")
+    setting_module_path = str(Path(__file__).parent / "{}.py".format(setting_module))
     # We are using execfile in order to share the current scope so that we
     # don't have to redefine and reimport everything in every single settings
     # module

@@ -113,5 +113,7 @@ ENV/
 # Our temporary files
 .derex
 
-tests/fixtures/tests/ironwood.2.tar.gz
-tests/fixtures/tests/edx-demo-course-*
+examples/tests/ironwood.2.tar.gz
+examples/tests/edx-demo-course-*
+
+!derex/runner/compose_files/openedx_customizations/**

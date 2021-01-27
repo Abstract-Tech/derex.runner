@@ -1,8 +1,7 @@
-project_name: complete
+project_name: juniper-complete
+openedx_version: juniper
 compile_assets: true
 variables:
   lms_test_dict:
     base: { "foo": "bar" }
     production: { "foo": "baz" }
-
-openedx_version: ironwood

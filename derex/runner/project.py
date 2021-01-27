@@ -1,8 +1,11 @@
 from derex.runner import __version__
+from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import MONGODB_ROOT_USER
+from derex.runner.constants import MYSQL_ROOT_USER
+from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
-from derex.runner.utils import CONF_FILENAME
 from derex.runner.utils import get_dir_hash
 from enum import Enum
 from enum import IntEnum
@@ -71,6 +74,9 @@ class Project:
     # fixtures and themes.
     plugins_dir: Optional[Path] = None
 
+    # The directory containing openedx python modules to be replaced
+    openedx_customizations_dir: Optional[Path] = None
+
     # The image name of the image that includes requirements
     requirements_image_name: str
 
@@ -95,17 +101,21 @@ class Project:
     # Enum containing possible settings modules
     _available_settings = None
 
-    _derex_django_path = abspath_from_egg(
-        "derex.runner", "derex_django/README.rst"
-    ).parent
-
     @property
     def mysql_db_name(self) -> str:
         return self.config.get("mysql_db_name", f"{self.name}_openedx")
 
     @property
+    def mysql_user(self) -> str:
+        return self.config.get("mysql_user", MYSQL_ROOT_USER)
+
+    @property
     def mongodb_db_name(self) -> str:
         return self.config.get("mongodb_db_name", f"{self.name}_openedx")
+
+    @property
+    def mongodb_user(self) -> str:
+        return self.config.get("mongodb_user", MONGODB_ROOT_USER)
 
     @property
     def runmode(self) -> ProjectRunMode:
@@ -208,7 +218,14 @@ class Project:
             path = os.getcwd()
         self.root = find_project_root(Path(path))
         config_path = self.root / CONF_FILENAME
+        secrets_config_path = self.root / SECRETS_CONF_FILENAME
         self.config = yaml.load(config_path.open(), Loader=yaml.FullLoader)
+        try:
+            self.secrets_config = yaml.load(
+                secrets_config_path.open(), Loader=yaml.FullLoader
+            )
+        except FileNotFoundError:
+            self.secrets_config = {}
         self.openedx_version = OpenEdXVersions[
             self.config.get("openedx_version", "ironwood")
         ]
@@ -277,6 +294,10 @@ class Project:
         if plugins_dir.is_dir():
             self.plugins_dir = plugins_dir
 
+        openedx_customizations_dir = self.root / "openedx_customizations"
+        if openedx_customizations_dir.is_dir():
+            self.openedx_customizations_dir = openedx_customizations_dir
+
         self.image_name = self.themes_image_name
 
     def update_default_settings(self, default_settings_dir, destination_settings_dir):
@@ -299,14 +320,14 @@ class Project:
             if destination.is_file():
                 old_text = destination.read_text()
                 if old_text != new_text:
-                    logger.warn(f"Replacing file {destination} with newer version")
+                    logger.warning(f"Replacing file {destination} with newer version")
                     diff = tuple(
                         difflib.unified_diff(
                             old_text.splitlines(keepends=True),
                             new_text.splitlines(keepends=True),
                         )
                     )
-                    logger.warn("".join(diff))
+                    logger.warning("".join(diff))
             else:
                 if not destination.parent.is_dir():
                     destination.parent.mkdir(parents=True)
@@ -388,13 +409,15 @@ class Project:
         """
         settings = self.settings.name
         result = {}
-        variables = self.config.get("variables", {})
-        for variable in variables:
-            value = variables[variable][settings]
-            if not isinstance(value, str):
-                result[f"DEREX_JSON_{variable.upper()}"] = json.dumps(value)
-            else:
-                result[f"DEREX_{variable.upper()}"] = value
+
+        for config in [self.config, self.secrets_config]:
+            variables = config.get("variables", {})
+            for variable in variables:
+                value = variables[variable][settings]
+                if not isinstance(value, str):
+                    result[f"DEREX_JSON_{variable.upper()}"] = json.dumps(value)
+                else:
+                    result[f"DEREX_{variable.upper()}"] = value
         return result
 
     def secret(self, name: str) -> str:
