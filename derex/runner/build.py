@@ -12,17 +12,12 @@ logger = logging.getLogger(__name__)
 def docker_commands_to_install_requirements(project: Project):
     dockerfile_contents = []
     if project.requirements_dir:
-        dockerfile_contents.append(
-            "RUN pip install pip==20.0.2\n"
-            # Constrain edx version, but omit the relative paths: we run this from our
-            # requirements dir so that the derex user can use `./` in their requirements files
-            "RUN grep == /openedx/edx-platform/requirements/edx/base.txt |grep -v ^git+https > /tmp/base.txt\n"
-            "COPY requirements /openedx/derex.requirements/\n"
-        )
+        dockerfile_contents.append("COPY requirements /openedx/derex.requirements/\n")
         for requirments_file in os.listdir(project.requirements_dir):
             if requirments_file.endswith(".txt"):
                 dockerfile_contents.append(
-                    f"RUN cd /openedx/derex.requirements && pip install -c /tmp/base.txt -r {requirments_file}\n"
+                    "RUN cd /openedx/derex.requirements && "
+                    f"pip install -r {requirments_file} -c /openedx/requirements/openedx_constraints.txt\n"
                 )
     return dockerfile_contents
 

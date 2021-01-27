@@ -3,6 +3,7 @@ from derex.runner.project import Project
 from types import SimpleNamespace
 
 import docker
+import pytest
 
 
 def test_ensure_volumes_present(mocker):
@@ -26,13 +27,14 @@ def test_ensure_volumes_present(mocker):
 def test_check_services(mocker):
     from derex.runner.docker_utils import check_services
 
-    client = mocker.patch("derex.runner.docker_utils.client")
+    api_client = mocker.patch("derex.runner.docker_utils.api_client")
 
-    client.containers.get.return_value.status = "running"
+    container_info = {"State": {"Status": "running", "Health": {"Status": "healthy"}}}
+    api_client.inspect_container.return_value = container_info
     assert check_services(["mysql"])
 
-    client.containers.get.side_effect = docker.errors.NotFound(
-        "Mysql container not found"
+    api_client.inspect_container.side_effect = docker.errors.NotFound(
+        "mysql container not found"
     )
     assert not check_services(["mysql"])
 
@@ -40,15 +42,43 @@ def test_check_services(mocker):
 def test_wait_for_service(mocker):
     from derex.runner.docker_utils import wait_for_service
 
-    container = mocker.MagicMock()
-    container.exec_run.return_value = mocker.MagicMock(exit_code=0)
+    # Test that a RuntimeError is raised if the container doesn't
+    # exists
+    with pytest.raises(RuntimeError):
+        wait_for_service("service", 1)
 
-    client = mocker.patch("derex.runner.docker_utils.client")
-    client.containers.get.return_value = container
+    container_info = {"State": {"Status": "running", "Health": {"Status": "healthy"}}}
+    api_client = mocker.patch("derex.runner.docker_utils.api_client")
+    api_client.inspect_container.return_value = container_info
 
-    wait_for_service("mysql", 'mysql -psecret -e "SHOW DATABASES"', 1)
-    client.containers.get.assert_called_with("mysql")
-    container.exec_run.assert_called_with('mysql -psecret -e "SHOW DATABASES"')
+    # Test that the result is successfull when the container
+    # is running or restarting and healthy
+    result = wait_for_service("service", 1)
+    api_client.inspect_container.assert_called_with("service")
+    assert result == 0
+
+    container_info["State"]["Status"] = "restarting"
+    result = wait_for_service("service", 1)
+    assert result == 0
+
+    # Test that a RuntimeError is raised if the container status is
+    # exited
+    container_info["State"]["Status"] = "exited"
+    with pytest.raises(RuntimeError):
+        wait_for_service("service", 1)
+
+    # Test that a TimeoutError is raised if the container status is
+    # unhealthy
+    container_info["State"]["Status"] = "running"
+    container_info["State"]["Health"]["Status"] = "unhealthy"
+    with pytest.raises(TimeoutError):
+        wait_for_service("service", 1)
+
+    # Test that a NotImplementedError is raised if the container doesn't
+    # define an healtcheck
+    container_info["State"]["Health"] = None
+    with pytest.raises(NotImplementedError):
+        wait_for_service("service", 1)
 
 
 def test_get_final_image(mocker, minimal_project):

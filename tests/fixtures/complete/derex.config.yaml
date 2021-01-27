@@ -1,8 +1,0 @@
-project_name: complete
-compile_assets: true
-variables:
-  lms_test_dict:
-    base: { "foo": "bar" }
-    production: { "foo": "baz" }
-
-openedx_version: ironwood

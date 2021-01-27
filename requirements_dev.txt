@@ -36,7 +36,7 @@ flake8==3.8.1             # via -r requirements_dev.in
 identify==1.4.16          # via pre-commit
 idna==2.9                 # via -r requirements.txt, -r requirements_doc.txt, requests
 imagesize==1.2.0          # via -r requirements_doc.txt, sphinx
-importlib-metadata==1.6.0  # via -r requirements.txt, flake8, jsonschema, keyring, pluggy, pre-commit, pytest, tox, twine, virtualenv
+importlib-metadata==1.6.0  # via -r requirements.txt
 isort==4.3.21             # via -r requirements_dev.in
 jeepney==0.4.3            # via keyring, secretstorage
 jinja2==2.11.2            # via -r requirements.txt, -r requirements_doc.txt, sphinx, sphinx-autoapi
@@ -92,13 +92,12 @@ sphinxcontrib-htmlhelp==1.0.3  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-jsmath==1.0.1  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-qthelp==1.0.3  # via -r requirements_doc.txt, sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via -r requirements_doc.txt, sphinx
-tabulate==0.8.7           # via -r requirements.txt
 texttable==1.6.2          # via -r requirements.txt, docker-compose
 toml==0.10.1              # via black, pre-commit, pytest-black, tox
 tox==3.15.1               # via -r requirements_dev.in
 tqdm==4.46.0              # via twine
 twine==3.1.1              # via -r requirements_dev.in
-typed-ast==1.4.1          # via -r requirements_doc.txt, astroid, black, mypy
+typed-ast==1.4.1          # via black, mypy
 typing-extensions==3.7.4.2  # via -r requirements.txt, mypy, rich
 unidecode==1.1.1          # via -r requirements_doc.txt, sphinx-autoapi
 urllib3==1.25.9           # via -r requirements.txt, -r requirements_doc.txt, requests

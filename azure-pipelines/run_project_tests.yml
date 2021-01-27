@@ -1,0 +1,82 @@
+parameters:
+  - name: PROJECT_TYPE
+    type: string
+  - name: PROJECT_PATH
+    type: string
+  - name: PROJECT_NAME
+    type: string
+
+steps:
+  - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      # Run a command to get the current database name. First run it with all output enabled
+      # so that in case of errors in the pipeline we have info about what went wrong
+      # We use the flower container because it always uses the base image regardless
+      # of requirements and themes
+      ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
+      # ...and then the actual run
+      DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+      ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -p$(derex debug print-secret mysql) ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+    displayName: "Test ${{ parameters.PROJECT_NAME }} project fixtures"
+
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost
+    displayName: Curl the LMS
+
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
+    displayName: Curl the LMS plugin view
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+
+  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost
+    displayName: Curl the CMS
+
+  - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      derex runmode production --force
+      ddc-project up -d
+      sleep 5  # Give it time to start up
+    displayName: "Start LMS and CMS in producion mode"
+
+  - script: |
+      cd ${{ parameters.PROJECT_PATH }}
+      ddc-project config
+      ddc-project logs lms cms
+    condition: always()
+    displayName: "Show LMS/CMS logs (production runmode)"
+
+  - script: |
+      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/)
+    displayName: "Curl the LMS (production runmode)"
+
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
+    displayName: "Curl the LMS (production runmode)"
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+
+  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/)
+    displayName: "Curl the CMS (production runmode)"
+
+  - script: |
+      set -ex
+      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/|grep static/demo-theme/css/lms-main-v1.css
+      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+    displayName: "Curl the LMS CSS and make sure our theme CSS is in"
+
+  - script: |
+      ddc-services logs
+      cd ${{ parameters.PROJECT_PATH }}; ddc-project logs
+    condition: always()
+    displayName: "Show logs"
+
+  - script: |
+      set -x
+      cd ${{ parameters.PROJECT_PATH }}
+      echo 127.0.0.1 localhost flower.${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
+      ddc-project up -d lms_worker cms_worker flower
+      while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
+      while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
+      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost/dashboard?json=1|grep celery@openedx.lms
+      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost/dashboard?json=1|grep celery@openedx.cms
+    displayName: "Check flower"

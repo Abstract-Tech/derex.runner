@@ -9,6 +9,9 @@ import sys
 import traceback
 
 
+DEREX_TEST_USER = "derex_test_user"
+
+
 # Do not trust the value of __file__ in this module: on Azure it's wrong
 
 
@@ -16,9 +19,8 @@ import traceback
 def workdir():
     @contextlib.contextmanager
     def workdir_decorator(path: Path):
-        """Creates a copy of the given directory's parent, changes working directory
-        to be the copy of the given one and returns to the previous working
-        directory on exit."""
+        """Changes working directory to the given one.
+        Returns to the previous working directory on exit."""
         prev_cwd = Path.cwd()
         os.chdir(path)
         try:
@@ -55,7 +57,7 @@ def workdir_copy():
 @pytest.fixture(params=["ironwood", "juniper"])
 def minimal_project(request, workdir_copy):
     """Return a context manager that can be used to work inside
-    a complete project.
+    a minimal project.
     """
     return workdir_copy(
         Path(__file__).parent.with_name("examples") / request.param / "minimal"

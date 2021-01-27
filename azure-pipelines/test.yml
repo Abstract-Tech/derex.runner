@@ -5,7 +5,7 @@ stages:
     jobs:
       - job: PyInstallerBuildLinux
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - template: test_pyinstaller.yml
@@ -34,7 +34,7 @@ stages:
       - job: RunPytests
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
 
@@ -52,20 +52,16 @@ stages:
       - job: RunSlowPytests
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - template: load_images.yml
-
-          - script: ddc-services pull
-            displayName: "Pull edX services images"
-
-          - script: |
-              set -ex
-              export DEREX_ADMIN_SERVICES=False
-              ddc-services up -d
-              derex reset-mailslurper
-            displayName: "Start service daemons"
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
+          - template: provision_services.yml
 
           - script: |
               set -ex
@@ -82,7 +78,7 @@ stages:
           - RunPytests
           - RunSlowPytests
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
 
@@ -117,64 +113,74 @@ stages:
             displayName: Fix coverage result and publish it
             condition: succeededOrFailed()
 
-      - job: TestIronwoodMinimal
+      - job: TestIronwoodMinimalProject
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
           - template: prepare.yml
           - template: load_images.yml
-          - template: test_minimal_project.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
+          - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: ironwood
+              PROJECT_TYPE: minimal
 
-      - job: TestIronwoodComplete
+      - job: TestIronwoodCompleteProject
         timeoutInMinutes: 60
-        dependsOn: TestIronwoodMinimal
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
           - template: prepare.yml
           - template: load_images.yml
-          - template: test_complete_project.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: ironwood
+          - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: ironwood
+              PROJECT_TYPE: complete
 
-      - job: TestJuniperMinimal
+      - job: TestJuniperMinimalProject
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
           - template: prepare.yml
           - template: load_images.yml
-          - template: test_minimal_project.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
+          - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: juniper
+              PROJECT_TYPE: minimal
 
-      - job: TestJuniperComplete
+      - job: TestJuniperCompleteProject
         timeoutInMinutes: 60
-        dependsOn: TestJuniperMinimal
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
           - template: prepare.yml
           - template: load_images.yml
-          - template: test_complete_project.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
+          - template: test_project.yml
             parameters:
               OPENEDX_RELEASE: juniper
+              PROJECT_TYPE: complete
 
       - job: CheckDocs
         timeoutInMinutes: 5
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - script: make docs
@@ -183,7 +189,7 @@ stages:
       - job: CheckPreCommit
         timeoutInMinutes: 5
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - script: pre-commit run -a

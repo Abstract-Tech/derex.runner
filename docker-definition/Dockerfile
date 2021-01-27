@@ -36,7 +36,8 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     mariadb-connector-c \
     sqlite \
     xmlsec \
-    wget
+    wget \
+    bash
 
 COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
@@ -45,22 +46,44 @@ COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
 RUN /tmp/patch_ldconfig_to_fix_shapely.sh && \
      python -c "from  ctypes import CDLL; CDLL('$(echo /usr/lib/libgeos_c.so)').GEOSversion"
 
-
 # we want to use paver without remembering to specify these
 ENV NO_PREREQ_INSTALL=True
 ENV NO_PYTHON_UNINSTALL=True
 
-FROM base as sourceonly
-ARG EDX_PLATFORM_VERSION=open-release/juniper.alpha1
+# Upgrade pip to the latest version
+RUN pip install --upgrade pip
 
+FROM base as sourceonly
+ARG EDX_PLATFORM_RELEASE=juniper
+ARG EDX_PLATFORM_VERSION=open-release/juniper.master
 ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
 
-RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ && \
+RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ /openedx/requirements/ && \
     git clone ${EDX_PLATFORM_REPOSITORY} --branch ${EDX_PLATFORM_VERSION} --depth 1 /openedx/edx-platform
 
 WORKDIR /openedx/edx-platform
+COPY requirements/${EDX_PLATFORM_RELEASE}/derex.txt /openedx/requirements/derex.txt
+COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /openedx/requirements/overrides.txt
+# The following layer is going to produce 3 requirements file:
+# * edx base requirements with some fixes which will be installed (openedx_base_fixed.txt)
+# * edx base requirements with relative paths converted to absolute paths which will be
+#   used to create wheels (openedx_wheels.txt)
+# * edx base requirements without links and extras to be used as constraints (openedx_constraints.txt)
+RUN cp /openedx/edx-platform/requirements/edx/base.txt /openedx/requirements/openedx_base_fixed.txt && \
+    `# Versioning of this package is wrong at the pinned commit` \
+    sed -e "s|django-oauth-plus.git@01ec2a161dfc3465f9d35b9211ae790177418316|django-oauth-plus.git@6218624ef19aea37c5abec35b4ea2e049dc8ee4e|" -i /openedx/requirements/openedx_base_fixed.txt && \
+    `# Without the following line pip produces an error` \
+    `# Generating metadata for package <package> produced metadata for project name django-ratelimit. Fix your #egg=ratelimit fragments.` \
+    sed -e "s|#egg=ratelimit|#egg=django-ratelimit|" -i /openedx/requirements/openedx_base_fixed.txt && \
+    sed -e "s|#egg=pystache_custom-dev|#egg=pystache-custom|" -i /openedx/requirements/openedx_base_fixed.txt && \
+    cat /openedx/requirements/openedx_base_fixed.txt | sed -e "/git+https/!s/-e /-e \/openedx\/edx-platform\//" > /openedx/requirements/openedx_wheels.txt && \
+    `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
+    sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /openedx/requirements/openedx_wheels.txt && \
+    `# From version 20.3 pip use a new dependency resolver which doesn t accept extras or links as constraints` \
+    `# Read more at https://github.com/pypa/pip/issues/8210` \
+    cat /openedx/requirements/openedx_wheels.txt | grep -v github | grep -v ^-e | sed -e "s|\[.*\]||" > /openedx/requirements/openedx_constraints.txt
 
-FROM base as wheels
+FROM sourceonly as wheels
 
 RUN --mount=type=cache,target=/var/cache/apk apk add \
     alpine-sdk \
@@ -87,17 +110,13 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     `# From https://github.com/jfloff/alpine-python/issues/32` \
     sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i
 
-COPY --from=sourceonly /openedx/edx-platform/requirements/edx/base.txt /tmp/base.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
-    cat /tmp/base.txt | grep -v github | grep -v ^-e > /tmp/derex.txt && \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
-    pip install numpy -c /tmp/derex.txt && \
-    `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
-    sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /tmp/derex.txt && \
-    `# sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html) ` \
-    sed -e "s|.*sympy==0.7.1*|sympy==1.5.1|" -i /tmp/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse -r /tmp/derex.txt && \
-    pip wheel --wheel-dir=/wheelhouse gevent "whitenoise[brotli]<5"
+    `# We need to add the --no-verify option due to django-oauth-plus metadata` \
+    `# violating PEP 440 (https://www.python.org/dev/peps/pep-0440/)` \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/openedx_wheels.txt --no-verify && \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/derex.txt -c /openedx/requirements/openedx_constraints.txt && \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/overrides.txt
 
 FROM wheels as rmlint
 RUN pip install scons && \
@@ -114,14 +133,10 @@ FROM sourceonly as notranslations
 
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 
-# TODO: extract these package list and put it in a file external to the Dockerfile
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install "whitenoise[brotli]<5" flower gevent packaging --find-links /wheelhouse -c /openedx/edx-platform/requirements/edx/development.txt
-RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install --find-links /wheelhouse -r /openedx/edx-platform/requirements/edx/base.txt && \
-    `# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option` \
-    `# It s not very clear why it was pinned in the first place` \
-    pip install gunicorn==19.10.0
+    pip install -r /openedx/requirements/openedx_base_fixed.txt --find-links /wheelhouse && \
+    pip install --upgrade -r /openedx/requirements/derex.txt --find-links /wheelhouse -c /openedx/requirements/openedx_constraints.txt && \
+    pip install --upgrade -r /openedx/requirements/overrides.txt --find-links /wheelhouse
 
 COPY whitenoise_edx.py assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 
@@ -135,7 +150,7 @@ FROM notranslations as translations
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
-    pip install transifex-client -c /openedx/edx-platform/requirements/edx/development.txt && \
+    pip install transifex-client -c /openedx/requirements/openedx_constraints.txt && \
     /usr/local/bin/translations.sh
 
 FROM notranslations as nostatic
@@ -147,11 +162,10 @@ RUN --mount=type=bind,from=translations,target=/translations \
     `# Add a pth file to Python site packages to mimic derex_django installation` \
     echo /openedx/derex_django > $(python -c 'import site; print(site.getsitepackages()[0])')/derex.pth
 
-
 FROM nostatic as nostatic-dev
 # This image has node dependencies installed, and can be used to compile assets
 
-ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v10.19.0/node-v10.19.0-linux-x64-musl.tar.xz
+ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v10.22.1/node-v10.22.1-linux-x64-musl.tar.xz
 # The latest node release does not work on ironwood: its node-sass version fails to compile
 # ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v12.16.1/node-v12.16.1-linux-x64-musl.tar.xz
 
@@ -162,8 +176,7 @@ RUN --mount=type=cache,target=/root/.npm \
     --mount=type=cache,target=/root/.cache/pip \
     apk add g++ make coreutils vim mariadb-client && \
     wget ${NODE_URL} -O - | tar --directory / -xJf - && ln -s /node-*/bin/* /usr/local/bin/ && \
-    npm install -g yarn@latest && ln -sf /node-*/bin/* /usr/local/bin/ && yarn install && \
-    pip install pdbpp ipython ipdb
+    npm install --unsafe-perm
 
 FROM nostatic-dev as dev-nodump
 RUN /usr/local/bin/compile_assets.sh && \
@@ -193,4 +206,4 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
 
 ENV DJANGO_SETTINGS_MODULE=lms.envs.derex.migration
 ENV SERVICE_VARIANT=lms
-ENV DEREX_VERSION=0.1.0
+ENV DEREX_VERSION=0.2.0

@@ -132,6 +132,8 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
         "--build-arg",
         f"PYTHON_VERSION={python_version}",
         "--build-arg",
+        f"EDX_PLATFORM_RELEASE={version.name}",
+        "--build-arg",
         f"EDX_PLATFORM_VERSION={git_branch}",
         "--build-arg",
         f"EDX_PLATFORM_REPOSITORY={git_repo}",

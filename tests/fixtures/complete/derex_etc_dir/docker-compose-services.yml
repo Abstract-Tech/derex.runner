@@ -1,5 +1,0 @@
-version: "3.5"
-services:
-  mysql:
-    environment:
-      MYSQL_ROOT_PASSWORD: my-overridden-secret-password

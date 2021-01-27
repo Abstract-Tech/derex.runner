@@ -4,10 +4,7 @@
 from .conftest import assert_result_ok
 from click.testing import CliRunner
 from derex.runner.cli import derex as derex_cli_group
-from derex.runner.ddc import ddc_services
 from derex.runner.project import Project
-from itertools import repeat
-from types import SimpleNamespace
 
 import os
 import pytest
@@ -22,23 +19,6 @@ def test_derex_compile_theme(complete_project):
         result = runner.invoke(derex_cli_group, ["compile-theme"])
         assert_result_ok(result)
         assert os.path.isdir(Project().root / ".derex")
-
-
-@pytest.mark.slowtest
-def test_derex_reset_mysql(sys_argv, mocker, minimal_project):
-    """Test the open edx ironwood docker compose shortcut."""
-    mocker.patch("derex.runner.ddc.check_services", return_value=True)
-    client = mocker.patch("derex.runner.docker_utils.client")
-    client.containers.get.return_value.exec_run.side_effect = [
-        SimpleNamespace(exit_code=-1)
-    ] + list(repeat(SimpleNamespace(exit_code=0), 10))
-
-    with sys_argv(["ddc-services", "up", "-d"]):
-        ddc_services()
-    with minimal_project:
-        result = runner.invoke(derex_cli_group, ["mysql", "reset"])
-    assert_result_ok(result)
-    assert result.exit_code == 0
 
 
 def test_derex_runmode(minimal_project, mocker):
@@ -84,7 +64,7 @@ def test_derex_runmode_wrong(minimal_project):
         result = runner.invoke(derex_cli_group, "runmode")
         # Ensure presence of error message
         assert "garbage-not-a-valid-runmode" in result.stderr
-        assert "valid as runmode" in result.stderr
+        assert "is not valid as" in result.stderr
 
 
 def test_derex_cli_group_no_containers_running(monkeypatch):
@@ -156,9 +136,10 @@ def test_derex_cli_group_one_container_running(monkeypatch):
 @pytest.fixture(autouse=True)
 def fix_terminal_width(monkeypatch):
     from rich.console import Console
-    import derex.runner.cli
 
     def wrapper(*args, **kwargs):
         return Console(*args, **dict(kwargs, width=120, force_terminal=True))
 
-    monkeypatch.setattr(derex.runner.cli, "Console", wrapper)
+    import rich
+
+    monkeypatch.setattr(rich.console, "Console", wrapper)

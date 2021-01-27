@@ -21,6 +21,7 @@ import time
 
 
 client = docker.from_env()
+api_client = docker.APIClient()
 logger = logging.getLogger(__name__)
 VOLUMES = {
     "derex_elasticsearch",
@@ -59,43 +60,72 @@ def ensure_volumes_present():
         client.volumes.create(volume)
 
 
-def check_services(services: Iterable[str]) -> bool:
-    """Check if the services needed for running Open edX are running.
-    """
-    result = True
-    try:
-        for service in services:
-            container = client.containers.get(service)
-            result *= container.status == "running"
-        return result
-    except docker.errors.NotFound:
-        return False
-
-
-def wait_for_service(service: str, check_command: str, max_seconds: int = 20):
+def wait_for_service(service: str, max_seconds: int = 35) -> int:
     """With a freshly created container services might need a bit of time to start.
-    This functions waits up to max_seconds seconds.
+    This functions waits up to max_seconds seconds for the healthcheck on the container
+    to report as healthy.
+    Returns an exit code 0 or raises an exception:
+
+    * RuntimeError is raised if the service container cannot be found or is not in a running state
+    * NotImplementedError is raised if the service doesn't define any healthcheck
+    * TimeoutError is raised if the healtcheck doesn't report as healthy in the `max_seconds` amount of time
     """
-    container = client.containers.get(service)
     for i in range(max_seconds):
-        res = container.exec_run(check_command)
-        if res.exit_code == 0:
+        try:
+            container_info = api_client.inspect_container(service)
+        except docker.errors.NotFound:
+            raise RuntimeError(
+                f"{service} service not found.\n"
+                "Maybe you forgot to run\n"
+                "ddc-services up -d"
+            )
+        container_status = container_info.get("State").get("Status")
+        if container_status not in ["running", "restarting"]:
+            raise RuntimeError(
+                f'Service {service} is not running (status="{container_status}")'
+            )
+        try:
+            healthcheck = container_info.get("State").get("Health").get("Status")
+        except AttributeError:
+            raise NotImplementedError(
+                f"{service} service doesn't declare any healthcheck.\n"
+            )
+        if healthcheck == "healthy":
             return 0
         time.sleep(1)
         logger.warning(f"Waiting for {service} to be ready")
     raise TimeoutError(f"Can't connect to {service} service")
 
 
+def check_services(services: Iterable[str], max_seconds: int = 1) -> bool:
+    """Check if the specified services are running and healthy.
+    For every service it will retry for a `max_seconds` amount of time.
+    Returns False if any of the service is unhealthy, True otherwise.
+    """
+    try:
+        for service in services:
+            wait_for_service(service, max_seconds)
+    except (TimeoutError, RuntimeError, NotImplementedError):
+        return False
+    return True
+
+
 def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database.
     """
+    from derex.runner.mysql import MYSQL_ROOT_PASSWORD
+
     dump_path = abspath_from_egg("derex.runner", relpath)
     image = client.containers.get("mysql").image
     logger.info("Resetting email database")
     try:
         client.containers.run(
             image.tags[0],
-            ["sh", "-c", f"mysql -h mysql -psecret < /dump/{dump_path.name}"],
+            [
+                "sh",
+                "-c",
+                f"mysql -h mysql -p{MYSQL_ROOT_PASSWORD} < /dump/{dump_path.name}",
+            ],
             network="derex",
             volumes={dump_path.parent: {"bind": "/dump"}},
             auto_remove=True,

@@ -27,21 +27,15 @@ FILE_UPLOAD_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME = DEREX_PROJECT
 FILE_UPLOAD_STORAGE_PREFIX = "submissions_attachments"
 
 GRADES_DOWNLOAD = {
-    "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
-    "STORAGE_KWARGS": {
-        "bucket": AWS_STORAGE_BUCKET_NAME,
-        "ROOT_PATH": "/grades",
-        "STORAGE_TYPE": "s3",
-    },
+    "BUCKET": AWS_STORAGE_BUCKET_NAME,
+    "ROOT_PATH": "/grades",
+    "STORAGE_TYPE": "s3",
 }
 
 FINANCIAL_REPORTS = {
     "BUCKET": AWS_STORAGE_BUCKET_NAME,
-    "STORAGE_KWARGS": {
-        "bucket": AWS_STORAGE_BUCKET_NAME,
-        "ROOT_PATH": "/reports",
-        "STORAGE_TYPE": "s3",
-    },
+    "ROOT_PATH": "/financial-reports",
+    "STORAGE_TYPE": "s3",
 }
 
 # This is needed for the Sysadmin dashboard "Git Logs" tab
@@ -53,24 +47,25 @@ MEDIA_ROOT = "http://minio.localhost/{}/openedx/media".format(AWS_STORAGE_BUCKET
 VIDEO_TRANSCRIPTS_SETTINGS.update(
     {
         "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+        "DIRECTORY_PREFIX": "video-transcripts/",
+        "VIDEO_TRANSCRIPTS_MAX_BYTES": 3 * 1024 * 1024,  # 3 MB
         "STORAGE_KWARGS": {
             "bucket": AWS_STORAGE_BUCKET_NAME,
-            "ROOT_PATH": "/video-transcripts",
-            "STORAGE_TYPE": "s3",
             "base_url": "not-used-but-need-to-define",
-            "location": "not-used-but-need-to-define",
+            "location": "uploads",
         },
     }
 )
 VIDEO_IMAGE_SETTINGS.update(
     {
         "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+        "DIRECTORY_PREFIX": "video-images/",
+        "VIDEO_IMAGE_MAX_BYTES": 2 * 1024 * 1024,  # 2 MB
+        "VIDEO_IMAGE_MIN_BYTES": 2 * 1024,  # 2 KB
         "STORAGE_KWARGS": {
             "bucket": AWS_STORAGE_BUCKET_NAME,
-            "ROOT_PATH": "/video-images",
-            "STORAGE_TYPE": "s3",
             "base_url": "not-used-but-need-to-define",
-            "location": "not-used-but-need-to-define",
+            "location": "uploads",
         },
     }
 )
@@ -79,14 +74,9 @@ PROFILE_IMAGE_BACKEND.update(
     {
         "class": DEFAULT_FILE_STORAGE,
         "options": {
-            "location": "/profile-images",
+            "location": "profile-images",
             "base_url": "not-used-but-need-to-define",
             "querystring_auth": False,
-        },
-        "STORAGE_KWARGS": {
-            "bucket": AWS_STORAGE_BUCKET_NAME,
-            "ROOT_PATH": "/profile-images",
-            "STORAGE_TYPE": "s3",
         },
     }
 )

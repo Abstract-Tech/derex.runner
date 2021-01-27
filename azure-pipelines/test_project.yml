@@ -1,0 +1,18 @@
+parameters:
+  - name: OPENEDX_RELEASE
+    type: string
+  - name: PROJECT_TYPE
+    type: string
+
+steps:
+  - template: provision_services.yml
+  - template: provision_project.yml
+    parameters:
+      PROJECT_TYPE: ${{ parameters.PROJECT_TYPE }}
+      PROJECT_PATH: ${{ format('examples/{0}/{1}', parameters.OPENEDX_RELEASE, parameters.PROJECT_TYPE) }}
+      PROJECT_NAME: ${{ format('{0}-{1}', parameters.OPENEDX_RELEASE, parameters.PROJECT_TYPE) }}
+  - template: run_project_tests.yml
+    parameters:
+      PROJECT_TYPE: ${{ parameters.PROJECT_TYPE }}
+      PROJECT_PATH: ${{ format('examples/{0}/{1}', parameters.OPENEDX_RELEASE, parameters.PROJECT_TYPE) }}
+      PROJECT_NAME: ${{ format('{0}-{1}', parameters.OPENEDX_RELEASE, parameters.PROJECT_TYPE) }}
