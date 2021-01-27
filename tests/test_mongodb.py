@@ -34,7 +34,7 @@ def cleanup_mongodb(start_mongodb):
 
     for user in MONGODB_CLIENT.admin.command("usersInfo").get("users"):
         if DEREX_TEST_USER in user["user"]:
-            MONGODB_CLIENT.admin.remove_user(DEREX_TEST_USER)
+            MONGODB_CLIENT.admin.command("dropUser", DEREX_TEST_USER)
 
 
 def test_derex_mongodb(start_mongodb):
