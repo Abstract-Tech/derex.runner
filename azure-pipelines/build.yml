@@ -11,8 +11,6 @@ stages:
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: hawthorn
-          - name: DOCKER_BASE_OPTS
-            value: --build-arg PYTHON_VERSION=2.7 --build-arg EDX_PLATFORM_VERSION=open-release/$(DOCKER_IMAGES_SLUG).master
         steps:
           - template: build_single_version.yml
 
@@ -24,8 +22,6 @@ stages:
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: ironwood
-          - name: DOCKER_BASE_OPTS
-            value: --build-arg PYTHON_VERSION=2.7 --build-arg EDX_PLATFORM_VERSION=open-release/$(DOCKER_IMAGES_SLUG).master
         steps:
           - template: build_single_version.yml
 
@@ -37,7 +33,5 @@ stages:
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: juniper
-          - name: DOCKER_BASE_OPTS
-            value:
         steps:
           - template: build_single_version.yml
