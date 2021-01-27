@@ -7,7 +7,7 @@ stages:
       - job: hawthorn
         timeoutInMinutes: 180
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: hawthorn
@@ -17,7 +17,7 @@ stages:
       - job: ironwood
         timeoutInMinutes: 180
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
 
         variables:
           - name: DOCKER_IMAGES_SLUG
@@ -28,7 +28,7 @@ stages:
       - job: juniper
         timeoutInMinutes: 180
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         continueOnError: true # bad translations currently cause errors
         variables:
           - name: DOCKER_IMAGES_SLUG

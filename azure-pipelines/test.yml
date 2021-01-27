@@ -5,7 +5,7 @@ stages:
     jobs:
       - job: PyInstallerBuildLinux
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - template: test_pyinstaller.yml
@@ -34,7 +34,7 @@ stages:
       - job: RunPytests
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
 
@@ -52,7 +52,7 @@ stages:
       - job: RunSlowPytests
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - template: load_images.yml
@@ -78,7 +78,7 @@ stages:
           - RunPytests
           - RunSlowPytests
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
 
@@ -116,7 +116,7 @@ stages:
       - job: TestIronwoodMinimalProject
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
@@ -132,7 +132,7 @@ stages:
       - job: TestIronwoodCompleteProject
         timeoutInMinutes: 60
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
@@ -148,7 +148,7 @@ stages:
       - job: TestJuniperMinimalProject
         timeoutInMinutes: 40
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
@@ -164,7 +164,7 @@ stages:
       - job: TestJuniperCompleteProject
         timeoutInMinutes: 60
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
         steps:
@@ -180,7 +180,7 @@ stages:
       - job: CheckDocs
         timeoutInMinutes: 5
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - script: make docs
@@ -189,7 +189,7 @@ stages:
       - job: CheckPreCommit
         timeoutInMinutes: 5
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: $(UBUNTU_VERSION)
         steps:
           - template: prepare.yml
           - script: pre-commit run -a

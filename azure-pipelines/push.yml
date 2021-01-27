@@ -7,7 +7,7 @@ stages:
     jobs:
       - job: hawthorn
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: hawthorn
@@ -16,7 +16,7 @@ stages:
 
       - job: ironwood
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: ironwood
@@ -25,7 +25,7 @@ stages:
 
       - job: juniper
         pool:
-          vmImage: "ubuntu-18.04"
+          vmImage: $(UBUNTU_VERSION)
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: juniper
