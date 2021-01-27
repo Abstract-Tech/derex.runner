@@ -58,6 +58,9 @@ stages:
           - template: load_images.yml
             parameters:
               DOCKER_IMAGES_SLUG: ironwood
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: juniper
           - template: provision_services.yml
 
           - script: |
