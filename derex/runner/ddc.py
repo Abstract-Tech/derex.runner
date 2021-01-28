@@ -4,9 +4,9 @@ These wrappers invoke `docker-compose` functions to get their job done.
 They put a `docker.compose.yml` file in place based on user configuration.
 """
 from derex.runner.compose_utils import run_docker_compose
-from derex.runner.docker_utils import check_services
 from derex.runner.docker_utils import ensure_volumes_present
 from derex.runner.docker_utils import is_docker_working
+from derex.runner.docker_utils import wait_for_service
 from derex.runner.logging_utils import setup_logging
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.plugins import sort_and_validate_plugins
@@ -71,11 +71,13 @@ def ddc_project():
     compose_args, dry_run = ddc_parse_args(sys.argv)
     # If trying to start up containers, first check that needed services are running
     is_start_cmd = any(param in compose_args for param in ["up", "start"])
-    if is_start_cmd and not check_services(["mysql", "mongodb", "rabbitmq"]):
-        click.echo(
-            "Mysql/mongo/rabbitmq services not found.\nMaybe you forgot to run\nddc-services up -d"
-        )
-        return
+    if is_start_cmd:
+        for service in ["mysql", "mongodb", "rabbitmq"]:
+            try:
+                wait_for_service(service)
+            except (TimeoutError, RuntimeError, NotImplementedError) as exc:
+                click.echo(click.style(str(exc), fg="red"))
+                sys.exit(1)
     run_ddc_project(list(compose_args), project, dry_run=dry_run, exit_afterwards=True)
 
 

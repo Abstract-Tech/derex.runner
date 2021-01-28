@@ -82,7 +82,9 @@ def wait_for_service(service: str, max_seconds: int = 35) -> int:
         container_status = container_info.get("State").get("Status")
         if container_status not in ["running", "restarting"]:
             raise RuntimeError(
-                f'Service {service} is not running (status="{container_status}")'
+                f'Service {service} is not running (status="{container_status}")\n'
+                "Maybe you forgot to run\n"
+                "ddc-services up -d"
             )
         try:
             healthcheck = container_info.get("State").get("Health").get("Status")

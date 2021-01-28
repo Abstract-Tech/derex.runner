@@ -36,7 +36,7 @@ def test_check_services(mocker):
     api_client.inspect_container.side_effect = docker.errors.NotFound(
         "mysql container not found"
     )
-    assert not check_services(["mysql"])
+    assert check_services(["mysql"]) is False
 
 
 def test_wait_for_service(mocker):
