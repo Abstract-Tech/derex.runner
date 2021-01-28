@@ -12,11 +12,9 @@ steps:
       cd ${{ parameters.PROJECT_PATH }}
       # Run a command to get the current database name. First run it with all output enabled
       # so that in case of errors in the pipeline we have info about what went wrong
-      # We use the flower container because it always uses the base image regardless
-      # of requirements and themes
-      ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
+      ddc-project run --rm lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
       # ...and then the actual run
-      DATABASE_NAME=$(ddc-project run --rm flower sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+      DATABASE_NAME=$(ddc-project run --rm lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
       ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -p$(derex debug print-secret mysql) ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Test ${{ parameters.PROJECT_NAME }} project fixtures"
@@ -35,7 +33,7 @@ steps:
       set -ex
       cd ${{ parameters.PROJECT_PATH }}
       derex runmode production --force
-      ddc-project up -d
+      ddc-project up -d lms cms
       sleep 5  # Give it time to start up
     displayName: "Start LMS and CMS in production mode"
 
