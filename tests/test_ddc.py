@@ -41,19 +41,25 @@ def test_ddc_project_minimal(sys_argv, mocker, minimal_project, capsys):
 
     """Test the open edx ironwood docker compose shortcut."""
     # It should check for services to be up before trying to do anything
-    check_services = mocker.patch("derex.runner.ddc.check_services", return_value=False)
+    wait_for_service = mocker.patch("derex.runner.ddc.wait_for_service")
 
     with minimal_project:
         for param in ["up", "start"]:
-            check_services.return_value = False
-            with sys_argv(["ddc-project", param, "--dry-run"]):
-                ddc_project()
-            assert "ddc-services up -d" in capsys.readouterr().out
-
-            check_services.return_value = True
+            wait_for_service.return_value = 0
+            wait_for_service.side_effect = None
             with sys_argv(["ddc-project", param, "--dry-run"]):
                 ddc_project()
             assert "Would have run" in capsys.readouterr().out
+
+            wait_for_service.side_effect = RuntimeError(
+                "mysql service not found.\n"
+                "Maybe you forgot to run\n"
+                "ddc-services up -d"
+            )
+            with sys_argv(["ddc-project", param, "--dry-run"]):
+                with pytest.raises(SystemExit):
+                    ddc_project()
+            assert "ddc-services up -d" in capsys.readouterr().out
 
         with sys_argv(["ddc-project", "config"]):
             ddc_project()
@@ -87,7 +93,7 @@ def test_ddc_project_symlink_mounting(sys_argv, mocker, complete_project, capsys
     from derex.runner.ddc import ddc_project
     from derex.runner.project import Project
 
-    mocker.patch("derex.runner.ddc.check_services", return_value=True)
+    mocker.patch("derex.runner.ddc.wait_for_service", return_value=0)
     with complete_project:
         with sys_argv(["ddc-project", "config"]):
             ddc_project()
