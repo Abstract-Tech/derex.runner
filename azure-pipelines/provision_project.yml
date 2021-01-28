@@ -34,9 +34,6 @@ steps:
   - script: cd ${{ parameters.PROJECT_PATH }} && derex build requirements
     displayName: "Build requirements image for project ${{ parameters.PROJECT_NAME }}"
 
-  - script: cd ${{ parameters.PROJECT_PATH }}; ddc-project up -d; sleep 3
-    displayName: "Start project docker containers"
-
   - script: echo 127.0.0.1 localhost studio.${{ parameters.PROJECT_NAME }}.localhost ${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
     displayName: Add studio.${{ parameters.PROJECT_NAME }}.localhost and ${{ parameters.PROJECT_NAME }}.localhost to /etc/hosts
 

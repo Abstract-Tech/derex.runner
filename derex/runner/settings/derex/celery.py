@@ -22,6 +22,7 @@ CELERY_IMPORTS = list(maybe_list(CELERY_IMPORTS)) + [
     "openedx.core.djangoapps.bookmarks.tasks",
     "openedx.core.djangoapps.content.course_overviews.tasks",
 ]
+CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 CELERYBEAT_SCHEDULE = {}
 
 CELERY_ROUTES = "{}.celery.Router".format(SERVICE_VARIANT)
