@@ -70,12 +70,6 @@ steps:
     displayName: "Curl the LMS CSS and make sure our theme CSS is in"
 
   - script: |
-      ddc-services logs
-      cd ${{ parameters.PROJECT_PATH }}; ddc-project logs
-    condition: always()
-    displayName: "Show logs"
-
-  - script: |
       set -x
       cd ${{ parameters.PROJECT_PATH }}
       echo 127.0.0.1 localhost flower.${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
@@ -101,3 +95,9 @@ steps:
       exit 1
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Check celerybeat"
+
+  - script: |
+      ddc-services logs
+      cd ${{ parameters.PROJECT_PATH }}; ddc-project logs
+    condition: always()
+    displayName: "Show logs"
