@@ -26,9 +26,9 @@ steps:
       cd ${{ parameters.PROJECT_PATH }}
       # Run a command to get the current database name. First run it with all output enabled
       # so that in case of errors in the pipeline we have info about what went wrong
-      ddc-project exec lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
+      ddc-project exec -T lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
       # ...and then the actual run
-      DATABASE_NAME=$(ddc-project exec lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+      DATABASE_NAME=$(ddc-project exec -T lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
       ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -p$(derex debug print-secret mysql) ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Test ${{ parameters.PROJECT_NAME }} project fixtures"
