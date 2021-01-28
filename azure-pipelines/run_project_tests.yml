@@ -37,7 +37,7 @@ steps:
       derex runmode production --force
       ddc-project up -d
       sleep 5  # Give it time to start up
-    displayName: "Start LMS and CMS in producion mode"
+    displayName: "Start LMS and CMS in production mode"
 
   - script: |
       cd ${{ parameters.PROJECT_PATH }}
@@ -75,8 +75,25 @@ steps:
       cd ${{ parameters.PROJECT_PATH }}
       echo 127.0.0.1 localhost flower.${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
       ddc-project up -d lms_worker cms_worker flower
-      while ! (ddc-project logs cms_worker|grep ready) ; do sleep 1 ; done
-      while ! (ddc-project logs lms_worker|grep ready) ; do sleep 1 ; done
+      while ! (ddc-project logs cms_worker|grep ready); do sleep 1; done
+      while ! (ddc-project logs lms_worker|grep ready); do sleep 1; done
       curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost/dashboard?json=1|grep celery@openedx.lms
       curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost/dashboard?json=1|grep celery@openedx.cms
     displayName: "Check flower"
+
+  - script: |
+      # This test is relying on the djcelery fixtures which should
+      # have been loaded into the database when priming mysql
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      # We want to see this task fail for now
+      # ddc-project up -d celerybeat
+      sleep 5
+      CELERYBEAT_RESULT=$(ddc-project logs celerybeat | grep "Scheduler: Sending due task debug" -c)
+      WORKER_RESULT=$(ddc-project logs lms_worker | grep "pong" -c)
+      if [ $CELERYBEAT_RESULT -gt 0 ] && [ $WORKER_RESULT -gt 0 ]; then
+          exit 0
+      fi
+      exit 1
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+    displayName: "Check celerybeat"
