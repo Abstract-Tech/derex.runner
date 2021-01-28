@@ -73,7 +73,11 @@ def ddc_project():
     is_start_cmd = any(param in compose_args for param in ["up", "start"])
     if is_start_cmd:
         for service in ["mysql", "mongodb", "rabbitmq"]:
-            wait_for_service(service)
+            try:
+                wait_for_service(service)
+            except (TimeoutError, RuntimeError, NotImplementedError) as exc:
+                click.echo(click.style(str(exc), fg="red"))
+                sys.exit(1)
     run_ddc_project(list(compose_args), project, dry_run=dry_run, exit_afterwards=True)
 
 
