@@ -10,6 +10,13 @@ steps:
   - script: |
       set -ex
       cd ${{ parameters.PROJECT_PATH }}
+      ddc-project up -d lms cms
+      sleep 5  # Give it time to start up
+    displayName: "Start LMS and CMS in debug mode"
+
+  - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
       # Run a command to get the current database name. First run it with all output enabled
       # so that in case of errors in the pipeline we have info about what went wrong
       ddc-project run --rm lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
@@ -84,8 +91,7 @@ steps:
       # have been loaded into the database when priming mysql
       set -ex
       cd ${{ parameters.PROJECT_PATH }}
-      # We want to see this task fail for now
-      # ddc-project up -d celerybeat
+      ddc-project up -d celerybeat
       sleep 5
       CELERYBEAT_RESULT=$(ddc-project logs celerybeat | grep "Scheduler: Sending due task debug" -c)
       WORKER_RESULT=$(ddc-project logs lms_worker | grep "pong" -c)

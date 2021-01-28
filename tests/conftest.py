@@ -3,6 +3,7 @@ from shutil import copytree
 from tempfile import TemporaryDirectory
 
 import contextlib
+import logging
 import os
 import pytest
 import sys
@@ -86,6 +87,12 @@ def sys_argv(session_mocker):
                     raise
 
     return my_cm
+
+
+def pytest_configure(config):
+    # Reduce flake8 verbosity as advised in
+    # https://github.com/tholo/pytest-flake8/issues/42#issuecomment-504990956
+    logging.getLogger("flake8").setLevel(logging.WARN)
 
 
 def assert_result_ok(result):
