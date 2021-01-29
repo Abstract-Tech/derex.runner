@@ -78,7 +78,7 @@ def test_derex_mysql_reset(start_mysql, mocker, minimal_project):
     """Test the open edx ironwood docker compose shortcut."""
     from derex.runner.cli.mysql import reset_mysql_cmd
 
-    mocker.patch("derex.runner.ddc.check_services", return_value=True)
+    mocker.patch("derex.runner.ddc.wait_for_service", return_value=0)
     client = mocker.patch("derex.runner.docker_utils.client")
     client.containers.get.return_value.exec_run.side_effect = [
         SimpleNamespace(exit_code=-1)

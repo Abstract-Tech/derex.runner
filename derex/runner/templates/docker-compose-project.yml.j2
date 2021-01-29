@@ -56,7 +56,6 @@ x-common:
 services:
   flower:
     <<: *common-conf
-    image: {{ project.base_image }}
     command:
       sh -c 'echo Obtaining broker configuration from edx. This is a bit slow;
              export FLOWER_OPTIONS=$$(echo "from django.conf import settings; print(\"--broker=\" + settings.BROKER_URL + \" --broker_api=http://\" + settings.CELERY_BROKER_USER + \":\" + settings.CELERY_BROKER_PASSWORD + \"@\" + settings.CELERY_BROKER_HOSTNAME + \":15672/api/\") " | ./manage.py lms shell);
@@ -165,6 +164,16 @@ services:
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
       DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
+
+  celerybeat:
+    <<: *common-conf
+    command:
+      sh -c './manage.py lms celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
+    environment:
+      <<: *common-env
+      C_FORCE_ROOT: "True"
+      SERVICE_VARIANT: lms
+      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
 
 networks:
   derex:
