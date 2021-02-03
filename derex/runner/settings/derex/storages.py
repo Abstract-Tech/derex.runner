@@ -28,13 +28,13 @@ FILE_UPLOAD_STORAGE_PREFIX = "submissions_attachments"
 
 GRADES_DOWNLOAD = {
     "BUCKET": AWS_STORAGE_BUCKET_NAME,
-    "ROOT_PATH": "/grades",
+    "ROOT_PATH": "grades",
     "STORAGE_TYPE": "s3",
 }
 
 FINANCIAL_REPORTS = {
     "BUCKET": AWS_STORAGE_BUCKET_NAME,
-    "ROOT_PATH": "/financial-reports",
+    "ROOT_PATH": "financial-reports",
     "STORAGE_TYPE": "s3",
 }
 
