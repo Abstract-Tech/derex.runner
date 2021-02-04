@@ -1,0 +1,15 @@
+version: "3.5"
+services:
+  cypress:
+    image: cypress/included:6.4.0
+    container_name: cypress
+    environment:
+      HTTP_PROXY: http://httpserver:80
+      CI: 1
+    command: npx cypress run
+    working_dir: /e2e
+    volumes:
+      - ../e2e/cypress:/e2e/cypress
+      - ../e2e/cypress.json:/e2e/cypress.json
+    networks:
+      derex:
