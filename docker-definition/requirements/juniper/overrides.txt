@@ -3,6 +3,11 @@
 
 # Prior versions of edxval will break file upload to S3 object storage on Python3
 edxval==1.4.4
+# Prior versions of ora2 use boto instead of boto3.
+# edx-submissions upgrade is required as a consequence of this.
+ora2==2.9.15
+edx-submissions==3.2.2
+
 # sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html)
 sympy==1.5.1
 # We install a newer version of gunicorn to take advantage of the --max-requests-jitter option

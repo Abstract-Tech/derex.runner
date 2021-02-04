@@ -11,7 +11,7 @@ attrs==19.3.0             # via -r requirements.txt, black, jsonschema, pytest
 babel==2.8.0              # via -r requirements_doc.txt, sphinx
 bcrypt==3.1.7             # via -r requirements.txt, paramiko
 black==19.10b0            # via -r requirements_dev.in, pytest-black
-bleach==3.1.5             # via readme-renderer
+bleach==3.3.0             # via readme-renderer
 bump2version==1.0.0       # via -r requirements_dev.in
 cached-property==1.5.1    # via -r requirements.txt, docker-compose
 certifi==2020.4.5.1       # via -r requirements.txt, -r requirements_doc.txt, requests
