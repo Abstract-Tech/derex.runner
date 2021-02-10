@@ -15,7 +15,7 @@ More information about installing Cypress can be found on the [official document
 If you instead are happy in just running all your test in a docker container you can use:
 
 ```bash
-ddc-project up cypress
+ddc-project run --rm cypress
 ```
 
 A failing test will make the container exit with code 1.

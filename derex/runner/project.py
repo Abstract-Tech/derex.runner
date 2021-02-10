@@ -77,6 +77,9 @@ class Project:
     # The directory containing openedx python modules to be replaced
     openedx_customizations_dir: Optional[Path] = None
 
+    # The directory containing cypress tests
+    e2e_dir: Optional[Path] = None
+
     # The image name of the image that includes requirements
     requirements_image_name: str
 
@@ -297,6 +300,10 @@ class Project:
         openedx_customizations_dir = self.root / "openedx_customizations"
         if openedx_customizations_dir.is_dir():
             self.openedx_customizations_dir = openedx_customizations_dir
+
+        e2e_dir = self.root / "e2e"
+        if e2e_dir.is_dir():
+            self.e2e_dir = e2e_dir
 
         self.image_name = self.themes_image_name
 

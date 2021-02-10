@@ -1,15 +1,20 @@
+# Test Open edX services
 version: "3.5"
+
 services:
   cypress:
     image: cypress/included:6.4.0
-    container_name: cypress
+    container_name: {{ project.name }}_cypress
     environment:
       HTTP_PROXY: http://httpserver:80
       CI: 1
     command: npx cypress run
     working_dir: /e2e
     volumes:
-      - ../e2e/cypress:/e2e/cypress
-      - ../e2e/cypress.json:/e2e/cypress.json
+      - {{ project.e2e_dir }}:/e2e
     networks:
       derex:
+
+networks:
+  derex:
+    name: derex
