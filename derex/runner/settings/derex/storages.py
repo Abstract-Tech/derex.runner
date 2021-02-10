@@ -27,15 +27,16 @@ FILE_UPLOAD_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME = DEREX_PROJECT
 FILE_UPLOAD_STORAGE_PREFIX = "submissions_attachments"
 
 GRADES_DOWNLOAD = {
-    "BUCKET": AWS_STORAGE_BUCKET_NAME,
-    "ROOT_PATH": "grades",
-    "STORAGE_TYPE": "s3",
+    "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+    "STORAGE_KWARGS": {"bucket": AWS_STORAGE_BUCKET_NAME, "location": "grades",},
 }
 
 FINANCIAL_REPORTS = {
-    "BUCKET": AWS_STORAGE_BUCKET_NAME,
-    "ROOT_PATH": "financial-reports",
-    "STORAGE_TYPE": "s3",
+    "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
+    "STORAGE_KWARGS": {
+        "bucket": AWS_STORAGE_BUCKET_NAME,
+        "location": "financial-reports",
+    },
 }
 
 # This is needed for the Sysadmin dashboard "Git Logs" tab
