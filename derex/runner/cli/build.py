@@ -115,7 +115,9 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
     dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
     git_repo = version.value["git_repo"]
     git_branch = version.value["git_branch"]
-    python_version = version.value.get("python_version", "3.6")
+    alpine_version = version.value["alpine_version"]
+    python_version = version.value["python_version"]
+    pip_version = version.value["pip_version"]
     docker_image_prefix = version.value["docker_image_prefix"]
     image_name = f"{docker_image_prefix}-{target}:{__version__}"
     if only_print_image_name:
@@ -130,7 +132,11 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
         "-t",
         image_name,
         "--build-arg",
+        f"ALPINE_VERSION={alpine_version}",
+        "--build-arg",
         f"PYTHON_VERSION={python_version}",
+        "--build-arg",
+        f"PIP_VERSION={pip_version}",
         "--build-arg",
         f"EDX_PLATFORM_RELEASE={version.name}",
         "--build-arg",

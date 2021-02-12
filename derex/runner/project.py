@@ -480,18 +480,25 @@ class OpenEdXVersions(Enum):
         "git_repo": "https://github.com/edx/edx-platform.git",
         "git_branch": "open-release/hawthorn.master",
         "docker_image_prefix": "derex/openedx-hawthorn",
+        "alpine_version": "alpine3.11",
         "python_version": "2.7",
+        "pip_version": "21.0.1",
     }
     ironwood = {
         "git_repo": "https://github.com/edx/edx-platform.git",
         "git_branch": "open-release/ironwood.master",
         "docker_image_prefix": "derex/openedx-ironwood",
+        "alpine_version": "alpine3.11",
         "python_version": "2.7",
+        "pip_version": "21.0.1",
     }
     juniper = {
         "git_repo": "https://github.com/edx/edx-platform.git",
         "git_branch": "open-release/juniper.master",
         "docker_image_prefix": "derex/openedx-juniper",
+        "alpine_version": "alpine3.11",
+        "python_version": "3.6",
+        "pip_version": "21.0.1",
     }
 
 

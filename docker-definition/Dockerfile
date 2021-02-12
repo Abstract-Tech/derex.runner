@@ -7,7 +7,7 @@
 # sudo nsenter --target $(pgrep sleep) --mount --uts --ipc --net --pid sh
 
 ARG PYTHON_VERSION=3.6
-FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as libgeos
+FROM docker.io/python:${PYTHON_VERSION}-${ALPINE_VERSION} as libgeos
 
 RUN --mount=type=cache,target=/var/cache/apk apk add alpine-sdk
 ENV GEOS_VERSION=3.8.0
@@ -15,7 +15,7 @@ ENV GEOS_VERSION=3.8.0
 RUN wget -c http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2 -O - | tar xjf - --directory /usr/local && \
     cd /usr/local/geos-${GEOS_VERSION} && ./configure && make -j 4 && make install
 
-FROM docker.io/python:${PYTHON_VERSION}-alpine3.11 as base
+FROM docker.io/python:${PYTHON_VERSION}-${ALPINE_VERSION} as base
 # This image will be used to build all other images in this Dockerfile
 # The base image is defined later, and it has rmlint added to this base
 ENV GEOS_VERSION=3.8.0
@@ -51,7 +51,7 @@ ENV NO_PREREQ_INSTALL=True
 ENV NO_PYTHON_UNINSTALL=True
 
 # Upgrade pip to the latest version
-RUN pip install --upgrade pip
+RUN pip install --upgrade pip==${PIP_VERSION}
 
 FROM base as sourceonly
 ARG EDX_PLATFORM_RELEASE=juniper
@@ -103,12 +103,15 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     mariadb-dev \
     openblas-dev \
     pkgconfig \
-    python-dev \
     sqlite-dev \
     swig \
     xmlsec-dev && \
     `# From https://github.com/jfloff/alpine-python/issues/32` \
     sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i
+
+# Latest versions of cryptography requires the newest version of Rust to build successfully
+# Unfortunately alpine versions prior to 3.13 doesn't include it
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
