@@ -6,7 +6,9 @@
 # in the place you want to examine. When execution stops there, run
 # sudo nsenter --target $(pgrep sleep) --mount --uts --ipc --net --pid sh
 
+ARG ALPINE_VERSION=alpine3.11
 ARG PYTHON_VERSION=3.6
+ARG PIP_VERSION=21.0.1
 FROM docker.io/python:${PYTHON_VERSION}-${ALPINE_VERSION} as libgeos
 
 RUN --mount=type=cache,target=/var/cache/apk apk add alpine-sdk
