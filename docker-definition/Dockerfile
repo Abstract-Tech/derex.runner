@@ -8,7 +8,6 @@
 
 ARG ALPINE_VERSION=alpine3.11
 ARG PYTHON_VERSION=3.6
-ARG PIP_VERSION=21.0.1
 FROM docker.io/python:${PYTHON_VERSION}-${ALPINE_VERSION} as libgeos
 
 RUN --mount=type=cache,target=/var/cache/apk apk add alpine-sdk
@@ -52,7 +51,7 @@ RUN /tmp/patch_ldconfig_to_fix_shapely.sh && \
 ENV NO_PREREQ_INSTALL=True
 ENV NO_PYTHON_UNINSTALL=True
 
-# Upgrade pip to the latest version
+ARG PIP_VERSION=21.0.1
 RUN pip install --upgrade pip==${PIP_VERSION}
 
 FROM base as sourceonly
