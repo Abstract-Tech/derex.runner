@@ -3,6 +3,8 @@
   "chromeWebSecurity": false,
   "env": {
     "LMS_URL": "http://ironwood-complete.localhost",
-    "CMS_URL": "http://studio.ironwood-complete.localhost"
+    "CMS_URL": "http://studio.ironwood-complete.localhost",
+    "user_email": "superuser@example.com",
+    "user_password": "secret"
   }
 }

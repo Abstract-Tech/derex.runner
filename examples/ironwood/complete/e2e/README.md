@@ -3,19 +3,19 @@ This Cypress project is an example of how you can run end to end tests in your d
 To run the awesome Cypress GUI:
 
 ```bash
-    export HTTP_PROXY=http://127.0.0.1:80
-    npm install cypress
-    npx cypress open
+export HTTP_PROXY=http://127.0.0.1:80
+npm install cypress
+npx cypress open
 ```
 
 If you are using [direnv](https://direnv.net/) you can authorize the `.envrc` file to set the `HTTP_PROXY` variable.
 
 More information about installing Cypress can be found on the [official documentation](https://docs.cypress.io/guides/getting-started/installing-cypress.html).
 
-If you instead are happy in just running all your test in a docker container you can use:
+If you instead are happy in just running all your test in a docker container you can run from the project directory:
 
 ```bash
-ddc-project run --rm cypress
+derex test e2e
 ```
 
 A failing test will make the container exit with code 1.
