@@ -1,12 +1,13 @@
-describe("Registration", () => {
+describe("Registration Form", () => {
   const lms_url = Cypress.env("LMS_URL");
 
-  it("allows admin user access", () => {
+
+  it("use a new user to Register", () => {
     cy.visit(`${lms_url}/`);
     cy.get(":nth-child(1) > :nth-child(1) > .register-btn").click();
     cy.get("#register-email")
       .should("have.attr", "name", "email")
-      .type("laythmassoud@gmail.com");
+      .type("newuser@gmail.com");
     cy.get("#register-name")
       .should("have.attr", "name", "name")
       .type("Foo bar");

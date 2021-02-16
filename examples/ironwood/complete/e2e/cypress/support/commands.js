@@ -26,7 +26,6 @@
 
 Cypress.Commands.add("login", (email, password) => {
   const login_url = Cypress.env("LMS_URL") + "/login_ajax";
-
   // Open the login page to get a CSRF cookie
   cy.request({
     url: login_url,
