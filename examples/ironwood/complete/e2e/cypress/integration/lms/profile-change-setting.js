@@ -4,6 +4,8 @@ describe("Knowledge Base Application", () => {
   // previous test omitted for brevity
   it("check for profile ", function () {
     cy.login(lms_url, Cypress.env("user_email"), Cypress.env("user_password"));
+    cy.visit("/");
+
     cy.get(".toggle-user-dropdown").then(($button) => {
       cy.wrap($button).click();
     });
@@ -32,6 +34,6 @@ describe("Knowledge Base Application", () => {
     cy.get(".profile-image-field > .u-field").then(($button) => {
       cy.wrap($button).click();
     });
-    cy.get(".clickable > .u-field-value-readonly").type("hi my name is Laith");
+    cy.get(".clickable > .u-field-value-readonly").type("test");
   });
 });
