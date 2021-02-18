@@ -34,7 +34,7 @@
 * As a logged in user I should be able to submit problem responses and obtain consistent feedback
 
 ### Instructor dashboard
-* 
+
 
 ## CMS
 ### Authentication + Authorization
@@ -43,6 +43,8 @@
 ### Course authoring
 * As a logged in user with admin on a course I should be able to create chapters, sections and units 
 * As a logged in user with admin on a course I should be able to see a preview of the units on the LMS 
+* As a logged in user with admin on a course I should be able to import course
+* As a logged in user with admin on a course I should be able to export course
 * As a logged in user with admin on a course I should be able to reindex course data if `ENABLE_COURSE_DISCOVERY` feature is enabled 
 * As a logged in user with admin on a course I should be able to publish course units in draft status 
 * As a logged in user with admin on a course I should be able to set course schedule and details informations 
