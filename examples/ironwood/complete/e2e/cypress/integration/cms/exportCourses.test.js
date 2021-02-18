@@ -1,9 +1,9 @@
-
 describe("Studio home page", () => {
-    const lms_url = Cypress.env("LMS_URL");
     const cms_url = Cypress.env("CMS_URL");
+  const course_id = Cypress.env("DEMO_COURSE_ID");
+  const export_url = `${cms_url}/export/${course_id}`;
   
-    it("test if an Admin able to create new course", async () => {
+    it("test if an Admin able import course", async () => {
       cy.visit(lms_url)
       cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
       cy.visit(cms_url)
@@ -13,7 +13,9 @@ describe("Studio home page", () => {
         if (res[0].children.length > 0) {
           cy.get(".course-item").should("be.visible");
           cy.get(".course-item:last-child").click();
-         
+          cy.get('.nav-course-tools > .title').click()
+          cy.get('.nav-course-tools-export > a').click();
+          cy.get("a.action-export").click();
         } else {
          alert("No Courses");
         }
