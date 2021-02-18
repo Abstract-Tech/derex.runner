@@ -1,9 +1,7 @@
 describe("Forget Password", () => {
-    beforeEach(() => {
-        cy.visit("/");
-    });
 
     it("user can reset the password", () => {
+        cy.visit("/")
         cy.get(':nth-child(1) > :nth-child(2) > .sign-in-btn').click()
         cy.get("#login-email").type(Cypress.env("user_email"));
         cy.get('.forgot-password').then($button => {

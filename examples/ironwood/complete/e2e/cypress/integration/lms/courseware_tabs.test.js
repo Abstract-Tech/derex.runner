@@ -1,5 +1,5 @@
 describe("course navigator", () => {
-  it(` As a logged in user I should be able to access the "Wiki, Progrss, Instructor, Discussion" tabs of the courseware of a course i'm enrolled in `, function() {
+  it(` User logged in be able to switch between "Wiki, Progrss, Instructor, Discussion" courses tabs of a course already enrolled in `, function() {
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
     cy.visit("/");
 

@@ -1,24 +1,37 @@
 describe("Registration Form", () => {
-  const lms_url = Cypress.env("LMS_URL");
 
+  const rand = (length, current) => {
+    current = current ? current : "";
+    return length
+      ? rand(
+          --length,
+          "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz".charAt(
+            Math.floor(Math.random() * 60)
+          ) + current
+        )
+      : current;
+  };
 
-  it("use a new user to Register", () => {
-    cy.visit(`${lms_url}/`);
+  it("create new user", () => {
+    cy.visit(`/`);
     cy.get(":nth-child(1) > :nth-child(1) > .register-btn").click();
-    cy.get("#register-email")
+    cy
+      .get("#register-email")
       .should("have.attr", "name", "email")
-      .type("newuser@gmail.com");
-    cy.get("#register-name")
+      .type(`${rand(5)}@gmail.com`);
+    cy
+      .get("#register-name")
       .should("have.attr", "name", "name")
       .type("Foo bar");
-    cy.get("#register-username")
+    cy
+      .get("#register-username")
       .should("have.attr", "name", "username")
-      .type("abstract");
-    cy.get("#register-password")
+      .type(`${rand(5)}`);
+    cy
+      .get("#register-password")
       .should("have.attr", "name", "password")
       .type("myname");
-    // cy.get("#tos-yes").check();
-    // cy.get("#honorcode-yes").check();
+
     cy.get(".action").click();
   });
 });
