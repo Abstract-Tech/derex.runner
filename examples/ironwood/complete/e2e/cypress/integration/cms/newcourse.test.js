@@ -8,16 +8,5 @@ describe("Studio home page", () => {
       cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
       cy.visit(cms_url)
       cy.createCourse();
-      cy.visit(cms_url);
-      cy.get("body").find("ul.list-courses").then(res => {
-        if (res[0].children.length > 0) {
-          cy.get(".course-item").should("be.visible");
-          cy.get(".course-item:last-child").click();
-         
-        } else {
-         alert("No Courses");
-        }
-      });
-      
     });
   });

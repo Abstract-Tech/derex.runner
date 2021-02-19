@@ -63,7 +63,7 @@ Cypress.on("uncaught:exception", (e, runnable) => {
 Cypress.Commands.add("importCourse", (coursePath) => {
   cy.wait(2000);
   cy.fixture(coursePath, "base64").as("uploadedCourse");
-  cy.get("#fileupload").then(function ($input) {
+  cy.get("#fileupload input[type=file]").then(function ($input) {
     // convert the logo base64 string to a blob
     return Cypress.Blob.base64StringToBlob(this.uploadedCourse).then((blob) => {
       const testFile = new File([blob], "course.tar.gz", {

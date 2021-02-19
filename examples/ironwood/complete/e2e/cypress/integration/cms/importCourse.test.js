@@ -1,27 +1,24 @@
 describe("Studio home page", () => {
-    const lms_url = Cypress.env("LMS_URL");
-    const cms_url = Cypress.env("CMS_URL");
-  
-    it("test if an Admin able import course", async () => {
-      cy.visit(lms_url)
-      cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
-      cy.visit(cms_url)
-      cy.createCourse();
-      cy.visit(cms_url);
-      cy.get("body").find("ul.list-courses").then(res => {
-        if (res[0].children.length > 0) {
-          cy.get(".course-item").should("be.visible");
-          cy.get(".course-item:last-child").click();
-          cy.get('.nav-course-tools > .title').click()
-          cy.get('.nav-course-tools-import > a').click();
-          cy.importCourse("courses/course.tar.gz");
-          cy.get("#replace-courselike-button").wait(1000).click();
-          cy.get("#view-updated-button").wait(10000).click();
-         
-        } else {
-         alert("No Courses");
-        }
-      });
-      
+  const lms_url = Cypress.env("LMS_URL");
+  const cms_url = Cypress.env("CMS_URL");
+
+  it("test if an Admin able import course", async () => {
+    cy.visit(lms_url);
+    cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
+    cy.visit(cms_url);
+    cy.get("body").find("ul.list-courses").then(res => {
+      if (res[0].children.length > 0) {
+        cy.get(".course-item:last-child").click();
+        cy.get(".nav-course-tools > .title").click();
+        cy.get(".nav-course-tools-import > a").click();
+        cy.importCourse("courses/course.tar.gz");
+        cy.get("#replace-courselike-button").wait(1000).click();
+        cy.get("#view-updated-button").wait(10000).click();
+      } else {
+        cy.createCourse();
+
+        cy.importCourse("courses/course.tar.gz");
+      }
     });
   });
+});
