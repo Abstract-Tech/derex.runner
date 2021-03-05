@@ -135,21 +135,19 @@ def generate_ddc_project_file(project: Project) -> Path:
             "Run\nderex build requirements\n to build it"
         )
 
-    openedx_customizations = []
+    openedx_customizations = {}
     for openedx_customizations_dir in [
         DEREX_OPENEDX_CUSTOMIZATIONS_PATH / project.openedx_version.name,
         project.openedx_customizations_dir,
     ]:
         if openedx_customizations_dir and openedx_customizations_dir.exists():
             for file_path in openedx_customizations_dir.rglob("*"):
-                openedx_customizations.append(
-                    (
-                        str(file_path),
-                        str(file_path).replace(
-                            str(openedx_customizations_dir), "/openedx/edx-platform"
-                        ),
+                if file_path.is_file():
+                    source = str(file_path)
+                    destination = str(file_path).replace(
+                        str(openedx_customizations_dir), "/openedx/edx-platform"
                     )
-                )
+                    openedx_customizations[destination] = source
 
     tmpl = Template(template_path.read_text())
     text = tmpl.render(

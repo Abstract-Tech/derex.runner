@@ -19,7 +19,7 @@ x-common:
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/lms/envs/derex_project
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/cms/envs/derex_project
     - {{ derex_django_path }}:/openedx/derex_django
-    {%- if openedx_customizations %}{%- for src, dest in openedx_customizations %}
+    {%- if openedx_customizations %}{%- for dest, src in openedx_customizations.items() %}
     - {{ src }}:{{ dest }}
     {%- endfor %}{%- endif %}
     {%- if project.requirements_dir and not project.requirements_volumes %}
