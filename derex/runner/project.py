@@ -1,5 +1,6 @@
 from derex.runner import __version__
 from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import SECRETS_CONF_FILENAME
@@ -422,6 +423,25 @@ class Project:
 
     def secret(self, name: str) -> str:
         return get_secret(DerexSecrets[name])
+
+    def get_openedx_customizations(self) -> dict:
+        """Return a mapping of customized files to be mounted in
+        the container in order to replace default edx-platform modules.
+        """
+        openedx_customizations = {}
+        for openedx_customizations_dir in [
+            DEREX_OPENEDX_CUSTOMIZATIONS_PATH / self.openedx_version.name,
+            self.openedx_customizations_dir,
+        ]:
+            if openedx_customizations_dir and openedx_customizations_dir.exists():
+                for file_path in openedx_customizations_dir.rglob("*"):
+                    if file_path.is_file():
+                        source = str(file_path)
+                        destination = str(file_path).replace(
+                            str(openedx_customizations_dir), "/openedx/edx-platform"
+                        )
+                        openedx_customizations[destination] = source
+        return openedx_customizations
 
 
 def get_requirements_hash(path: Path) -> str:
