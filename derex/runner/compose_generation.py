@@ -141,11 +141,11 @@ def generate_ddc_project_file(project: Project) -> Path:
         project.openedx_customizations_dir,
     ]:
         if openedx_customizations_dir and openedx_customizations_dir.exists():
-            for python_file_path in openedx_customizations_dir.rglob("*.py"):
+            for file_path in openedx_customizations_dir.rglob("*"):
                 openedx_customizations.append(
                     (
-                        str(python_file_path),
-                        str(python_file_path).replace(
+                        str(file_path),
+                        str(file_path).replace(
                             str(openedx_customizations_dir), "/openedx/edx-platform"
                         ),
                     )
