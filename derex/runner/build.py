@@ -36,12 +36,19 @@ def build_requirements_image(project: Project):
 
     openedx_customizations = project.get_openedx_customizations()
     if openedx_customizations:
-        paths_to_copy.append(DEREX_OPENEDX_CUSTOMIZATIONS_PATH)
-        paths_to_copy.append(project.openedx_customizations_dir)
+        openedx_customizations_paths = [DEREX_OPENEDX_CUSTOMIZATIONS_PATH]
+        if project.openedx_customizations_dir:
+            openedx_customizations_paths.append(project.openedx_customizations_dir)
+
+        for openedx_customization_path in openedx_customizations_paths:
+            paths_to_copy.append(openedx_customization_path)
+
         for destination, source in openedx_customizations.items():
-            docker_build_context_source = source.replace(
-                str(DEREX_OPENEDX_CUSTOMIZATIONS_PATH), "openedx_customizations"
-            ).replace(str(project.openedx_customizations_dir), "openedx_customizations")
+            docker_build_context_source = None
+            for openedx_customization_path in openedx_customizations_paths:
+                docker_build_context_source = source.replace(
+                    str(openedx_customization_path), "openedx_customizations"
+                )
             dockerfile_contents.append(
                 f"COPY {docker_build_context_source} {destination}"
             )
