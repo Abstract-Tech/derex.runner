@@ -44,9 +44,9 @@ def build_requirements_image(project: Project):
             paths_to_copy.append(openedx_customization_path)
 
         for destination, source in openedx_customizations.items():
-            docker_build_context_source = None
+            docker_build_context_source = source
             for openedx_customization_path in openedx_customizations_paths:
-                docker_build_context_source = source.replace(
+                docker_build_context_source = docker_build_context_source.replace(
                     str(openedx_customization_path), "openedx_customizations"
                 )
             dockerfile_contents.append(
