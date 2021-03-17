@@ -1,11 +1,9 @@
 {
   "baseUrl": "http://ironwood-complete.localhost",
   "chromeWebSecurity": false,
-  "experimentalSourceRewriting": true,
   "env": {
     "LMS_URL": "http://ironwood-complete.localhost",
     "CMS_URL": "http://studio.ironwood-complete.localhost",
-    "DEMO_COURSE_ID": "course-v1:Abstract22+Lm101+2021",
     "user_email": "superuser@example.com",
     "user_password": "secret"
   }
