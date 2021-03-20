@@ -22,7 +22,7 @@ dockerpty==0.4.1          # via docker-compose
 docopt==0.6.2             # via docker-compose
 idna==2.9                 # via requests
 importlib-metadata==1.6.0  # via derex.runner (setup.py)
-jinja2==2.11.2            # via derex.runner (setup.py)
+jinja2==2.11.3            # via derex.runner (setup.py)
 jsonschema==3.2.0         # via docker-compose
 markupsafe==1.1.1         # via jinja2
 paramiko==2.7.1           # via docker
