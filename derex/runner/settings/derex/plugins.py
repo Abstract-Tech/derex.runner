@@ -1,5 +1,5 @@
-from openedx.core.djangoapps.plugins import constants as plugin_constants
-from openedx.core.djangoapps.plugins import plugin_settings
+from edx_django_utils.plugins import constants as plugin_constants
+from edx_django_utils.plugins import plugin_settings
 
 
 PROJECT_TYPE = getattr(plugin_constants.ProjectType, SERVICE_VARIANT.upper())
