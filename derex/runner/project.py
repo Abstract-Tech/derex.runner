@@ -506,6 +506,12 @@ class OpenEdXVersions(Enum):
         "git_branch": "open-release/juniper.master",
         "docker_image_prefix": "derex/openedx-juniper",
     }
+    koa = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/koa.master",
+        "docker_image_prefix": "derex/openedx-koa",
+
+    }
 
 
 class ProjectNotFound(ValueError):
