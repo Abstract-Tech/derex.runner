@@ -520,6 +520,12 @@ class OpenEdXVersions(Enum):
         "python_version": "3.6",
         "pip_version": "21.0.1",
     }
+    koa = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/koa.master",
+        "docker_image_prefix": "derex/openedx-koa",
+
+    }
 
 
 class ProjectNotFound(ValueError):
