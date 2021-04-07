@@ -1,7 +1,7 @@
 {
   "baseUrl": "http://ironwood-complete.localhost",
   "chromeWebSecurity": false,
-  "experimentalSourceRewriting": true,
+  "pageLoadTimeout": 200000,
   "env": {
     "LMS_URL": "http://ironwood-complete.localhost",
     "CMS_URL": "http://studio.ironwood-complete.localhost",
