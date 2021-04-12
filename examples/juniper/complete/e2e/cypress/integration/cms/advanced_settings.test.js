@@ -1,34 +1,39 @@
-describe("Knowledge Base Application", () => {
-  beforeEach(() => {});
+describe("advanced settings test", () => {
+  const lms_url = Cypress.env("LMS_URL");
+  const course_id = Cypress.env("DEMO_COURSE_ID");
+  const cms_url = Cypress.env("CMS_URL");
+  const demo_course = `${cms_url}/course/${course_id}`;
 
-  let count = 0;
+  it("allows admin to change sittings ", () => {
 
-  const $click = ($el) => {
-    count += 1;
-    return $el.click();
-  };
-  it("change settings ", async () => {
+    cy.visit(lms_url)
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
+    cy.visit(demo_course)
 
-    cy.visit(Cypress.env("CMS_URL"));
+    // go to setting then advanced settings
 
-    // grab the first course on the list
-    cy.get(".list-courses .course-item:nth-child(1)").wait(1000).click();
-    cy.get(".nav-course-settings").wait(1000).click();
-    cy.get(".nav-course-settings-advanced").wait(1000).click(); // grab the 24 item on the list
-    // grab the thied item on the list
-    /* Allow Anonymous Discussion Posts to Peers and check if it contains false */
-    cy.get(
-      ":nth-child(3) > .value > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines pre .cm-atom"
-    )
-      .wait(1000)
+
+    cy
+      .get(".nav-course-settings > .title")
+      .wait(1500)
+      .click({ force: true });
+
+    cy
+    cy.get('.nav-course-settings-advanced > a')
+
+      .click({ force: true });
+    /* check the input of Allow Anonymous Discussion Posts to Peer if the contains is false */
+
+    cy
+      .get(
+        ":nth-child(3) > .value > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer  .CodeMirror-lines  pre .cm-atom"
+      )
       .contains("false");
-    // grab the 24 item on the list
-    /* Course Visibility In Catalog and check if it contains both */
-    cy.get(
-      ":nth-child(24) > .value > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines pre .cm-string"
-    )
-      .wait(1000)
+    /* check the input of Course Visibility In Catalog if the contains is both */
+    cy
+      .get(
+        ":nth-child(24) > .value > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines pre .cm-string"
+      )
       .contains("both");
   });
 });
