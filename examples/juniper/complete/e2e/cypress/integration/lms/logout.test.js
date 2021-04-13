@@ -6,7 +6,7 @@ describe("Logout test ", () => {
   
     cy.visit(lms_url);
        cy.get(".toggle-user-dropdown").then(($button) => {
-      cy.wrap($button).click();
+      cy.wrap($button).click({ force: true });
     });
     // click the logout button
     cy.get('#user-menu > :nth-child(4) > a').click({ force: true });

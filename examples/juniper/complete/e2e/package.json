@@ -1,0 +1,24 @@
+{
+    "name": "e2e",
+    "description": "Cypress tests",
+    "main": "index.js",
+    "scripts": {
+        "testconsole": "cypress open",
+        "record": "cypress run --spec cypress/integration/*",
+        "lint": "eslint cypress/integration"
+    },
+    "keywords": [],
+    "license": "ISC",
+    "private": true,
+    "devDependencies": {
+        "cypress": "6.8.0",
+        "eslint": "^6.5.1",
+        "eslint-config-google": "^0.14.0",
+        "husky": "^3.0.9"
+    },
+    "dependencies": {
+        "cypress-pipe": "^1.5.0",
+        "optionator": "^0.8.3",
+        "uuidv4": "^5.0.1"
+    }
+}

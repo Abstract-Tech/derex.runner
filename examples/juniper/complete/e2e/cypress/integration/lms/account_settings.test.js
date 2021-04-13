@@ -3,7 +3,9 @@ describe("Account settings Page", () => {
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
     cy.visit("/");
 
-    cy.get(".toggle-user-dropdown").wait(2000).click();
+    cy.get(".toggle-user-dropdown").then(($button) => {
+      cy.wrap($button).click({ force: true });
+    });
 
     cy
       .get("#user-menu  .dropdown-item a[href$='/account/settings']")

@@ -1,13 +1,12 @@
 {
   "baseUrl": "http://juniper-complete.localhost",
   "chromeWebSecurity": false,
-
   "env": {
     "LMS_URL": "http://juniper-complete.localhost",
     "CMS_URL": "http://studio.juniper-complete.localhost",
     "login_url": "http://studio.juniper-complete.localhost/login",
-    "login_api_url": "http://juniper-complete./uselocalhostr_api/v1/account/login_session/",
-    "DEMO_COURSE_ID":"course-v1:Abstract+101+2021",
+    "login_api_url": "http://juniper-complete.localhost/user_api/v1/account/login_session/",
+    "DEMO_COURSE_ID":"course-v1:Abstract+Lm101+2021",
     "user_email": "superuser@example.com",
     "user_password": "secret"
   }
