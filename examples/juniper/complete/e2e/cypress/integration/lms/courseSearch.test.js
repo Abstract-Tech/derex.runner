@@ -12,8 +12,11 @@ describe("Courses Page", () => {
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
     cy.visit("/dashboard");
 
-    cy.get("body").find("ul.listing-courses").then(res => {
-      if (res[0].children.length > 0) {
+    cy.get("body").find("#my-courses").then(res => {
+      if (res.find(".empty-dashboard-message").length > 0) {
+        console.log("No Courses");
+      }
+      else {
         cy.get(".course").should("be.visible");
         cy
           .get("li.course-item:first-child")
@@ -22,7 +25,7 @@ describe("Courses Page", () => {
             cy.get("#dashboard-search-input").type(res[0].outerText);
             cy.get('.search-button').click();
             cy.get("body").find("#dashboard-search-results").then(res => {
-            if (cy.get(res).children("ol.search-result-list").length > 0) {
+              if (cy.get(res).children("ol.search-result-list").length > 0) {
                 cy.get("li.search-results-item").should("be.visible");
               }
               else {
@@ -30,8 +33,6 @@ describe("Courses Page", () => {
               }
             });
           });
-      } else {
-        alert("No Courses");
       }
     });
   });

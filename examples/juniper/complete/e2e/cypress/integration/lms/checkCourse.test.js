@@ -8,7 +8,8 @@ describe("checkcourse test", () => {
 
     cy.visit('/courses');
     // enter to the first course on the list
-
+    cy.get("body").find("ul.courses-listing.courses-list").then(res => {
+      if (res[0].children.length > 0) {
     cy.get(".course:nth-child(1)").click();
     cy.get("body").find("div.main-cta").then(res => {
       if (cy.get(res).children().length > 0) {
@@ -22,15 +23,17 @@ describe("checkcourse test", () => {
         });
       }
     })
-
+    
     cy.get(".form-actions > .action-resume-course")
       .contains("Start Course")
       .then(($button) => {
         cy.wrap($button).click();
       });
-    cy.visit(
-      `${lms_url}/courses/course-v1:Abstract+101+2021/courseware/d8a6192ade314473a78242dfeedfbf5b/edx_introduction/`
-    );
+    }
+    else{
+      console.log("No courses founded")
+    }
+  })
 
   });
 });
