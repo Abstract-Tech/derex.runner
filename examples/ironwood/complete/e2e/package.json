@@ -17,7 +17,7 @@
     "license": "ISC",
     "private": true,
     "devDependencies": {
-        "cypress": "6.7.1",
+        "cypress": "7.1.0",
         "eslint": "^6.5.1",
         "eslint-config-google": "^0.14.0",
         "husky": "^3.0.9"
