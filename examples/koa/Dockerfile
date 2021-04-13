@@ -165,7 +165,8 @@ RUN --mount=type=bind,from=translations,target=/translations \
 FROM nostatic as nostatic-dev
 # This image has node dependencies installed, and can be used to compile assets
 
-ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v10.22.1/node-v10.22.1-linux-x64-musl.tar.xz
+ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v12.19.0/node-v12.19.0-linux-x64-musl.tar.gz
+# Trying version from Open edX Koa doc: https://openedx.atlassian.net/wiki/spaces/COMM/pages/1398113104/Koa
 # The latest node release does not work on ironwood: its node-sass version fails to compile
 # ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/v12.16.1/node-v12.16.1-linux-x64-musl.tar.xz
 
