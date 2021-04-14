@@ -25,6 +25,7 @@ stages:
             value: juniper
         steps:
           - template: build_single_version.yml
+
       - job: koa
         timeoutInMinutes: 180
         pool:
