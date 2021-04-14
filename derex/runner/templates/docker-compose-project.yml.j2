@@ -41,6 +41,7 @@ x-common:
   environment:
     &common-env
     DEREX_PROJECT: {{ project.name }}
+    DEREX_OPENEDX_VERSION: {{ project.openedx_version.name }}
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
     MYSQL_USER: {{ project.mysql_user }}
