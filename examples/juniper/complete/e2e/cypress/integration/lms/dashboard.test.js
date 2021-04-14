@@ -8,7 +8,7 @@ describe("Knowledge Base Application", () => {
     cy.visit("/dashboard");
 
     cy.get("body").find("#my-courses").then(res => {
-      if (res.find(".empty-dashboard-message").length > 0 && res.find("ul.listing-courses")[0].children.length == 0) {
+      if (res.find(".empty-dashboard-message").length > 0) {
         console.log("No Courses");
       } else {
         cy.get(".course").should("be.visible") ;
