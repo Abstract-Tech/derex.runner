@@ -168,8 +168,13 @@ services:
 
   celerybeat:
     <<: *common-conf
+    {% if project.openedx_version.name == "koa" -%}
     command:
-      sh -c './manage.py lms celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
+      sh -c 'celery beat -A lms.celery:APP --scheduler django_celery_beat.schedulers:DatabaseScheduler'
+    {% else -%}
+    command:
+      sh -c 'celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
+    {% endif -%}
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"
