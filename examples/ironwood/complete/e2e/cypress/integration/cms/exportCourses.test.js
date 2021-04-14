@@ -7,6 +7,6 @@ describe("Studio home page", () => {
     cy.visit(lms_url);
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
     cy.visit(export_url);
-    cy.get("a.action-export").click({force:"true"});
+    cy.get("a.action-export").click({ force: "true" });
   });
 });

@@ -7,12 +7,15 @@ describe("Login tests", () => {
     cy.get("#login-email").clear(); // clear out username
     cy.get("#login-password").clear(); // clear out password
     cy.get(".action").click();
-    cy.get('.message-copy > :nth-child(1)')
-      .should("have.text", "Please enter your Email.");
-      
-      cy.get('.message-copy > :nth-child(2)')
-      .should("have.text", "Please enter your Password.");
-      
+    cy.get(".message-copy > :nth-child(1)").should(
+      "have.text",
+      "Please enter your Email."
+    );
+
+    cy.get(".message-copy > :nth-child(2)").should(
+      "have.text",
+      "Please enter your Password."
+    );
   });
 
   it("User can not logged in with wrong username or password or both ", () => {
@@ -22,8 +25,10 @@ describe("Login tests", () => {
     cy.get("#login-email").type("foo@gmail.com");
     cy.get("#login-password").type("bar");
     cy.get(".action").click();
-    cy.get('.message-copy > :nth-child(1)')
-      .should("have.text", "Email or password is incorrect.");
+    cy.get(".message-copy > :nth-child(1)").should(
+      "have.text",
+      "Email or password is incorrect."
+    );
   });
 
   it("User can access with correct credentials", () => {

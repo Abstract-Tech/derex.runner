@@ -3,4 +3,3 @@ cypress/screenshots
 cypress/videos
 package-lock.json
 .env
-

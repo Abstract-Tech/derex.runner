@@ -12,7 +12,6 @@
 
 //     // go to setting then advanced settings
 
-
 //     cy
 //       .get(".nav-course-settings > .title")
 //       .wait(1500)

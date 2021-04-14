@@ -6,19 +6,21 @@ describe("Studio home page", () => {
     cy.visit(lms_url);
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
     cy.visit(cms_url);
- 
-    cy.get("body").find("ul.list-courses").then(res => {
-      if (res[0].children.length > 0) {
-        cy.get(".course-item:last-child").click();
-        cy.get(".nav-course-tools > .title").click();
-        cy.get(".nav-course-tools-import > a").click();
-        cy.uploadFile("#fileupload","courses/course.tar.gz");
-        cy.get("#replace-courselike-button").wait(1000).click();
-        cy.get("#view-updated-button").wait(10000).click();
-      } else {
-        cy.createCourse();
-        cy.uploadFile("#fileupload","courses/course.tar.gz");
-      }
-    });
+
+    cy.get("body")
+      .find("ul.list-courses")
+      .then((res) => {
+        if (res[0].children.length > 0) {
+          cy.get(".course-item:last-child").click();
+          cy.get(".nav-course-tools > .title").click();
+          cy.get(".nav-course-tools-import > a").click();
+          cy.uploadFile("#fileupload", "courses/course.tar.gz");
+          cy.get("#replace-courselike-button").wait(1000).click();
+          cy.get("#view-updated-button").wait(10000).click();
+        } else {
+          cy.createCourse();
+          cy.uploadFile("#fileupload", "courses/course.tar.gz");
+        }
+      });
   });
 });

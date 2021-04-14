@@ -7,12 +7,14 @@ describe("Knowledge Base Application", () => {
 
     cy.visit("/dashboard");
 
-    cy.get("body").find("#my-courses").then(res => {
-      if (res.find(".empty-dashboard-message").length > 0) {
-        console.log("No Courses");
-      } else {
-        cy.get(".course").should("be.visible") ;
-      }
-    });
+    cy.get("body")
+      .find("#my-courses")
+      .then((res) => {
+        if (res.find(".empty-dashboard-message").length > 0) {
+          console.log("No Courses");
+        } else {
+          cy.get(".course").should("be.visible");
+        }
+      });
   });
-})
+});

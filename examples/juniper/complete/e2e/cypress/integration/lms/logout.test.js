@@ -3,14 +3,12 @@ describe("Logout test ", () => {
 
   it("User can logout after logged in ", () => {
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
-  
+
     cy.visit(lms_url);
-       cy.get(".toggle-user-dropdown").then(($button) => {
+    cy.get(".toggle-user-dropdown").then(($button) => {
       cy.wrap($button).click({ force: true });
     });
     // click the logout button
-    cy.get('#user-menu > :nth-child(4) > a').click({ force: true });
-
-    });
-
+    cy.get("#user-menu > :nth-child(4) > a").click({ force: true });
+  });
 });

@@ -7,9 +7,11 @@ describe("Studio home page", () => {
     cy.visit(lms_url);
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
     cy.visit(export_url);
-    cy.wait(2000)
-    cy.get('.title > .list-actions > .item-action > .action').click({force:"true"});
-    cy.wait(4000)
-    cy.get('#download-exported-button').click({force:"true"});
+    cy.wait(2000);
+    cy.get(".title > .list-actions > .item-action > .action").click({
+      force: "true",
+    });
+    cy.wait(4000);
+    cy.get("#download-exported-button").click({ force: "true" });
   });
 });
