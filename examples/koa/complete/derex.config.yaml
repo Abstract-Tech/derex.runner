@@ -1,0 +1,7 @@
+project_name: koa-complete
+openedx_version: koa
+compile_assets: true
+variables:
+  lms_test_dict:
+    base: { "foo": "bar" }
+    production: { "foo": "baz" }
