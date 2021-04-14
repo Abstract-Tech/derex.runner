@@ -81,7 +81,3 @@ PROFILE_IMAGE_BACKEND.update(
         },
     }
 )
-
-if DEBUG:
-    """Here we should make sure that the above settings don't break lms.urls
-    """
