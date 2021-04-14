@@ -15,7 +15,7 @@ click-plugins==1.1.1      # via derex.runner (setup.py)
 click==7.1.2              # via click-plugins, derex.runner (setup.py)
 colorama==0.4.3           # via rich
 commonmark==0.9.1         # via rich
-cryptography==3.3.2         # via paramiko
+cryptography==3.3.2       # via paramiko
 docker-compose==1.25.5    # via derex.runner (setup.py)
 docker[ssh]==4.2.0        # via docker-compose
 dockerpty==0.4.1          # via docker-compose
