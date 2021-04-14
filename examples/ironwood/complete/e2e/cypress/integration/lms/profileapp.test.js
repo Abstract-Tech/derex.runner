@@ -5,7 +5,7 @@ describe("Knowledge Base Application", () => {
     it("check for profile ", function () {
       cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
       cy.get(".toggle-user-dropdown").then(($button) => {
-        cy.wrap($button).click();
+        cy.wrap($button).click({ force: true });
       });
   
       cy.get("#user-menu  .dropdown-item a[href$='/u/staff']").then(($button) => {
