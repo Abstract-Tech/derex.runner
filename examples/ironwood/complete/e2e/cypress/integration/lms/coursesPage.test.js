@@ -11,11 +11,12 @@ describe("Courses Page", () => {
     cy.login(Cypress.env("user_email"), Cypress.env("user_password"));
     cy.visit("/courses");
 
-    cy.get("body").find("ul.courses-listing.courses-list").then(res => {
-      if (res[0].children.length > 0) {
-        cy.get(".course").should("be.visible") ;
-      } else {
+    cy.get("body").find(".courses-container").then(res => {
+      if (res[0].children[0].classList.contains("no-course-discovery")) {
         console.log("No Courses");
+       
+      } else {
+        cy.get(".course").should("be.visible") ;
       }
     });
   });
