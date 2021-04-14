@@ -1,4 +1,6 @@
 from openedx.core.djangoapps.plugins import constants as plugin_constants
+
+
 try:
     from openedx.core.djangoapps.plugins import plugin_settings
 except ImportError:
