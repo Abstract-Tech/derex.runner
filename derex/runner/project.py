@@ -496,14 +496,6 @@ class DebugBaseImageProject(Project):
 
 
 class OpenEdXVersions(Enum):
-    hawthorn = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/hawthorn.master",
-        "docker_image_prefix": "derex/openedx-hawthorn",
-        "alpine_version": "alpine3.11",
-        "python_version": "2.7",
-        "pip_version": "20.3.4",
-    }
     ironwood = {
         "git_repo": "https://github.com/edx/edx-platform.git",
         "git_branch": "open-release/ironwood.master",
@@ -524,7 +516,6 @@ class OpenEdXVersions(Enum):
         "git_repo": "https://github.com/edx/edx-platform.git",
         "git_branch": "open-release/koa.master",
         "docker_image_prefix": "derex/openedx-koa",
-
     }
 
 
