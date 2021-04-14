@@ -29,6 +29,33 @@ logger = getLogger(__name__)
 DEREX_RUNNER_PROJECT_DIR = ".derex"
 
 
+class OpenEdXVersions(Enum):
+    ironwood = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/ironwood.master",
+        "docker_image_prefix": "derex/openedx-ironwood",
+        "alpine_version": "alpine3.11",
+        "python_version": "2.7",
+        "pip_version": "20.3.4",
+    }
+    juniper = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/juniper.master",
+        "docker_image_prefix": "derex/openedx-juniper",
+        "alpine_version": "alpine3.11",
+        "python_version": "3.6",
+        "pip_version": "21.0.1",
+    }
+    koa = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/koa.master",
+        "docker_image_prefix": "derex/openedx-koa",
+        "alpine_version": "alpine3.11",
+        "python_version": "3.6",
+        "pip_version": "21.0.1",
+    }
+
+
 class ProjectRunMode(Enum):
     debug = "debug"  # The first is the default
     production = "production"
@@ -57,7 +84,7 @@ class Project:
     final_base_image: str
 
     # The named version of Open edX to use
-    openedx_version: "OpenEdXVersions"
+    openedx_version: OpenEdXVersions
 
     #: The directory containing requirements, if defined
     requirements_dir: Optional[Path] = None
@@ -231,7 +258,7 @@ class Project:
         except FileNotFoundError:
             self.secrets_config = {}
         self.openedx_version = OpenEdXVersions[
-            self.config.get("openedx_version", "ironwood")
+            self.config.get("openedx_version", "koa")
         ]
         source_image_prefix = self.openedx_version.value["docker_image_prefix"]
         self.base_image = self.config.get(
@@ -493,30 +520,6 @@ class DebugBaseImageProject(Project):
     @requirements_image_name.setter
     def requirements_image_name(self, value):
         pass
-
-
-class OpenEdXVersions(Enum):
-    ironwood = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/ironwood.master",
-        "docker_image_prefix": "derex/openedx-ironwood",
-        "alpine_version": "alpine3.11",
-        "python_version": "2.7",
-        "pip_version": "20.3.4",
-    }
-    juniper = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/juniper.master",
-        "docker_image_prefix": "derex/openedx-juniper",
-        "alpine_version": "alpine3.11",
-        "python_version": "3.6",
-        "pip_version": "21.0.1",
-    }
-    koa = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/koa.master",
-        "docker_image_prefix": "derex/openedx-koa",
-    }
 
 
 class ProjectNotFound(ValueError):
