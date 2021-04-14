@@ -5,15 +5,6 @@ stages:
     variables:
       - group: Docker credentials
     jobs:
-      - job: hawthorn
-        pool:
-          vmImage: $(UBUNTU_VERSION)
-        variables:
-          - name: DOCKER_IMAGES_SLUG
-            value: hawthorn
-        steps:
-          - template: push_single_version.yml
-
       - job: ironwood
         pool:
           vmImage: $(UBUNTU_VERSION)
@@ -29,5 +20,14 @@ stages:
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: juniper
+        steps:
+          - template: push_single_version.yml
+
+      - job: koa
+        pool:
+          vmImage: $(UBUNTU_VERSION)
+        variables:
+          - name: DOCKER_IMAGES_SLUG
+            value: koa
         steps:
           - template: push_single_version.yml
