@@ -118,6 +118,7 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
     alpine_version = version.value["alpine_version"]
     python_version = version.value["python_version"]
     pip_version = version.value["pip_version"]
+    node_version = version.value["node_version"]
     docker_image_prefix = version.value["docker_image_prefix"]
     image_name = f"{docker_image_prefix}-{target}:{__version__}"
     if only_print_image_name:
@@ -143,6 +144,8 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
         f"EDX_PLATFORM_VERSION={git_branch}",
         "--build-arg",
         f"EDX_PLATFORM_REPOSITORY={git_repo}",
+        "--build-arg",
+        f"NODE_VERSION={node_version}",
         f"--target={target}",
     ]
     transifex_path = os.path.expanduser("~/.transifexrc")

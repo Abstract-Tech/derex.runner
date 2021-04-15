@@ -37,6 +37,9 @@ class OpenEdXVersions(Enum):
         "alpine_version": "alpine3.11",
         "python_version": "2.7",
         "pip_version": "20.3.4",
+        # The latest node release does not work on ironwood
+        # (node-sass version fails to compile)
+        "node_version": "v10.22.1",
     }
     juniper = {
         "git_repo": "https://github.com/edx/edx-platform.git",
@@ -45,6 +48,7 @@ class OpenEdXVersions(Enum):
         "alpine_version": "alpine3.11",
         "python_version": "3.6",
         "pip_version": "21.0.1",
+        "node_version": "v12.19.0",
     }
     koa = {
         "git_repo": "https://github.com/edx/edx-platform.git",
@@ -53,6 +57,7 @@ class OpenEdXVersions(Enum):
         "alpine_version": "alpine3.11",
         "python_version": "3.6",
         "pip_version": "21.0.1",
+        "node_version": "v12.19.0",
     }
 
 
