@@ -169,6 +169,7 @@ RUN --mount=type=bind,from=translations,target=/translations \
 FROM nostatic as nostatic-dev
 # This image has node dependencies installed, and can be used to compile assets
 
+ARG NODE_VERSION=v10.22.1
 ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64-musl.tar.xz
 
 WORKDIR /openedx/edx-platform
