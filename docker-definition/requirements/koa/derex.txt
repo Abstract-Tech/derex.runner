@@ -1,6 +1,9 @@
 # Here we put our additional derex requirements
 # They will be constrained to openedx base requirements
 
+# We want to be able to schedule celery periodic tasks from the admin panel
+django_celery_beat
+
 flower
 gevent
 whitenoise

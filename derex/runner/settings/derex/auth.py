@@ -30,3 +30,6 @@ JWT_AUTH["JWT_PUBLIC_SIGNING_JWK_SET"] = json.dumps(
 )
 
 JWT_AUTH["JWT_SIGNING_ALGORITHM"] = "RS512"
+# If the login JWT cookie age is not the same as the Django SESSION_COOKIE_AGE
+# login will be inconsistent
+JWT_AUTH["JWT_IN_COOKIE_EXPIRATION"] = SESSION_COOKIE_AGE

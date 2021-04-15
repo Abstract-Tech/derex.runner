@@ -1,3 +1,4 @@
+from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.docker_utils import build_image
 from derex.runner.docker_utils import docker_has_experimental
 from derex.runner.project import Project
@@ -29,8 +30,29 @@ def build_requirements_image(project: Project):
     """
     if project.requirements_dir is None:
         return
+    paths_to_copy = [str(project.requirements_dir)]
     dockerfile_contents = [f"FROM {project.base_image}"]
     dockerfile_contents.extend(docker_commands_to_install_requirements(project))
+
+    openedx_customizations = project.get_openedx_customizations()
+    if openedx_customizations:
+        openedx_customizations_paths = [DEREX_OPENEDX_CUSTOMIZATIONS_PATH]
+        if project.openedx_customizations_dir:
+            openedx_customizations_paths.append(project.openedx_customizations_dir)
+
+        for openedx_customization_path in openedx_customizations_paths:
+            paths_to_copy.append(openedx_customization_path)
+
+        for destination, source in openedx_customizations.items():
+            docker_build_context_source = source
+            for openedx_customization_path in openedx_customizations_paths:
+                docker_build_context_source = docker_build_context_source.replace(
+                    str(openedx_customization_path), "openedx_customizations"
+                )
+            dockerfile_contents.append(
+                f"COPY {docker_build_context_source} {destination}"
+            )
+
     compile_command = ("; \\\n").join(
         (
             # Remove files from the previous image
@@ -58,7 +80,6 @@ def build_requirements_image(project: Project):
     if project.config.get("compile_assets", False):
         dockerfile_contents.append(f"RUN sh -c '{compile_command}'")
     dockerfile_text = "\n".join(dockerfile_contents)
-    paths_to_copy = [str(project.requirements_dir)]
     build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_name)
 
 

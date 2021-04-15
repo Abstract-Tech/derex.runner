@@ -19,7 +19,7 @@ x-common:
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/lms/envs/derex_project
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/cms/envs/derex_project
     - {{ derex_django_path }}:/openedx/derex_django
-    {%- if openedx_customizations %}{%- for src, dest in openedx_customizations %}
+    {%- if openedx_customizations %}{%- for dest, src in openedx_customizations.items() %}
     - {{ src }}:{{ dest }}
     {%- endfor %}{%- endif %}
     {%- if project.requirements_dir and not project.requirements_volumes %}
@@ -41,6 +41,7 @@ x-common:
   environment:
     &common-env
     DEREX_PROJECT: {{ project.name }}
+    DEREX_OPENEDX_VERSION: {{ project.openedx_version.name }}
     SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
     MYSQL_USER: {{ project.mysql_user }}
@@ -136,7 +137,7 @@ services:
   lms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default'
+      sh -c 'celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default'
     healthcheck:
       test: celery inspect ping -A lms.celery:APP -d celery@openedx.lms
       interval: 15m
@@ -152,7 +153,7 @@ services:
   cms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default'
+      sh -c 'celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default'
     healthcheck:
       test: celery inspect ping -A cms.celery:APP -d celery@openedx.cms
       interval: 15m
@@ -167,8 +168,13 @@ services:
 
   celerybeat:
     <<: *common-conf
+    {% if project.openedx_version.name == "koa" -%}
     command:
-      sh -c './manage.py lms celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
+      sh -c 'celery beat -A lms.celery:APP --scheduler django_celery_beat.schedulers:DatabaseScheduler'
+    {% else -%}
+    command:
+      sh -c 'celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
+    {% endif -%}
     environment:
       <<: *common-env
       C_FORCE_ROOT: "True"

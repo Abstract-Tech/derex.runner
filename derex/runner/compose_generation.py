@@ -13,7 +13,6 @@ from derex.runner.constants import DDC_PROJECT_TEMPLATE_PATH
 from derex.runner.constants import DDC_SERVICES_YML_PATH
 from derex.runner.constants import DEREX_DJANGO_PATH
 from derex.runner.constants import DEREX_ETC_PATH
-from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MAILSLURPER_JSON_TEMPLATE
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import WSGI_PY_PATH
@@ -135,21 +134,7 @@ def generate_ddc_project_file(project: Project) -> Path:
             "Run\nderex build requirements\n to build it"
         )
 
-    openedx_customizations = []
-    for openedx_customizations_dir in [
-        DEREX_OPENEDX_CUSTOMIZATIONS_PATH / project.openedx_version.name,
-        project.openedx_customizations_dir,
-    ]:
-        if openedx_customizations_dir and openedx_customizations_dir.exists():
-            for python_file_path in openedx_customizations_dir.rglob("*.py"):
-                openedx_customizations.append(
-                    (
-                        str(python_file_path),
-                        str(python_file_path).replace(
-                            str(openedx_customizations_dir), "/openedx/edx-platform"
-                        ),
-                    )
-                )
+    openedx_customizations = project.get_openedx_customizations()
 
     tmpl = Template(template_path.read_text())
     text = tmpl.render(

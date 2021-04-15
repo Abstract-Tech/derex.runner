@@ -22,7 +22,11 @@ CELERY_IMPORTS = list(maybe_list(CELERY_IMPORTS)) + [
     "openedx.core.djangoapps.bookmarks.tasks",
     "openedx.core.djangoapps.content.course_overviews.tasks",
 ]
-CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
+if DEREX_OPENEDX_VERSION == "koa":
+    INSTALLED_APPS.extend(["django_celery_beat"])
+    CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
+else:
+    CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 CELERYBEAT_SCHEDULE = {}
 
 CELERY_ROUTES = "{}.celery.Router".format(SERVICE_VARIANT)

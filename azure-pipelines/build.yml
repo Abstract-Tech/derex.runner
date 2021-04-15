@@ -4,16 +4,6 @@ stages:
       - group: Transifex credentials
 
     jobs:
-      - job: hawthorn
-        timeoutInMinutes: 180
-        pool:
-          vmImage: $(UBUNTU_VERSION)
-        variables:
-          - name: DOCKER_IMAGES_SLUG
-            value: hawthorn
-        steps:
-          - template: build_single_version.yml
-
       - job: ironwood
         timeoutInMinutes: 180
         pool:
@@ -33,6 +23,17 @@ stages:
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: juniper
+        steps:
+          - template: build_single_version.yml
+
+      - job: koa
+        timeoutInMinutes: 180
+        pool:
+          vmImage: $(UBUNTU_VERSION)
+        continueOnError: true # bad translations currently cause errors
+        variables:
+          - name: DOCKER_IMAGES_SLUG
+            value: koa
         steps:
           - template: build_single_version.yml
       - job: koa

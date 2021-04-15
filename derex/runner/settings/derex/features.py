@@ -20,6 +20,10 @@ FEATURES.update(
     }
 )
 
+DEFAULT_COURSE_VISIBILITY_IN_CATALOG = "none"
+COURSE_CATALOG_VISIBILITY_PERMISSION = "see_in_catalog"
+COURSE_ABOUT_VISIBILITY_PERMISSION = "see_about_page"
+
 # Remove CSMH as discussed in
 # https://discuss.openedx.org/t/new-edxapp-csmh-mysql-database-in-juniper/2127
 FEATURES["ENABLE_CSMH_EXTENDED"] = False

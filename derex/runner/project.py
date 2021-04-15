@@ -1,5 +1,6 @@
 from derex.runner import __version__
 from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import SECRETS_CONF_FILENAME
@@ -26,6 +27,25 @@ import yaml
 
 logger = getLogger(__name__)
 DEREX_RUNNER_PROJECT_DIR = ".derex"
+
+
+class OpenEdXVersions(Enum):
+    ironwood = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/ironwood.master",
+        "docker_image_prefix": "derex/openedx-ironwood",
+        "python_version": "2.7",
+    }
+    juniper = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/juniper.master",
+        "docker_image_prefix": "derex/openedx-juniper",
+    }
+    koa = {
+        "git_repo": "https://github.com/edx/edx-platform.git",
+        "git_branch": "open-release/koa.master",
+        "docker_image_prefix": "derex/openedx-koa",
+    }
 
 
 class ProjectRunMode(Enum):
@@ -56,7 +76,7 @@ class Project:
     final_base_image: str
 
     # The named version of Open edX to use
-    openedx_version: "OpenEdXVersions"
+    openedx_version: OpenEdXVersions
 
     #: The directory containing requirements, if defined
     requirements_dir: Optional[Path] = None
@@ -227,7 +247,7 @@ class Project:
         except FileNotFoundError:
             self.secrets_config = {}
         self.openedx_version = OpenEdXVersions[
-            self.config.get("openedx_version", "ironwood")
+            self.config.get("openedx_version", "koa")
         ]
         source_image_prefix = self.openedx_version.value["docker_image_prefix"]
         self.base_image = self.config.get(
@@ -423,6 +443,25 @@ class Project:
     def secret(self, name: str) -> str:
         return get_secret(DerexSecrets[name])
 
+    def get_openedx_customizations(self) -> dict:
+        """Return a mapping of customized files to be mounted in
+        the container in order to replace default edx-platform modules.
+        """
+        openedx_customizations = {}
+        for openedx_customizations_dir in [
+            DEREX_OPENEDX_CUSTOMIZATIONS_PATH / self.openedx_version.name,
+            self.openedx_customizations_dir,
+        ]:
+            if openedx_customizations_dir and openedx_customizations_dir.exists():
+                for file_path in openedx_customizations_dir.rglob("*"):
+                    if file_path.is_file():
+                        source = str(file_path)
+                        destination = str(file_path).replace(
+                            str(openedx_customizations_dir), "/openedx/edx-platform"
+                        )
+                        openedx_customizations[destination] = source
+        return openedx_customizations
+
 
 def get_requirements_hash(path: Path) -> str:
     """Given a directory, return a hash of the contents of the text files it contains.
@@ -466,32 +505,6 @@ class DebugBaseImageProject(Project):
     @requirements_image_name.setter
     def requirements_image_name(self, value):
         pass
-
-
-class OpenEdXVersions(Enum):
-    hawthorn = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/hawthorn.master",
-        "docker_image_prefix": "derex/openedx-hawthorn",
-        "python_version": "2.7",
-    }
-    ironwood = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/ironwood.master",
-        "docker_image_prefix": "derex/openedx-ironwood",
-        "python_version": "2.7",
-    }
-    juniper = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/juniper.master",
-        "docker_image_prefix": "derex/openedx-juniper",
-    }
-    koa = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/koa.master",
-        "docker_image_prefix": "derex/openedx-koa",
-
-    }
 
 
 class ProjectNotFound(ValueError):

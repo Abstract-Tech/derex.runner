@@ -20,7 +20,7 @@ requirements = [
     "pluggy",
     "pymongo",
     "pymysql",
-    "pyyaml",
+    "PyYAML>=5.4",
     "rich",
 ]
 
