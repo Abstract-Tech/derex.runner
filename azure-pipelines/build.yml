@@ -36,13 +36,3 @@ stages:
             value: koa
         steps:
           - template: build_single_version.yml
-      - job: koa
-        timeoutInMinutes: 180
-        pool:
-          vmImage: $(UBUNTU_VERSION)
-        continueOnError: true # bad translations currently cause errors
-        variables:
-          - name: DOCKER_IMAGES_SLUG
-            value: koa
-        steps:
-          - template: build_single_version.yml

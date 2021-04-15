@@ -3,7 +3,9 @@
 from .build import build
 from .mongodb import mongodb
 from .mysql import mysql
+from .test import test
 from .utils import ensure_project
+from .utils import red
 from click_plugins import with_plugins
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
@@ -322,13 +324,10 @@ def minio_update_key(old_key: str):
     return 0
 
 
-def red(string: str) -> str:
-    return click.style(string, fg="red")
-
-
 derex.add_command(mysql)
 derex.add_command(mongodb)
 derex.add_command(build)
+derex.add_command(test)
 
 
 __all__ = ["derex"]

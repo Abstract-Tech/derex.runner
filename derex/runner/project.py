@@ -30,21 +30,45 @@ DEREX_RUNNER_PROJECT_DIR = ".derex"
 
 
 class OpenEdXVersions(Enum):
+    # Values will be passed as uppercased named arguments to the docker build
+    # e.g. --build-arg EDX_PLATFORM_RELEASE=koa
     ironwood = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/ironwood.master",
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/ironwood.master",
+        "edx_platform_release": "ironwood",
         "docker_image_prefix": "derex/openedx-ironwood",
+        "alpine_version": "alpine3.11",
         "python_version": "2.7",
+        "pip_version": "20.3.4",
+        # The latest node release does not work on ironwood
+        # (node-sass version fails to compile)
+        "node_version": "v10.22.1",
+        "mysql_image": "mysql:5.6.36",
+        "mongodb_image": "mongo:3.2.21",
     }
     juniper = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/juniper.master",
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/juniper.master",
+        "edx_platform_release": "juniper",
         "docker_image_prefix": "derex/openedx-juniper",
+        "alpine_version": "alpine3.11",
+        "python_version": "3.6",
+        "pip_version": "21.0.1",
+        "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.6.36",
+        "mongodb_image": "mongo:3.6.23",
     }
     koa = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/koa.master",
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/koa.master",
+        "edx_platform_release": "koa",
         "docker_image_prefix": "derex/openedx-koa",
+        "alpine_version": "alpine3.13",
+        "python_version": "3.8",
+        "pip_version": "21.0.1",
+        "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.7.33",
+        "mongodb_image": "mongo:3.6.23",
     }
 
 
@@ -96,6 +120,9 @@ class Project:
 
     # The directory containing openedx python modules to be replaced
     openedx_customizations_dir: Optional[Path] = None
+
+    # The directory containing cypress tests
+    e2e_dir: Optional[Path] = None
 
     # The image name of the image that includes requirements
     requirements_image_name: str
@@ -317,6 +344,10 @@ class Project:
         openedx_customizations_dir = self.root / "openedx_customizations"
         if openedx_customizations_dir.is_dir():
             self.openedx_customizations_dir = openedx_customizations_dir
+
+        e2e_dir = self.root / "e2e"
+        if e2e_dir.is_dir():
+            self.e2e_dir = e2e_dir
 
         self.image_name = self.themes_image_name
 

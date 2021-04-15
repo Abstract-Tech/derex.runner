@@ -13,8 +13,12 @@ def ensure_project(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if click.get_current_context().obj is None:
-            click.echo("This command needs to be run inside a derex project")
+            click.echo("This command needs to be run inside a derex project", err=True)
             return 1
         func(*args, **kwargs)
 
     return wrapper
+
+
+def red(string: str) -> str:
+    return click.style(string, fg="red")
