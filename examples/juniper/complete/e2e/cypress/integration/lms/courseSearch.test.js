@@ -21,7 +21,6 @@ describe("Courses Page", () => {
       .then((res) => {
         cy.get("#dashboard-search-input").type(res[0].outerText);
         cy.get(".search-button").click();
-
         cy.get("body")
           .find("#dashboard-search-results")
           .then((res) => {
