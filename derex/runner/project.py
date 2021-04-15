@@ -30,9 +30,12 @@ DEREX_RUNNER_PROJECT_DIR = ".derex"
 
 
 class OpenEdXVersions(Enum):
+    # Values will be passed as uppercased named arguments to the docker build
+    # e.g. --build-arg EDX_PLATFORM_RELEASE=koa
     ironwood = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/ironwood.master",
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/ironwood.master",
+        "edx_platform_release": "ironwood",
         "docker_image_prefix": "derex/openedx-ironwood",
         "alpine_version": "alpine3.11",
         "python_version": "2.7",
@@ -44,8 +47,9 @@ class OpenEdXVersions(Enum):
         "mongodb_image": "mongo:3.2.21",
     }
     juniper = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/juniper.master",
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/juniper.master",
+        "edx_platform_release": "juniper",
         "docker_image_prefix": "derex/openedx-juniper",
         "alpine_version": "alpine3.11",
         "python_version": "3.6",
@@ -55,8 +59,9 @@ class OpenEdXVersions(Enum):
         "mongodb_image": "mongo:3.6.23",
     }
     koa = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/koa.master",
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/koa.master",
+        "edx_platform_release": "koa",
         "docker_image_prefix": "derex/openedx-koa",
         "alpine_version": "alpine3.11",
         "python_version": "3.6",

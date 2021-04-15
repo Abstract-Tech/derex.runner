@@ -113,12 +113,10 @@ def final_refresh(ctx, project: Project):
 def openedx(version, target, push, only_print_image_name, docker_opts):
     """Build openedx image using docker. Defaults to dev image target."""
     dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
-    git_repo = version.value["git_repo"]
-    git_branch = version.value["git_branch"]
-    alpine_version = version.value["alpine_version"]
-    python_version = version.value["python_version"]
-    pip_version = version.value["pip_version"]
-    node_version = version.value["node_version"]
+    build_arguments = []
+    for spec in version.value.items():
+        build_arguments.append("--build-arg")
+        build_arguments.append(f"{spec[0].upper()}={spec[1]}")
     docker_image_prefix = version.value["docker_image_prefix"]
     image_name = f"{docker_image_prefix}-{target}:{__version__}"
     if only_print_image_name:
@@ -132,20 +130,7 @@ def openedx(version, target, push, only_print_image_name, docker_opts):
         str(dockerdir),
         "-t",
         image_name,
-        "--build-arg",
-        f"ALPINE_VERSION={alpine_version}",
-        "--build-arg",
-        f"PYTHON_VERSION={python_version}",
-        "--build-arg",
-        f"PIP_VERSION={pip_version}",
-        "--build-arg",
-        f"EDX_PLATFORM_RELEASE={version.name}",
-        "--build-arg",
-        f"EDX_PLATFORM_VERSION={git_branch}",
-        "--build-arg",
-        f"EDX_PLATFORM_REPOSITORY={git_repo}",
-        "--build-arg",
-        f"NODE_VERSION={node_version}",
+        *build_arguments,
         f"--target={target}",
     ]
     transifex_path = os.path.expanduser("~/.transifexrc")
