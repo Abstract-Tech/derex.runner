@@ -25,6 +25,7 @@ def test_complete_project(workdir, complete_project):
     assert type(project.config) == dict
     assert project.requirements_dir == project_path / "requirements"
     assert project.themes_dir == project_path / "themes"
+    assert project.e2e_dir == project_path / "e2e"
     assert project.name == f"{project.openedx_version.name}-complete"
 
     if project.openedx_version.name == "ironwood":
@@ -46,6 +47,7 @@ def test_minimal_project(minimal_project):
     assert type(project.config) == dict
     assert project.requirements_dir is None
     assert project.themes_dir is None
+    assert project.e2e_dir is None
     assert project.name == f"{project.openedx_version.name}-minimal"
     assert project.requirements_image_name == project.image_name
     assert project.themes_image_name == project.image_name

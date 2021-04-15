@@ -11,6 +11,7 @@ from derex.runner import hookimpl
 from derex.runner.constants import DDC_ADMIN_PATH
 from derex.runner.constants import DDC_PROJECT_TEMPLATE_PATH
 from derex.runner.constants import DDC_SERVICES_YML_PATH
+from derex.runner.constants import DDC_TEST_TEMPLATE_PATH
 from derex.runner.constants import DEREX_DJANGO_PATH
 from derex.runner.constants import DEREX_ETC_PATH
 from derex.runner.constants import MAILSLURPER_JSON_TEMPLATE
@@ -43,11 +44,12 @@ class BaseServices:
     def ddc_services_options() -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.ddc_services_options docstring.
         """
+        services_compose_path = generate_ddc_services_compose()
         options = [
             "--project-name",
             "derex_services",
             "-f",
-            generate_ddc_services_file(),
+            str(services_compose_path),
         ]
         if asbool(os.environ.get("DEREX_ADMIN_SERVICES", True)):
             options += ["-f", str(DDC_ADMIN_PATH)]
@@ -61,11 +63,11 @@ class BaseServices:
 class BaseProject:
     @staticmethod
     @hookimpl
-    def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
+    def ddc_project_options(project: Project) -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.ddc_project_options docstring
         """
-        local_path = generate_ddc_project_file(project)
-        options = ["--project-name", project.name, "-f", str(local_path)]
+        project_compose_path = generate_ddc_project_compose(project)
+        options = ["--project-name", project.name, "-f", str(project_compose_path)]
         return {"options": options, "name": "base-project", "priority": "_begin"}
 
 
@@ -92,7 +94,7 @@ class LocalServices:
 class LocalProject:
     @staticmethod
     @hookimpl
-    def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
+    def ddc_project_options(project: Project) -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.ddc_project_options docstring
         """
         options: List[str] = []
@@ -108,7 +110,7 @@ class LocalProject:
 class LocalProjectRunmode:
     @staticmethod
     @hookimpl
-    def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
+    def ddc_project_options(project: Project) -> Dict[str, Union[str, List[str]]]:
         """See derex.runner.plugin_spec.ddc_project_options docstring
         """
         local_path = project.root / f"docker-compose-{project.runmode.value}.yml"
@@ -118,7 +120,7 @@ class LocalProjectRunmode:
         return {"options": options, "name": "local-project-runmode", "priority": "_end"}
 
 
-def generate_ddc_project_file(project: Project) -> Path:
+def generate_ddc_project_compose(project: Project) -> Path:
     """This function is called every time ddc-project is run.
     It assembles a docker-compose file from the given configuration.
     It should execute as fast as possible.
@@ -148,7 +150,21 @@ def generate_ddc_project_file(project: Project) -> Path:
     return project_compose_path
 
 
-def generate_ddc_services_file() -> str:
+def generate_ddc_test_compose(project: Project) -> Path:
+    """This function assembles a docker-compose with test services for
+    the given project.
+    It should execute as fast as possible.
+    """
+    test_compose_path = project.private_filepath("docker-compose-test.yml")
+    template_path = DDC_TEST_TEMPLATE_PATH
+
+    tmpl = Template(template_path.read_text())
+    text = tmpl.render(project=project)
+    test_compose_path.write_text(text)
+    return test_compose_path
+
+
+def generate_ddc_services_compose() -> Path:
     """Generate the global docker-compose config file that will drive
     ddc-services and return its path.
     """
@@ -178,4 +194,4 @@ def generate_ddc_services_file() -> str:
         MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PASSWORD,
     )
     local_path.write_text(text)
-    return str(local_path)
+    return local_path

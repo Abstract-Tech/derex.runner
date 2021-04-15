@@ -101,6 +101,13 @@ steps:
     displayName: "Check celerybeat"
 
   - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}
+      derex test e2e
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+    displayName: "Run project e2e tests"
+
+  - script: |
       ddc-services logs
       cd ${{ parameters.PROJECT_PATH }}; ddc-project logs
     condition: always()

@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://juniper-complete.localhost",
+  "chromeWebSecurity": false,
+  "env": {
+    "LMS_URL": "http://juniper-complete.localhost",
+    "CMS_URL": "http://studio.juniper-complete.localhost"
+  }
+}
