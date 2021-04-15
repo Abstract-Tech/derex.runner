@@ -40,6 +40,8 @@ class OpenEdXVersions(Enum):
         # The latest node release does not work on ironwood
         # (node-sass version fails to compile)
         "node_version": "v10.22.1",
+        "mysql_image": "mysql:5.6.36",
+        "mongodb_image": "mongo:3.2.21",
     }
     juniper = {
         "git_repo": "https://github.com/edx/edx-platform.git",
@@ -49,6 +51,8 @@ class OpenEdXVersions(Enum):
         "python_version": "3.6",
         "pip_version": "21.0.1",
         "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.6.36",
+        "mongodb_image": "mongo:3.6.23",
     }
     koa = {
         "git_repo": "https://github.com/edx/edx-platform.git",
@@ -58,6 +62,8 @@ class OpenEdXVersions(Enum):
         "python_version": "3.6",
         "pip_version": "21.0.1",
         "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.7.33",
+        "mongodb_image": "mongo:3.6.23",
     }
 
 
