@@ -1,0 +1,5 @@
+# Those requirements will be installed only in the wheels image
+# and are required to build wheels successfully
+
+cython
+pybind11

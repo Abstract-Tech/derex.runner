@@ -64,6 +64,7 @@ RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ /openedx/requirements
 
 WORKDIR /openedx/edx-platform
 COPY requirements/${EDX_PLATFORM_RELEASE}/derex.txt /openedx/requirements/derex.txt
+COPY requirements/${EDX_PLATFORM_RELEASE}/wheels_build_requirements.txt /openedx/requirements/wheels_build_requirements.txt
 COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /openedx/requirements/overrides.txt
 # The following layer is going to produce 3 requirements file:
 # * edx base requirements with some fixes which will be installed (openedx_base_fixed.txt)
@@ -116,10 +117,17 @@ ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
+    pip install -r /openedx/requirements/wheels_build_requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     `# We need to add the --no-verify option due to django-oauth-plus metadata` \
     `# violating PEP 440 (https://www.python.org/dev/peps/pep-0440/)` \
-    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/openedx_wheels.txt --no-verify && \
-    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/derex.txt -c /openedx/requirements/openedx_constraints.txt && \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/openedx_wheels.txt --no-verify
+RUN --mount=type=cache,target=/root/.cache/pip \
+    export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
+    pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/derex.txt -c /openedx/requirements/openedx_constraints.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/overrides.txt
 
 FROM wheels as rmlint
