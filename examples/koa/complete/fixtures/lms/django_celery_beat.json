@@ -1,13 +1,13 @@
 [
   {
-    "model": "djcelery.intervalschedule",
+    "model": "django_celery_beat.intervalschedule",
     "fields": {
       "every": 1,
       "period": "seconds"
     }
   },
   {
-    "model": "djcelery.periodictask",
+    "model": "django_celery_beat.periodictask",
     "fields": {
       "name": "debug",
       "task": "openedx.core.djangoapps.service_status.tasks.delayed_ping",
