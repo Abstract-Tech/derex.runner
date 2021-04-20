@@ -63,7 +63,10 @@ class OpenEdXVersions(Enum):
         "edx_platform_version": "open-release/koa.master",
         "edx_platform_release": "koa",
         "docker_image_prefix": "derex/openedx-koa",
-        "alpine_version": "alpine3.13",
+        # We are stuck on alpine3.12 since SciPy won't build
+        # on gcc>=10 due to fortran incompatibility issues.
+        # See more at https://gcc.gnu.org/gcc-10/porting_to.html
+        "alpine_version": "alpine3.12",
         "python_version": "3.8",
         "pip_version": "21.0.1",
         "node_version": "v12.19.0",

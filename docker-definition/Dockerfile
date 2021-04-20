@@ -120,6 +120,10 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r /openedx/requirements/wheels_build_requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
+    `# xmlsec is a dependecy of python-saml.` \
+    `# We need to build it with this flag in order to avoid this error on import:` \
+    `# xmlsec.Error: (19, 'xmlsec library version mismatch.')` \
+    export CFLAGS=-DXMLSEC_NO_SIZE_T && \
     `# We need to add the --no-verify option due to django-oauth-plus metadata` \
     `# violating PEP 440 (https://www.python.org/dev/peps/pep-0440/)` \
     pip wheel --wheel-dir=/wheelhouse -r /openedx/requirements/openedx_wheels.txt --no-verify
