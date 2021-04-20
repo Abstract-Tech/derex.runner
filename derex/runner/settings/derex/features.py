@@ -27,8 +27,13 @@ COURSE_ABOUT_VISIBILITY_PERMISSION = "see_about_page"
 # Remove CSMH as discussed in
 # https://discuss.openedx.org/t/new-edxapp-csmh-mysql-database-in-juniper/2127
 FEATURES["ENABLE_CSMH_EXTENDED"] = False
-if "coursewarehistoryextended" in INSTALLED_APPS:
-    INSTALLED_APPS.remove("coursewarehistoryextended")
+for coursewarehistoryextended_app in [
+    "coursewarehistoryextended",
+    "lms.djangoapps.coursewarehistoryextended",
+]:
+    if coursewarehistoryextended_app in INSTALLED_APPS:
+        INSTALLED_APPS.remove(coursewarehistoryextended_app)
+
 DATABASE_ROUTERS.remove(
     "openedx.core.lib.django_courseware_routers.StudentModuleHistoryExtendedRouter"
 )
