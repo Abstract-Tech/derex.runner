@@ -64,7 +64,6 @@ RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ /openedx/requirements
 
 WORKDIR /openedx/edx-platform
 COPY requirements/${EDX_PLATFORM_RELEASE}/derex.txt /openedx/requirements/derex.txt
-COPY requirements/${EDX_PLATFORM_RELEASE}/wheels_build_requirements.txt /openedx/requirements/wheels_build_requirements.txt
 COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /openedx/requirements/overrides.txt
 # The following layer is going to produce 3 requirements file:
 # * edx base requirements with some fixes which will be installed (openedx_base_fixed.txt)
@@ -115,9 +114,6 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
 # Unfortunately alpine versions prior to 3.13 doesn't include it
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
-RUN --mount=type=cache,target=/root/.cache/pip \
-    export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
-    pip install -r /openedx/requirements/wheels_build_requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     export PIP_FIND_LINKS="https://wheels.derex.page/alpine-$(cat /etc/alpine-release)" && \
     `# xmlsec is a dependecy of python-saml.` \
