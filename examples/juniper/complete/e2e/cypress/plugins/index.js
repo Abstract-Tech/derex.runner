@@ -14,7 +14,11 @@
 /**
  * @type {Cypress.PluginConfig}
  */
+
+const getCompareSnapshotsPlugin = require("cypress-visual-regression/dist/plugin");
+
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
+  getCompareSnapshotsPlugin(on, config);
 };
