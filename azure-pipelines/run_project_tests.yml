@@ -102,7 +102,7 @@ steps:
 
   - script: |
       set -ex
-      cd ${{ parameters.PROJECT_PATH }}
+      cd ${{ parameters.PROJECT_PATH }}/e2e && npm ci && cd ..
       derex test e2e
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Run project e2e tests"
