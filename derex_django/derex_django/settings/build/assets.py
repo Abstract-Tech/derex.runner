@@ -30,5 +30,5 @@ DATABASES = {"default": {}}  # type: ignore
 # enterprise.views tries to access settings.ECOMMERCE_PUBLIC_URL_ROOT,
 ECOMMERCE_PUBLIC_URL_ROOT = None
 
-STATICFILES_STORAGE = "whitenoise_edx.WhitenoiseEdxStorage"
+STATICFILES_STORAGE = "derex_django.staticfiles_storages.WhitenoiseEdxStorage"
 derive_settings(__name__)

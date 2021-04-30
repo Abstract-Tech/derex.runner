@@ -1,12 +1,12 @@
 from derex.runner import __version__
 from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import DEREX_DJANGO_SETTINGS_PATH
 from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
-from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import get_dir_hash
 from enum import Enum
 from enum import IntEnum
@@ -148,6 +148,10 @@ class Project:
     # Keys are paths on the host system and values are path inside the container
     requirements_volumes: Optional[Dict[str, str]] = None
 
+    # Wheter derex default settings should be materialized in the project
+    # settings directory
+    materialize_derex_settings = bool
+
     # Enum containing possible settings modules
     _available_settings = None
 
@@ -217,13 +221,12 @@ class Project:
         lms/envs/derex_project and cms/envs/derex_project inside the
         container.
         If the project has local settings, we use that directory.
-        Otherwise we use the directory bundled with `derex.runner`
+        Otherwise we use the derex_django settings directory bundled
+        with `derex.runner`
         """
         if self.settings_dir is not None:
             return self.settings_dir
-        return abspath_from_egg(
-            "derex.runner", "derex/runner/settings/derex/base.py"
-        ).parent
+        return DEREX_DJANGO_SETTINGS_PATH / "default"
 
     def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Read value for the desired status from the project directory.
@@ -257,7 +260,7 @@ class Project:
         # before making any change
         self._load(path)
         if not read_only:
-            self._populate_settings()
+            self._materialize_settings()
         if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
             (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
 
@@ -353,10 +356,13 @@ class Project:
             self.e2e_dir = e2e_dir
 
         self.image_name = self.themes_image_name
+        self.materialize_derex_settings = self.config.get(
+            "materialize_derex_settings", True
+        )
 
     def update_default_settings(self, default_settings_dir, destination_settings_dir):
         """Update default settings in a specified directory.
-        Given a directory where to look for default settings modules recursively
+        Given a directory where to look for default settings modules, recursively
         copy or update them into the destination directory.
         Additionally add a warning asking not to manually edit files.
         If files needs to be overwritten, print a diff.
@@ -395,29 +401,24 @@ class Project:
                 destination.chmod(current_mode | 0o700)
                 destination.write_text(new_text)
 
-    def _populate_settings(self):
-        """If the project includes user defined settings, add ours to that directory
-        to let the project's settings use the line
-
-            from .derex import *
-
-        Also add a base.py file with the above content if it does not exist.
+    def _materialize_settings(self):
+        """If the project includes user defined settings and
+        `materialize_derex_settings` is True for the project then
+        copy current derex default settings to the project settings
+        directory.
+        This is useful to keep track of settings changes between
+        version upgrades.
         """
-        if self.settings_dir is None:
+        if self.settings_dir is None or not self.materialize_derex_settings:
             return
 
         base_settings = self.settings_dir / "base.py"
         if not base_settings.is_file():
-            base_settings.write_text("from .derex import *\n")
+            base_settings.write_text("from derex_django.settings.default import *\n")
 
-        init = self.settings_dir / "__init__.py"
-        if not init.is_file():
-            init.write_text('"""Settings for edX"""')
-
-        derex_runner_settings_dir = abspath_from_egg(
-            "derex.runner", "derex/runner/settings/README.rst"
-        ).parent
-        self.update_default_settings(derex_runner_settings_dir, self.settings_dir)
+        self.update_default_settings(
+            DEREX_DJANGO_SETTINGS_PATH, self.settings_dir / "derex"
+        )
 
     def get_plugin_directories(self, plugin: str) -> Dict[str, Path]:
         """

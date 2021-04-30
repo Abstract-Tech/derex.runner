@@ -73,7 +73,7 @@ def build_requirements_image(project: Project):
             "unset DJANGO_SETTINGS_MODULE",
             # XXX we only compile the `open-edx` theme. We could make this configurable per-project
             # but probably most people are only interested in their own theme
-            "paver update_assets --settings derex.assets --themes open-edx",
+            "paver update_assets --settings derex_django.settings.build.assets --themes open-edx",
             'rmlint -c sh:symlink -o sh:rmlint.sh /openedx/staticfiles > /dev/null 2> /dev/null && sed "/# empty /d" -i rmlint.sh && ./rmlint.sh -d > /dev/null',
         )
     )

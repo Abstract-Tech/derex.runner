@@ -143,7 +143,7 @@ def test_image_prefix(minimal_project):
         assert project.themes_image_name.startswith(project.image_prefix)
 
 
-def test_populate_settings(minimal_project):
+def test_materialize_settings(minimal_project):
     with minimal_project:
         default_settings_dir = Project().settings_directory_path()
         assert default_settings_dir.is_dir()
@@ -153,17 +153,18 @@ def test_populate_settings(minimal_project):
 
         assert default_settings_dir != project.settings_directory_path()
 
-        project._populate_settings()
+        project._materialize_settings()
         assert (project.settings_dir / "base.py").is_file(), str(
             sorted((project.settings_dir).iterdir())
         )
         assert (project.settings_dir / "derex").is_dir(), str(
             sorted((project.settings_dir).iterdir())
         )
-        base_py = project.settings_dir / "derex" / "base.py"
-        assert base_py.is_file()
-        assert (project.settings_dir / "derex" / "__init__.py").is_file()
+        assets_py = project.settings_dir / "derex" / "build" / "assets.py"
+        assert assets_py.is_file()
 
+        base_py = project.settings_dir / "derex" / "default" / "base.py"
+        assert base_py.is_file()
         assert os.access(str(base_py), os.W_OK)
 
         # In case a settings file was already present, it should be overwritten,
@@ -171,7 +172,7 @@ def test_populate_settings(minimal_project):
         base_py.write_text("# Changed")
         base_py.chmod(0o444)
         assert not os.access(str(base_py), os.W_OK)
-        project._populate_settings()
+        project._materialize_settings()
         assert os.access(str(base_py), os.W_OK)
 
 

@@ -28,7 +28,10 @@ FILE_UPLOAD_STORAGE_PREFIX = "submissions_attachments"
 
 GRADES_DOWNLOAD = {
     "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
-    "STORAGE_KWARGS": {"bucket": AWS_STORAGE_BUCKET_NAME, "location": "grades",},
+    "STORAGE_KWARGS": {
+        "bucket": AWS_STORAGE_BUCKET_NAME,
+        "location": "grades",
+    },  # noqa: E231
 }
 
 FINANCIAL_REPORTS = {

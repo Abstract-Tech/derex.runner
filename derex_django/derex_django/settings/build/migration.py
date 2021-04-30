@@ -8,7 +8,7 @@ from openedx.core.lib.derived import derive_settings
 
 # Use a custom mysql port to increase the probability of finding it free on a build machine.
 # buildkit seems to always use host networking mode, so it might clash
-# Attempts to add `--network=none` to the Dockerfile RUN directives proved fruiless
+# Attempts to add `--network=none` to the Dockerfile RUN directives proved fruitless
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",

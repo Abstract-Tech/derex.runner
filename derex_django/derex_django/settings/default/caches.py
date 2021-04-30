@@ -3,7 +3,7 @@ Use memcached. If derex_django is available use its cache function.
 If not use the one bundled with Open edX.
 """
 try:
-    import derex_django
+    import derex_django  # noqa: F401
 
     CACHES_KEY_FUNCTION = "derex_django.memcache.safe_key"
 except ImportError:

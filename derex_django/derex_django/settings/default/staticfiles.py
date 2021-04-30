@@ -8,11 +8,13 @@ STATIC_ROOT = {
     "lms": Path(STATIC_ROOT_BASE),
     "cms": Path(STATIC_ROOT_BASE) / "studio",
 }[SERVICE_VARIANT]
-STATIC_URL = {"lms": "/static/", "cms": "/static/studio/",}[SERVICE_VARIANT]
+STATIC_URL = {"lms": "/static/", "cms": "/static/studio/",}[  # noqa: E231
+    SERVICE_VARIANT
+]
 
 WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = STATIC_ROOT / "webpack-stats.json"
 COMPREHENSIVE_THEME_DIRS.append(Path("/openedx/themes"))
-STATICFILES_STORAGE = "whitenoise_edx.WhitenoiseEdxStorage"
+STATICFILES_STORAGE = "derex_django.staticfiles_storages.WhitenoiseEdxStorage"
 
 if "runserver" in sys.argv:
     REQUIRE_DEBUG = True

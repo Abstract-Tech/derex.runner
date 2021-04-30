@@ -10,4 +10,4 @@ export NO_PYTHON_UNINSTALL=True
 # `./manage.my lms etc-etc`
 # will leave it as is and not set it to the correct value
 unset SERVICE_VARIANT
-paver update_assets --settings derex.assets
+paver update_assets --settings derex_django.settings.build.assets

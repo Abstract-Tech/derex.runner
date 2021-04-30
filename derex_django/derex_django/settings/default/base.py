@@ -1,3 +1,4 @@
+from importlib import import_module
 from openedx.core.lib.derived import derive_settings
 from path import Path
 
@@ -5,15 +6,19 @@ import os
 import sys
 
 
-try:
-    # This will fail if the project is overriding settings
-    from ..common import *
-except ImportError:
-    from ...common import *
-
 SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
 DEREX_PROJECT = os.environ["DEREX_PROJECT"]
 DEREX_OPENEDX_VERSION = os.environ["DEREX_OPENEDX_VERSION"]
+
+assert SERVICE_VARIANT in ["lms", "cms"]
+
+# Load common settings for LMS and CMS
+common_settings = import_module("{}.envs.common".format(SERVICE_VARIANT))
+settings = [
+    setting for setting in common_settings.__dict__ if not setting.startswith("_")
+]
+for setting in settings:
+    globals().update({setting: getattr(common_settings, setting)})
 
 _settings_modules = [
     "django_settings",

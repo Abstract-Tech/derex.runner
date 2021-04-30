@@ -144,19 +144,15 @@ RUN wget -q https://github.com/sahib/rmlint/tarball/e56626d39134b7ac6317c19940c4
 FROM sourceonly as notranslations
 
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
+COPY derex_django/ /openedx/derex_django
 
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install -r /openedx/requirements/openedx_base_fixed.txt --find-links /wheelhouse && \
     pip install --upgrade -r /openedx/requirements/derex.txt --find-links /wheelhouse -c /openedx/requirements/openedx_constraints.txt && \
-    pip install --upgrade -r /openedx/requirements/overrides.txt --find-links /wheelhouse
+    pip install --upgrade -r /openedx/requirements/overrides.txt --find-links /wheelhouse && \
+    pip install /openedx/derex_django --find-links /wheelhouse
 
-COPY whitenoise_edx.py assets.py translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
-
-RUN mkdir -p /openedx/edx-platform/lms/envs/derex/ /openedx/edx-platform/cms/envs/derex/ && \
-    touch /openedx/edx-platform/lms/envs/derex/__init__.py /openedx/edx-platform/cms/envs/derex/__init__.py && \
-    mv /usr/local/bin/assets.py /openedx/edx-platform/lms/envs/derex/ && \
-    mv /usr/local/bin/whitenoise_edx.py /openedx/edx-platform/whitenoise_edx.py && \
-    cp /openedx/edx-platform/lms/envs/derex/assets.py /openedx/edx-platform/cms/envs/derex/assets.py
+COPY translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
 
 FROM notranslations as translations
 
@@ -170,9 +166,7 @@ FROM notranslations as nostatic
 # It's still missing the static files, hence the name.
 
 RUN --mount=type=bind,from=translations,target=/translations \
-    cp -avu /translations/openedx/edx-platform/conf/locale/ conf/ && \
-    `# Add a pth file to Python site packages to mimic derex_django installation` \
-    echo /openedx/derex_django > $(python -c 'import site; print(site.getsitepackages()[0])')/derex.pth
+    cp -avu /translations/openedx/edx-platform/conf/locale/ conf/
 
 FROM nostatic as nostatic-dev
 # This image has node dependencies installed, and can be used to compile assets
@@ -198,23 +192,19 @@ FROM dev-nodump as dev
 
 # TODO: fixtures should not be included in the image
 COPY fixtures /openedx/fixtures/
-COPY migration.py /openedx/edx-platform/lms/envs/derex/
 RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     --mount=type=bind,from=docker.io/mysql:5.6.36,target=/mysql,rw=true \
     set -ex; \
-    cp /openedx/edx-platform/lms/envs/derex/migration.py /openedx/edx-platform/cms/envs/derex/; \
     cp -a /dev/ /mysql; \
-    touch /openedx/edx-platform/lms/envs/derex/__init__.py; \
-    touch /openedx/edx-platform/cms/envs/derex/__init__.py; \
     export MYSQL_ALLOW_EMPTY_PASSWORD=1; \
     echo -e '[mysqld]\n'port=3399 >> /mysql/etc/mysql/conf.d/custom_port.cnf; \
     chroot /mysql /usr/local/bin/docker-entrypoint.sh mysqld > /mysql/mysqld.out & \
     until grep "MySQL init process done. Ready for start up" /mysql/mysqld.out ; do sleep 1; done; \
     until chroot /mysql mysqladmin -P 3399 create edxapp ; do sleep 1; done; \
-    ./manage.py lms --settings=derex.migration migrate; \
-    ./manage.py cms --settings=derex.migration migrate; \
+    ./manage.py lms --settings=derex_django.settings.build.migration migrate; \
+    ./manage.py cms --settings=derex_django.settings.build.migration migrate; \
     chroot /mysql mysqldump edxapp | bzip2 -9 - > /openedx/empty_dump.sql.bz2;
 
-ENV DJANGO_SETTINGS_MODULE=lms.envs.derex.migration
+ENV DJANGO_SETTINGS_MODULE=derex_django.settings.default
 ENV SERVICE_VARIANT=lms
 ENV DEREX_VERSION=0.2.2
