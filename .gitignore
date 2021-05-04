@@ -22,8 +22,8 @@ parts/
 sdist/
 var/
 wheels/
-derex.egg-info/
-derex.runner.egg-info/
+*.egg-info/
+*.runner.egg-info/
 .installed.cfg
 *.egg
 

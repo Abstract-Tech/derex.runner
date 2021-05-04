@@ -2,6 +2,7 @@
 This egg is meant to be installed automatically by ``derex`` alongside
 ``ed-platform``. End users sould never need to install this.
 """
+from setuptools import find_packages
 from setuptools import setup
 
 
@@ -13,7 +14,7 @@ setup(
     author="Silvio Tomatis",
     author_email="silviot@abstract-technologies.de",
     license="AGPL",
-    packages=["derex_django"],
+    packages=find_packages(),
     zip_safe=False,
     entry_points={
         "lms.djangoapp": ["derex_app = derex_django.app:DerexAppConfig"],
