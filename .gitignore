@@ -10,7 +10,7 @@ __pycache__/
 .Python
 env/
 build/
-!derex_django/derex_django/settings/build
+!docker-definition/derex_django/derex_django/settings/build
 develop-eggs/
 dist/
 downloads/

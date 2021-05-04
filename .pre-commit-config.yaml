@@ -17,7 +17,7 @@ repos:
       - id: flake8
         args:
           - "--per-file-ignores=\
-            derex_django/derex_django/settings/default/*.py,\
+            docker-definition/derex_django/derex_django/settings/default/*.py,\
             derex/runner/compose_files/openedx_customizations/*\
             :F821,F405,F403,E266"
 
@@ -29,8 +29,8 @@ repos:
           - --ignore-missing-imports
         exclude: "^\
           examples/.*|\
-          derex_django/derex_django/settings/default/.*|\
-          derex_django/setup.py\
+          docker-definition/derex_django/derex_django/settings/default/.*|\
+          docker-definition/derex_django/setup.py\
           $"
 
   - repo: https://github.com/ambv/black
