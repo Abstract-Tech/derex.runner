@@ -1,6 +1,5 @@
 #!/bin/sh
-set -e
-set -x
+set -ex
 
 # Avoid dulicates: rmlint finds files with the same conents, keeps the oldest
 # and symlinks the other copies. Do not mess with node_modules, or it will stop working.

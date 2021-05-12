@@ -2,16 +2,14 @@
 Bare minimum settings for collecting production assets.
 """
 
-from ..common import *  # type: ignore # noqa: F403,F401
-from ..common import COMPREHENSIVE_THEME_DIRS  # type: ignore
-from ..common import WEBPACK_LOADER  # type: ignore
 from openedx.core.lib.derived import derive_settings
 from path import Path as path
 
 import os
 
 
-COMPREHENSIVE_THEME_DIRS.append("/openedx/themes")  # type: ignore
+ENABLE_COMPREHENSIVE_THEMING = True
+COMPREHENSIVE_THEME_DIRS.append("/openedx/themes")  # type: ignore # noqa: F821
 STATIC_ROOT_BASE = os.environ.get("STATIC_ROOT_LMS", "/openedx/staticfiles")
 STATIC_ROOT = {  # type: ignore
     "lms": path(STATIC_ROOT_BASE),
@@ -19,7 +17,7 @@ STATIC_ROOT = {  # type: ignore
 }[
     os.environ.get("SERVICE_VARIANT")  # type: ignore
 ]
-WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = (  # type: ignore
+WEBPACK_LOADER["DEFAULT"]["STATS_FILE"] = (  # type: ignore # noqa: F821
     STATIC_ROOT / "webpack-stats.json"
 )
 

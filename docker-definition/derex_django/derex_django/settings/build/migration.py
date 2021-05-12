@@ -2,7 +2,6 @@
 Bare minimum settings for dumping database migrations.
 """
 
-from ..common import *  # type: ignore # noqa: F403,F401
 from openedx.core.lib.derived import derive_settings
 
 

@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     wget \
     bash
 
-COPY patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
+COPY scripts/patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
 
 COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
 # Patch ldconfig and test that libgeos works
@@ -52,7 +52,7 @@ ENV NO_PREREQ_INSTALL=True
 ENV NO_PYTHON_UNINSTALL=True
 
 ARG PIP_VERSION=21.0.1
-RUN pip install --upgrade pip==${PIP_VERSION}
+RUN pip install -U pip==${PIP_VERSION}
 
 FROM base as sourceonly
 ARG EDX_PLATFORM_RELEASE=koa
@@ -73,7 +73,7 @@ COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /openedx/requirements/ov
 RUN cp /openedx/edx-platform/requirements/edx/base.txt /openedx/requirements/openedx_base_fixed.txt && \
     `# Versioning of this package is wrong at the pinned commit` \
     sed -e "s|django-oauth-plus.git@01ec2a161dfc3465f9d35b9211ae790177418316|django-oauth-plus.git@6218624ef19aea37c5abec35b4ea2e049dc8ee4e|" -i /openedx/requirements/openedx_base_fixed.txt && \
-    `# Without the following line pip produces an error` \
+    `# Without the following line pip produces an error:` \
     `# Generating metadata for package <package> produced metadata for project name django-ratelimit. Fix your #egg=ratelimit fragments.` \
     sed -e "s|#egg=ratelimit|#egg=django-ratelimit|" -i /openedx/requirements/openedx_base_fixed.txt && \
     sed -e "s|#egg=pystache_custom-dev|#egg=pystache-custom|" -i /openedx/requirements/openedx_base_fixed.txt && \
@@ -147,12 +147,18 @@ COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
 COPY derex_django/ /openedx/derex_django
 
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
-    pip install -r /openedx/requirements/openedx_base_fixed.txt --find-links /wheelhouse && \
-    pip install --upgrade -r /openedx/requirements/derex.txt --find-links /wheelhouse -c /openedx/requirements/openedx_constraints.txt && \
-    pip install --upgrade -r /openedx/requirements/overrides.txt --find-links /wheelhouse && \
+    pip install -r /openedx/requirements/openedx_base_fixed.txt --find-links /wheelhouse
+
+RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
+    pip install -U -r /openedx/requirements/derex.txt --find-links /wheelhouse -c /openedx/requirements/openedx_constraints.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
+    pip install -U -r /openedx/requirements/overrides.txt --find-links /wheelhouse
+
+RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install /openedx/derex_django --find-links /wheelhouse
 
-COPY translations.sh cleanup_assets.sh compile_assets.sh /usr/local/bin/
+COPY scripts/* scripts/assets/* /usr/local/bin/
 
 FROM notranslations as translations
 
@@ -201,8 +207,8 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     chroot /mysql /usr/local/bin/docker-entrypoint.sh mysqld > /mysql/mysqld.out & \
     until grep "MySQL init process done. Ready for start up" /mysql/mysqld.out ; do sleep 1; done; \
     until chroot /mysql mysqladmin -P 3399 create edxapp ; do sleep 1; done; \
-    ./manage.py lms --settings=derex_django.settings.build.migration migrate; \
-    ./manage.py cms --settings=derex_django.settings.build.migration migrate; \
+    SERVICE_VARIANT="lms" python manage.py lms --settings=derex_django.settings.build.migration migrate; \
+    SERVICE_VARIANT="cms" python manage.py cms --settings=derex_django.settings.build.migration migrate; \
     chroot /mysql mysqldump edxapp | bzip2 -9 - > /openedx/empty_dump.sql.bz2;
 
 ENV DJANGO_SETTINGS_MODULE=derex_django.settings.default
