@@ -5,8 +5,8 @@ set -ex
 # always try to load settings from modules relative to the
 # lms or cms 'envs' folder.
 
-./process_xmodule_assets.sh
-./process_npm_assets.sh
-./webpack.sh
-./compile_sass.sh
-./collect_assets.sh
+derex_process_xmodule_assets
+derex_process_npm_assets
+derex_webpack_build
+derex_compile_sass
+derex_collect_assets

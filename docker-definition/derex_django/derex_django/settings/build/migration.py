@@ -4,6 +4,23 @@ Bare minimum settings for dumping database migrations.
 
 from openedx.core.lib.derived import derive_settings
 
+import os
+
+
+try:
+    SERVICE_VARIANT = os.environ["SERVICE_VARIANT"]
+    assert SERVICE_VARIANT in ["lms", "cms"]
+except KeyError:
+    raise RuntimeError("SERVICE_VARIANT environment variable must be defined!")
+except AssertionError:
+    raise RuntimeError(
+        'SERVICE_VARIANT environment variable must be one of ["lms", "cms"]'
+    )
+
+if SERVICE_VARIANT == "lms":
+    from lms.envs.common import *  # noqa: F401, F403
+if SERVICE_VARIANT == "cms":
+    from cms.envs.common import *  # noqa: F401, F403
 
 # Use a custom mysql port to increase the probability of finding it free on a build machine.
 # buildkit seems to always use host networking mode, so it might clash

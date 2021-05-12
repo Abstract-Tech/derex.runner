@@ -40,11 +40,11 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     wget \
     bash
 
-COPY scripts/patch_ldconfig_to_fix_shapely.sh /tmp/patch_ldconfig_to_fix_shapely.sh
+COPY scripts/derex_patch_ldconfig_to_fix_shapely /tmp/derex_patch_ldconfig_to_fix_shapely
 
 COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
 # Patch ldconfig and test that libgeos works
-RUN /tmp/patch_ldconfig_to_fix_shapely.sh && \
+RUN /tmp/derex_patch_ldconfig_to_fix_shapely && \
      python -c "from  ctypes import CDLL; CDLL('$(echo /usr/lib/libgeos_c.so)').GEOSversion"
 
 # we want to use paver without remembering to specify these
@@ -144,7 +144,6 @@ RUN wget -q https://github.com/sahib/rmlint/tarball/e56626d39134b7ac6317c19940c4
 FROM sourceonly as notranslations
 
 COPY --from=rmlint /usr/local/bin/rmlint /usr/local/bin/rmlint
-COPY derex_django/ /openedx/derex_django
 
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install -r /openedx/requirements/openedx_base_fixed.txt --find-links /wheelhouse
@@ -155,17 +154,20 @@ RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelho
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install -U -r /openedx/requirements/overrides.txt --find-links /wheelhouse
 
+COPY derex_django/ /openedx/derex_django
 RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=/wheelhouse,from=wheels,target=/wheelhouse \
     pip install /openedx/derex_django --find-links /wheelhouse
 
-COPY scripts/* scripts/assets/* /usr/local/bin/
+COPY scripts/* scripts/assets/* /tmp/
+
+RUN cp /tmp/derex* /usr/local/bin/ && chmod +x /usr/local/bin/*
 
 FROM notranslations as translations
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
     pip install transifex-client -c /openedx/requirements/openedx_constraints.txt && \
-    /usr/local/bin/translations.sh
+    derex_update_translations
 
 FROM notranslations as nostatic
 # This image contains the Open edX source code and all necessary python packages installed.
@@ -190,8 +192,7 @@ RUN --mount=type=cache,target=/root/.npm \
     npm install --unsafe-perm
 
 FROM nostatic-dev as dev-nodump
-RUN /usr/local/bin/compile_assets.sh && \
-    cleanup_assets.sh
+RUN derex_update_assets && derex_cleanup_assets
 
 FROM dev-nodump as dev
 # This image will be used to compile themes and collect assets
@@ -207,8 +208,9 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     chroot /mysql /usr/local/bin/docker-entrypoint.sh mysqld > /mysql/mysqld.out & \
     until grep "MySQL init process done. Ready for start up" /mysql/mysqld.out ; do sleep 1; done; \
     until chroot /mysql mysqladmin -P 3399 create edxapp ; do sleep 1; done; \
-    SERVICE_VARIANT="lms" python manage.py lms --settings=derex_django.settings.build.migration migrate; \
-    SERVICE_VARIANT="cms" python manage.py cms --settings=derex_django.settings.build.migration migrate; \
+    export DJANGO_SETTINGS_MODULE="derex_django.settings.build.migration"; \
+    SERVICE_VARIANT="lms" python manage.py lms migrate; \
+    SERVICE_VARIANT="cms" python manage.py cms migrate; \
     chroot /mysql mysqldump edxapp | bzip2 -9 - > /openedx/empty_dump.sql.bz2;
 
 ENV DJANGO_SETTINGS_MODULE=derex_django.settings.default

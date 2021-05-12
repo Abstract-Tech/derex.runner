@@ -16,8 +16,9 @@ x-common:
   volumes:
     - derex_{{ project.name }}_media:/openedx/media
     - derex_{{ project.name }}_data:/openedx/data/
-    - {{ project.settings_directory_path() }}:/openedx/edx-platform/lms/envs/derex_project
-    - {{ project.settings_directory_path() }}:/openedx/edx-platform/cms/envs/derex_project
+    {%- if project.settings_directory_path() %}
+    - {{ project.settings_directory_path() }}:/openedx/edx-platform/derex_settings
+    {%- endif %}
     - {{ derex_django_path }}:/openedx/derex_django
     {%- if openedx_customizations %}{%- for dest, src in openedx_customizations.items() %}
     - {{ src }}:{{ dest }}
@@ -40,9 +41,9 @@ x-common:
 
   environment:
     &common-env
+    DJANGO_SETTINGS_MODULE: {{ project.settings.value }}
     DEREX_PROJECT: {{ project.name }}
     DEREX_OPENEDX_VERSION: {{ project.openedx_version.name }}
-    SETTINGS: derex_project.{{ project.settings.name }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
     MYSQL_USER: {{ project.mysql_user }}
     MYSQL_PASSWORD: {{ project.secret("mysql") }}
@@ -65,7 +66,6 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
     container_name: {{ project.name }}_flower
     networks:
       - derex
@@ -96,7 +96,6 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
     networks:
         derex:
           aliases:
@@ -126,7 +125,6 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: cms
-      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
     {% if project.runmode.value == "debug" -%}
     {% endif %}
     networks:
@@ -148,7 +146,6 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
 
   cms_worker:
     <<: *common-conf
@@ -164,7 +161,6 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
-      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
 
   celerybeat:
     <<: *common-conf
@@ -179,7 +175,6 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
 
 networks:
   derex:

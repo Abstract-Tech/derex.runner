@@ -233,7 +233,7 @@ def get_available_settings():
     return project.get_available_settings().__members__
 
 
-def materialise_settings(ctx, _, value):
+def materialize_settings(ctx, _, value):
     if value:
         return ctx.obj.get_available_settings()[value]
     return None
@@ -245,13 +245,13 @@ def materialise_settings(ctx, _, value):
     "settings",
     type=click.Choice(get_available_settings()),
     required=False,
-    callback=materialise_settings,
+    callback=materialize_settings,
 )
 @click.pass_obj
 def settings(project: Project, settings: Optional[Any]):
     """Get/set project settings module to use (base.py/production.py)"""
     if settings is None:
-        click.echo(project.settings.name)
+        click.echo(f"{project.settings.name} => {project.settings.value}")
     else:
         project.settings = settings
 

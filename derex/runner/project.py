@@ -9,7 +9,6 @@ from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import get_dir_hash
 from enum import Enum
-from enum import IntEnum
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
@@ -209,16 +208,16 @@ class Project:
     def settings(self):
         """Name of the module to use as DJANGO_SETTINGS_MODULE
         """
-        current_status = self._get_status("settings", "base")
+        current_status = self._get_status("settings", "default")
         return self.get_available_settings()[current_status]
 
     @settings.setter
-    def settings(self, value: IntEnum):
+    def settings(self, value: Enum):
         self._set_status("settings", value.name)
 
     def settings_directory_path(self) -> Path:
         """Return an absolute path that will be mounted under
-        lms/envs/derex_project and cms/envs/derex_project inside the
+        /openedx/edx-platform/derex_settings inside the
         container.
         If the project has local settings, we use that directory.
         Otherwise we use the derex_django settings directory bundled
@@ -226,7 +225,7 @@ class Project:
         """
         if self.settings_dir is not None:
             return self.settings_dir
-        return DEREX_DJANGO_SETTINGS_PATH / "default"
+        return DEREX_DJANGO_SETTINGS_PATH
 
     def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Read value for the desired status from the project directory.
@@ -439,23 +438,17 @@ class Project:
         """Return an Enum object that includes possible settings for this project.
         This enum must be dynamic, since it depends on the contents of the project
         settings directory.
-        For this reason we use the functional API for python Enum, which means we're
-        limited to IntEnums. For this reason we'll be using `settings.name` instead
-        of `settings.value` throughout the code.
         """
         if self._available_settings is not None:
             return self._available_settings
-        if self.settings_dir is None:
-            available_settings = IntEnum("settings", "base")
-        else:
-            settings_names = []
+        available_settings = {"default": "derex_django.settings.default"}
+        if self.settings_dir is not None:
             for file in self.settings_dir.iterdir():
                 if file.suffix == ".py" and file.stem != "__init__":
-                    settings_names.append(file.stem)
-
-            available_settings = IntEnum("settings", " ".join(settings_names))
-        self._available_settings = available_settings
-        return available_settings
+                    available_settings[file.stem] = f"derex_settings.{file.stem}"
+        available_settings_enum = Enum("ProjectSettings", available_settings)
+        self._available_settings = available_settings_enum
+        return available_settings_enum
 
     def get_container_env(self):
         """Return a dictionary to be used as environment variables for all containers
