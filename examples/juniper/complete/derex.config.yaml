@@ -1,7 +1,8 @@
 project_name: juniper-complete
 openedx_version: juniper
-compile_assets: true
+update_assets: true
+materialize_derex_settings: false
 variables:
   lms_test_dict:
-    base: { "foo": "bar" }
+    default: { "foo": "bar" }
     production: { "foo": "baz" }

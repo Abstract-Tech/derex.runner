@@ -1,7 +1,8 @@
 project_name: koa-complete
 openedx_version: koa
-compile_assets: true
+update_assets: true
+materialize_derex_settings: false
 variables:
   lms_test_dict:
-    base: { "foo": "bar" }
+    default: { "foo": "bar" }
     production: { "foo": "baz" }

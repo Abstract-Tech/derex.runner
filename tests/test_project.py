@@ -120,11 +120,16 @@ def test_docker_compose_addition_per_runmode(minimal_project, mocker, capsys):
 
 def test_settings_enum(minimal_project):
     with minimal_project:
-        assert Project().settings == Project().get_available_settings().base
+        assert (
+            Project().settings.value == Project().get_available_settings().default.value
+        )
 
         create_settings_file(Project().root, "production")
         Project().settings = Project().get_available_settings().production
-        assert Project().settings == Project().get_available_settings().production
+        assert (
+            Project().settings.value
+            == Project().get_available_settings().production.value
+        )
 
 
 def test_image_prefix(minimal_project):
@@ -154,7 +159,7 @@ def test_materialize_settings(minimal_project):
         assert default_settings_dir != project.settings_directory_path()
 
         project._materialize_settings()
-        assert (project.settings_dir / "base.py").is_file(), str(
+        assert (project.settings_dir / "__init__.py").is_file(), str(
             sorted((project.settings_dir).iterdir())
         )
         assert (project.settings_dir / "derex").is_dir(), str(
@@ -163,7 +168,7 @@ def test_materialize_settings(minimal_project):
         assets_py = project.settings_dir / "derex" / "build" / "assets.py"
         assert assets_py.is_file()
 
-        base_py = project.settings_dir / "derex" / "default" / "base.py"
+        base_py = project.settings_dir / "derex" / "default" / "__init__.py"
         assert base_py.is_file()
         assert os.access(str(base_py), os.W_OK)
 
@@ -183,7 +188,7 @@ def test_container_variables(minimal_project):
             "project_name": "minimal",
             "variables": {
                 "lms_site_name": {
-                    "base": "dev.onlinecourses.example",
+                    "default": "dev.onlinecourses.example",
                     "production": "onlinecourses.example",
                 }
             },
@@ -218,7 +223,7 @@ def test_container_variables_json_serialized(minimal_project):
             "project_name": "minimal",
             "variables": {
                 "ALL_JWT_AUTH": {
-                    "base": {
+                    "default": {
                         "JWT_AUDIENCE": "jwt-audience",
                         "JWT_SECRET_KEY": "jwt-secret",
                     },
@@ -234,7 +239,7 @@ def test_container_variables_json_serialized(minimal_project):
         project = Project()
         env = project.get_container_env()
         assert "DEREX_JSON_ALL_JWT_AUTH" in env
-        expected = config["variables"]["ALL_JWT_AUTH"]["base"]
+        expected = config["variables"]["ALL_JWT_AUTH"]["default"]
         assert expected == json.loads(env["DEREX_JSON_ALL_JWT_AUTH"])
 
         project.settings = project._available_settings.production
@@ -250,7 +255,7 @@ def test_secret_variables(complete_project):
         config = {
             "variables": {
                 "ALL_MYSQL_ROOT_PASSWORD": {
-                    "base": "base-secret-password",
+                    "default": "base-secret-password",
                     "production": "production-secret-password",
                 },
             },
@@ -260,7 +265,7 @@ def test_secret_variables(complete_project):
         project = Project()
         env = project.get_container_env()
         assert "DEREX_ALL_MYSQL_ROOT_PASSWORD" in env
-        expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["base"]
+        expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["default"]
         assert expected == env["DEREX_ALL_MYSQL_ROOT_PASSWORD"]
 
         project.settings = project._available_settings.production
