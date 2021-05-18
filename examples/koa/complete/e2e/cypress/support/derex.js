@@ -60,10 +60,10 @@ Cypress.Commands.add("createCourse", (next_url) => {
   cy.get("#new-course-org").type(course_org);
   cy.get("#new-course-number").type(course_number);
   cy.get("#new-course-run").type(course_run);
-  cy.get("#create-course-form").submit();
+  cy.get("#create-course-form > .actions > .action-primary").click();
 
   // Wait for the form to redirect
-  cy.url().should("contain", "/home/");
+  cy.url().should("contain", "/course/");
 
   if (next_url) {
     cy.visit(next_url);

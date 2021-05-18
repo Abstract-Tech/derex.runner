@@ -1,7 +1,7 @@
 describe("Studio Import/Export tests", () => {
   beforeEach(() => {
     cy.login_staff();
-    cy.createCourse();
+    cy.createCourse(`${Cypress.env("CMS_URL")}/home`);
     cy.get(".course-item:last-child .course-link").click();
   });
 

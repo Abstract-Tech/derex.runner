@@ -103,6 +103,7 @@ steps:
   - script: |
       set -ex
       cd ${{ parameters.PROJECT_PATH }}/e2e && npm ci && cd ..
+      export HTTP_PROXY=http://127.0.0.1:80
       derex test e2e
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Run project e2e tests"
