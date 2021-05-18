@@ -28,6 +28,7 @@ if DEREX_OPENEDX_VERSION == "koa":
 else:
     CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
 CELERYBEAT_SCHEDULE = {}
+CELERYBEAT_MAX_LOOP_INTERVAL = 300
 
 CELERY_ROUTES = "{}.celery.Router".format(SERVICE_VARIANT)
 CELERY_QUEUES = {"openedx.lms.default": {}, "openedx.cms.default": {}}

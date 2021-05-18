@@ -209,6 +209,7 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     until grep "MySQL init process done. Ready for start up" /mysql/mysqld.out ; do sleep 1; done; \
     until chroot /mysql mysqladmin -P 3399 create edxapp ; do sleep 1; done; \
     export DJANGO_SETTINGS_MODULE="derex_django.settings.build.migration"; \
+    export DEREX_OPENEDX_VERSION=${EDX_PLATFORM_RELEASE}; \
     SERVICE_VARIANT="lms" python manage.py lms migrate; \
     SERVICE_VARIANT="cms" python manage.py cms migrate; \
     chroot /mysql mysqldump edxapp | bzip2 -9 - > /openedx/empty_dump.sql.bz2;

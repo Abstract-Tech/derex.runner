@@ -2,6 +2,7 @@
 Bare minimum settings for dumping database migrations.
 """
 
+from derex_django.constants import DEREX_OPENEDX_SUPPORTED_VERSIONS
 from openedx.core.lib.derived import derive_settings
 
 import os
@@ -21,6 +22,23 @@ if SERVICE_VARIANT == "lms":
     from lms.envs.common import *  # noqa: F401, F403
 if SERVICE_VARIANT == "cms":
     from cms.envs.common import *  # noqa: F401, F403
+
+try:
+    DEREX_OPENEDX_VERSION = os.environ["DEREX_OPENEDX_VERSION"]
+    assert DEREX_OPENEDX_VERSION in DEREX_OPENEDX_SUPPORTED_VERSIONS
+except KeyError:
+    raise RuntimeError("DEREX_OPENEDX_VERSION environment variable must be defined!")
+except AssertionError:
+    raise RuntimeError(
+        "DEREX_OPENEDX_VERSION must be on of {}".format(
+            DEREX_OPENEDX_SUPPORTED_VERSIONS
+        )
+    )
+
+if DEREX_OPENEDX_VERSION == "koa":
+    # Since we installed django_celery_beat to take advantage from the
+    # database scheduler we need to run its migrations too
+    INSTALLED_APPS.extend(["django_celery_beat"])  # type: ignore # noqa: F401, F405
 
 # Use a custom mysql port to increase the probability of finding it free on a build machine.
 # buildkit seems to always use host networking mode, so it might clash

@@ -135,7 +135,7 @@ services:
   lms_worker:
     <<: *common-conf
     command:
-      sh -c 'celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default'
+      sh -c 'celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default --beat'
     healthcheck:
       test: celery inspect ping -A lms.celery:APP -d celery@openedx.lms
       interval: 15m
@@ -150,7 +150,7 @@ services:
   cms_worker:
     <<: *common-conf
     command:
-      sh -c 'celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default'
+      sh -c 'celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default --beat'
     healthcheck:
       test: celery inspect ping -A cms.celery:APP -d celery@openedx.cms
       interval: 15m
@@ -161,20 +161,6 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
-
-  celerybeat:
-    <<: *common-conf
-    {% if project.openedx_version.name == "koa" -%}
-    command:
-      sh -c 'celery beat -A lms.celery:APP --scheduler django_celery_beat.schedulers:DatabaseScheduler'
-    {% else -%}
-    command:
-      sh -c 'celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
-    {% endif -%}
-    environment:
-      <<: *common-env
-      C_FORCE_ROOT: "True"
-      SERVICE_VARIANT: lms
 
 networks:
   derex:

@@ -91,7 +91,7 @@ steps:
       # have been loaded into the database when priming mysql
       set -ex
       cd ${{ parameters.PROJECT_PATH }}
-      CELERYBEAT_RESULT=$(ddc-project logs celerybeat | grep "Scheduler: Sending due task debug" -c)
+      CELERYBEAT_RESULT=$(ddc-project logs lms_worker | grep "Scheduler: Sending due task debug" -c)
       WORKER_RESULT=$(ddc-project logs lms_worker | grep "pong" -c)
       if [ $CELERYBEAT_RESULT -gt 0 ] && [ $WORKER_RESULT -gt 0 ]; then
           exit 0
@@ -113,3 +113,13 @@ steps:
       cd ${{ parameters.PROJECT_PATH }}; ddc-project logs
     condition: always()
     displayName: "Show services and project logs"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: ${{ parameters.PROJECT_PATH }}/e2e/cypress/screenshots
+      artifactName: ${{ parameters.PROJECT_NAME }}-e2e-screenshots
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: ${{ parameters.PROJECT_PATH }}/e2e/cypress/videos
+      artifactName: ${{ parameters.PROJECT_NAME }}-e2e-videos
