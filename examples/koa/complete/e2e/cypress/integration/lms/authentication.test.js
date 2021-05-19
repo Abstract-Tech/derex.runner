@@ -39,21 +39,24 @@ describe("Login tests", () => {
   });
 
   it("A user can authenticate by submitting correct credentials", () => {
-    cy.get("#login-email").type(Cypress.env("staff_user").email);
-    cy.get("#login-password").type(Cypress.env("staff_user").password);
+    cy.get("#login-email").type(Cypress.env("learner_user").email);
+    cy.get("#login-password").type(Cypress.env("learner_user").password);
     cy.get(".action").click();
-    cy.get(".username").should("have.text", Cypress.env("staff_user").username);
+    cy.get(".username").should(
+      "have.text",
+      Cypress.env("learner_user").username
+    );
   });
 
   it("A user can reset his own password", () => {
     cy.get(".login-help").click();
     cy.get("#login-help > .field-link").click();
-    cy.get("#password-reset-email").type(Cypress.env("staff_user").email);
+    cy.get("#password-reset-email").type(Cypress.env("learner_user").email);
     cy.get("#password-reset > .action").click();
     cy.get(".js-password-reset-success").should("contain", "Check Your Email");
     cy.get(".js-password-reset-success").should(
       "contain",
-      Cypress.env("staff_user").email
+      Cypress.env("learner_user").email
     );
   });
 

@@ -116,10 +116,14 @@ steps:
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathToPublish: ${{ parameters.PROJECT_PATH }}/e2e/cypress/screenshots
+      pathToPublish: $(System.DefaultWorkingDirectory)/${{ parameters.PROJECT_PATH }}/e2e/cypress/screenshots
       artifactName: ${{ parameters.PROJECT_NAME }}-e2e-screenshots
+    condition: and(always(), eq('${{ parameters.PROJECT_TYPE }}', 'complete'))
+    displayName: "Publish Cypress tests screenshots folder"
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathToPublish: ${{ parameters.PROJECT_PATH }}/e2e/cypress/videos
+      pathToPublish: $(System.DefaultWorkingDirectory)/${{ parameters.PROJECT_PATH }}/e2e/cypress/videos
       artifactName: ${{ parameters.PROJECT_NAME }}-e2e-videos
+    condition: and(always(), eq('${{ parameters.PROJECT_TYPE }}', 'complete'))
+    displayName: "Publish Cypress tests videos folder"

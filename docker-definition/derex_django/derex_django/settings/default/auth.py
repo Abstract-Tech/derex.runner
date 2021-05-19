@@ -33,3 +33,7 @@ JWT_AUTH["JWT_SIGNING_ALGORITHM"] = "RS512"
 # If the login JWT cookie age is not the same as the Django SESSION_COOKIE_AGE
 # login will be inconsistent
 JWT_AUTH["JWT_IN_COOKIE_EXPIRATION"] = SESSION_COOKIE_AGE
+
+# This takes effect only on koa which started using django-ratelimit
+# https://django-ratelimit.readthedocs.io/en/stable/index.html
+PASSWORD_RESET_EMAIL_RATE = "5/h"

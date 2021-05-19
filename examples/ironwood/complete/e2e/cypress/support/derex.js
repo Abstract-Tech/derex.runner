@@ -54,7 +54,7 @@ Cypress.Commands.add("createCourse", (next_url) => {
   let course_number = makeChar(2) + Math.floor(Math.random() * 1000);
   let course_run = new Date().getFullYear();
 
-  cy.get(".nav-actions .new-course-button").wait(500).click();
+  cy.get(".nav-items .new-course-button").wait(500).click();
   // Fill and submit the form
   cy.get("#new-course-name").type(course_name);
   cy.get("#new-course-org").type(course_org);
