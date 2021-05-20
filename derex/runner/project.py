@@ -59,7 +59,8 @@ class OpenEdXVersions(Enum):
     }
     koa = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
-        "edx_platform_version": "open-release/koa.master",
+        # We set koa.3 since as today (20 may 2021) koa.master codebase is broken
+        "edx_platform_version": "open-release/koa.3",
         "edx_platform_release": "koa",
         "docker_image_prefix": "derex/openedx-koa",
         # We are stuck on alpine3.12 since SciPy won't build
