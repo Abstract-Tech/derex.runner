@@ -239,11 +239,11 @@ def get_exposed_container_names() -> List:
     return result
 
 
-def run_minio_shell(command="sh"):
+def run_minio_shell(command: str = "sh", tty: bool = True):
     """Invoke a minio shell
     """
     minio_key = get_secret(DerexSecrets.minio)
     os.system(
-        "docker run -ti --rm --network derex --entrypoint /bin/sh minio/mc -c '"
+        f"docker run {'-ti ' if tty else ''}--rm --network derex --entrypoint /bin/sh minio/mc -c '"
         f'mc config host add local http://minio:80 minio_derex "{minio_key}" --api s3v4 ; set -ex; {command}\''
     )

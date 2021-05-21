@@ -22,7 +22,7 @@ steps:
       set -ex
       cd ${{ parameters.PROJECT_PATH }}
       derex minio-update-key
-      derex create-bucket
+      derex create-bucket --no-tty
     displayName: "Prime MinIO bucket"
 
   - script: |

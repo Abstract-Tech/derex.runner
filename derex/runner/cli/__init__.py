@@ -146,16 +146,19 @@ def reindex_courses(project, course_ids):
 
 
 @derex.command()
+@click.option(
+    "--tty/--no-tty", required=False, default=True, help="Allocate a tty",
+)
 @click.pass_obj
 @ensure_project
-def create_bucket(project):
+def create_bucket(project, tty):
     """Create S3 buckets on Minio"""
     from derex.runner.docker_utils import run_minio_shell
 
     click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
     command = f"mc mb --ignore-existing local/{project.name}; "
     command += f"mc policy set download local/{project.name}/profile-images"
-    run_minio_shell(command)
+    run_minio_shell(command, tty=tty)
 
 
 @derex.command()
