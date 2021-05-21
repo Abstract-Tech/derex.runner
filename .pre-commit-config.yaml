@@ -7,6 +7,9 @@ repos:
         exclude: .bumpversion.cfg
       - id: debug-statements
       - id: check-added-large-files
+        exclude: "^\
+          examples/.*/complete/themes/.*/lms/static/css/.*\
+          $"
       - id: end-of-file-fixer
         exclude: .bumpversion.cfg
       - id: check-yaml
