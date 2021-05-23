@@ -20,7 +20,10 @@ describe("Studio Import/Export tests", () => {
 
     // Check the course content on the LMS
     // Remove the `target` attribute as we don't want it to open in a new tab
-    cy.get(".view-live-button").invoke("removeAttr", "target").click();
+    cy.get(".view-live-button")
+      .should("be.visible")
+      .invoke("removeAttr", "target")
+      .click({ force: true });
     cy.url().should("contain", "/courses/");
     cy.get("body").should(
       "contain",
