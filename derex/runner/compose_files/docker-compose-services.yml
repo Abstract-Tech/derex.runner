@@ -139,6 +139,8 @@ services:
 
   httpserver:
     image: caddy:2.0.0
+    restart: unless-stopped
+    container_name: httpserver
     ports:
       - 127.0.0.1:80:80
       - 127.0.0.1:81:81

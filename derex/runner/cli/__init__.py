@@ -3,7 +3,9 @@
 from .build import build
 from .mongodb import mongodb
 from .mysql import mysql
+from .test import test
 from .utils import ensure_project
+from .utils import red
 from click_plugins import with_plugins
 from derex.runner.logging_utils import setup_logging_decorator
 from derex.runner.project import DebugBaseImageProject
@@ -144,16 +146,19 @@ def reindex_courses(project, course_ids):
 
 
 @derex.command()
+@click.option(
+    "--tty/--no-tty", required=False, default=True, help="Allocate a tty",
+)
 @click.pass_obj
 @ensure_project
-def create_bucket(project):
+def create_bucket(project, tty):
     """Create S3 buckets on Minio"""
     from derex.runner.docker_utils import run_minio_shell
 
     click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
     command = f"mc mb --ignore-existing local/{project.name}; "
     command += f"mc policy set download local/{project.name}/profile-images"
-    run_minio_shell(command)
+    run_minio_shell(command, tty=tty)
 
 
 @derex.command()
@@ -231,7 +236,7 @@ def get_available_settings():
     return project.get_available_settings().__members__
 
 
-def materialise_settings(ctx, _, value):
+def materialize_settings(ctx, _, value):
     if value:
         return ctx.obj.get_available_settings()[value]
     return None
@@ -243,13 +248,13 @@ def materialise_settings(ctx, _, value):
     "settings",
     type=click.Choice(get_available_settings()),
     required=False,
-    callback=materialise_settings,
+    callback=materialize_settings,
 )
 @click.pass_obj
 def settings(project: Project, settings: Optional[Any]):
     """Get/set project settings module to use (base.py/production.py)"""
     if settings is None:
-        click.echo(project.settings.name)
+        click.echo(f"{project.settings.name} => {project.settings.value}")
     else:
         project.settings = settings
 
@@ -322,13 +327,10 @@ def minio_update_key(old_key: str):
     return 0
 
 
-def red(string: str) -> str:
-    return click.style(string, fg="red")
-
-
 derex.add_command(mysql)
 derex.add_command(mongodb)
 derex.add_command(build)
+derex.add_command(test)
 
 
 __all__ = ["derex"]

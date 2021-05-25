@@ -10,6 +10,7 @@ __pycache__/
 .Python
 env/
 build/
+!docker-definition/derex_django/derex_django/settings/build
 develop-eggs/
 dist/
 downloads/
@@ -21,8 +22,8 @@ parts/
 sdist/
 var/
 wheels/
-derex.egg-info/
-derex.runner.egg-info/
+*.egg-info/
+*.runner.egg-info/
 .installed.cfg
 *.egg
 

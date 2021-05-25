@@ -91,7 +91,7 @@ steps:
       # have been loaded into the database when priming mysql
       set -ex
       cd ${{ parameters.PROJECT_PATH }}
-      CELERYBEAT_RESULT=$(ddc-project logs celerybeat | grep "Scheduler: Sending due task debug" -c)
+      CELERYBEAT_RESULT=$(ddc-project logs lms_worker | grep "Scheduler: Sending due task debug" -c)
       WORKER_RESULT=$(ddc-project logs lms_worker | grep "pong" -c)
       if [ $CELERYBEAT_RESULT -gt 0 ] && [ $WORKER_RESULT -gt 0 ]; then
           exit 0
@@ -101,7 +101,29 @@ steps:
     displayName: "Check celerybeat"
 
   - script: |
+      set -ex
+      cd ${{ parameters.PROJECT_PATH }}/e2e && npm ci && cd ..
+      export HTTP_PROXY=http://127.0.0.1:80
+      derex test e2e
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+    displayName: "Run project e2e tests"
+
+  - script: |
       ddc-services logs
       cd ${{ parameters.PROJECT_PATH }}; ddc-project logs
     condition: always()
     displayName: "Show services and project logs"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: $(System.DefaultWorkingDirectory)/${{ parameters.PROJECT_PATH }}/e2e/cypress/screenshots
+      artifactName: ${{ parameters.PROJECT_NAME }}-e2e-screenshots
+    condition: and(always(), eq('${{ parameters.PROJECT_TYPE }}', 'complete'))
+    displayName: "Publish Cypress tests screenshots folder"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: $(System.DefaultWorkingDirectory)/${{ parameters.PROJECT_PATH }}/e2e/cypress/videos
+      artifactName: ${{ parameters.PROJECT_NAME }}-e2e-videos
+    condition: and(always(), eq('${{ parameters.PROJECT_TYPE }}', 'complete'))
+    displayName: "Publish Cypress tests videos folder"

@@ -16,10 +16,11 @@ x-common:
   volumes:
     - derex_{{ project.name }}_media:/openedx/media
     - derex_{{ project.name }}_data:/openedx/data/
-    - {{ project.settings_directory_path() }}:/openedx/edx-platform/lms/envs/derex_project
-    - {{ project.settings_directory_path() }}:/openedx/edx-platform/cms/envs/derex_project
+    {%- if project.settings_directory_path() %}
+    - {{ project.settings_directory_path() }}:/openedx/edx-platform/derex_settings
+    {%- endif %}
     - {{ derex_django_path }}:/openedx/derex_django
-    {%- if openedx_customizations %}{%- for src, dest in openedx_customizations %}
+    {%- if openedx_customizations %}{%- for dest, src in openedx_customizations.items() %}
     - {{ src }}:{{ dest }}
     {%- endfor %}{%- endif %}
     {%- if project.requirements_dir and not project.requirements_volumes %}
@@ -40,8 +41,9 @@ x-common:
 
   environment:
     &common-env
+    DJANGO_SETTINGS_MODULE: {{ project.settings.value }}
     DEREX_PROJECT: {{ project.name }}
-    SETTINGS: derex_project.{{ project.settings.name }}
+    DEREX_OPENEDX_VERSION: {{ project.openedx_version.name }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
     MYSQL_USER: {{ project.mysql_user }}
     MYSQL_PASSWORD: {{ project.secret("mysql") }}
@@ -64,7 +66,6 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
     container_name: {{ project.name }}_flower
     networks:
       - derex
@@ -95,7 +96,6 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
     networks:
         derex:
           aliases:
@@ -125,7 +125,6 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: cms
-      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
     {% if project.runmode.value == "debug" -%}
     {% endif %}
     networks:
@@ -136,7 +135,7 @@ services:
   lms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py lms celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default'
+      sh -c 'celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default --beat'
     healthcheck:
       test: celery inspect ping -A lms.celery:APP -d celery@openedx.lms
       interval: 15m
@@ -147,12 +146,11 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
 
   cms_worker:
     <<: *common-conf
     command:
-      sh -c './manage.py cms celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default'
+      sh -c 'celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default --beat'
     healthcheck:
       test: celery inspect ping -A cms.celery:APP -d celery@openedx.cms
       interval: 15m
@@ -163,17 +161,6 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
-      DJANGO_SETTINGS_MODULE: cms.envs.derex_project.{{ project.settings.name }}
-
-  celerybeat:
-    <<: *common-conf
-    command:
-      sh -c './manage.py lms celery beat -A lms.celery:APP --scheduler djcelery.schedulers:DatabaseScheduler'
-    environment:
-      <<: *common-env
-      C_FORCE_ROOT: "True"
-      SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.derex_project.{{ project.settings.name }}
 
 networks:
   derex:

@@ -1,0 +1,25 @@
+{
+  "baseUrl": "http://koa-complete.localhost",
+  "chromeWebSecurity": false,
+  "screenshotsFolder": "./cypress/screenshots/actual",
+  "trashAssetsBeforeRuns": true,
+  "env": {
+    "failSilently": false,
+    "type": "actual",
+    "SNAPSHOT_BASE_DIRECTORY": "./cypress/screenshots/base",
+    "SNAPSHOT_DIFF_DIRECTORY": "./cypress/screenshots/diff",
+    "LMS_URL": "http://koa-complete.localhost",
+    "CMS_URL": "http://studio.koa-complete.localhost",
+    "LOGIN_URL": "http://koa-complete.localhost/user_api/v1/account/login_session/",
+    "staff_user": {
+      "username": "superuser",
+      "email": "superuser@example.com",
+      "password": "secret"
+    },
+    "learner_user": {
+      "username": "user",
+      "email": "user@example.com",
+      "password": "secret"
+    }
+  }
+}

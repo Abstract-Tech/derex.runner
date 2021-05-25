@@ -1,14 +1,14 @@
 from derex.runner import __version__
 from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import DEREX_DJANGO_SETTINGS_PATH
+from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
-from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import get_dir_hash
 from enum import Enum
-from enum import IntEnum
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
@@ -26,6 +26,53 @@ import yaml
 
 logger = getLogger(__name__)
 DEREX_RUNNER_PROJECT_DIR = ".derex"
+
+
+class OpenEdXVersions(Enum):
+    # Values will be passed as uppercased named arguments to the docker build
+    # e.g. --build-arg EDX_PLATFORM_RELEASE=koa
+    ironwood = {
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/ironwood.master",
+        "edx_platform_release": "ironwood",
+        "docker_image_prefix": "derex/openedx-ironwood",
+        "alpine_version": "alpine3.11",
+        "python_version": "2.7",
+        "pip_version": "20.3.4",
+        # The latest node release does not work on ironwood
+        # (node-sass version fails to compile)
+        "node_version": "v10.22.1",
+        "mysql_image": "mysql:5.6.36",
+        "mongodb_image": "mongo:3.2.21",
+    }
+    juniper = {
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/juniper.master",
+        "edx_platform_release": "juniper",
+        "docker_image_prefix": "derex/openedx-juniper",
+        "alpine_version": "alpine3.11",
+        "python_version": "3.6",
+        "pip_version": "21.0.1",
+        "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.6.36",
+        "mongodb_image": "mongo:3.6.23",
+    }
+    koa = {
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        # We set koa.3 since as today (20 may 2021) koa.master codebase is broken
+        "edx_platform_version": "open-release/koa.3",
+        "edx_platform_release": "koa",
+        "docker_image_prefix": "derex/openedx-koa",
+        # We are stuck on alpine3.12 since SciPy won't build
+        # on gcc>=10 due to fortran incompatibility issues.
+        # See more at https://gcc.gnu.org/gcc-10/porting_to.html
+        "alpine_version": "alpine3.12",
+        "python_version": "3.8",
+        "pip_version": "21.0.1",
+        "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.7.33",
+        "mongodb_image": "mongo:3.6.23",
+    }
 
 
 class ProjectRunMode(Enum):
@@ -56,7 +103,7 @@ class Project:
     final_base_image: str
 
     # The named version of Open edX to use
-    openedx_version: "OpenEdXVersions"
+    openedx_version: OpenEdXVersions
 
     #: The directory containing requirements, if defined
     requirements_dir: Optional[Path] = None
@@ -76,6 +123,9 @@ class Project:
 
     # The directory containing openedx python modules to be replaced
     openedx_customizations_dir: Optional[Path] = None
+
+    # The directory containing cypress tests
+    e2e_dir: Optional[Path] = None
 
     # The image name of the image that includes requirements
     requirements_image_name: str
@@ -97,6 +147,10 @@ class Project:
     # directory will not be mounted directly, but this dictionary will be used.
     # Keys are paths on the host system and values are path inside the container
     requirements_volumes: Optional[Dict[str, str]] = None
+
+    # Wheter derex default settings should be materialized in the project
+    # settings directory
+    materialize_derex_settings = bool
 
     # Enum containing possible settings modules
     _available_settings = None
@@ -155,25 +209,24 @@ class Project:
     def settings(self):
         """Name of the module to use as DJANGO_SETTINGS_MODULE
         """
-        current_status = self._get_status("settings", "base")
+        current_status = self._get_status("settings", "default")
         return self.get_available_settings()[current_status]
 
     @settings.setter
-    def settings(self, value: IntEnum):
+    def settings(self, value: Enum):
         self._set_status("settings", value.name)
 
     def settings_directory_path(self) -> Path:
         """Return an absolute path that will be mounted under
-        lms/envs/derex_project and cms/envs/derex_project inside the
+        /openedx/edx-platform/derex_settings inside the
         container.
         If the project has local settings, we use that directory.
-        Otherwise we use the directory bundled with `derex.runner`
+        Otherwise we use the derex_django settings directory bundled
+        with `derex.runner`
         """
         if self.settings_dir is not None:
             return self.settings_dir
-        return abspath_from_egg(
-            "derex.runner", "derex/runner/settings/derex/base.py"
-        ).parent
+        return DEREX_DJANGO_SETTINGS_PATH
 
     def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Read value for the desired status from the project directory.
@@ -207,7 +260,7 @@ class Project:
         # before making any change
         self._load(path)
         if not read_only:
-            self._populate_settings()
+            self._materialize_settings()
         if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
             (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
 
@@ -227,7 +280,7 @@ class Project:
         except FileNotFoundError:
             self.secrets_config = {}
         self.openedx_version = OpenEdXVersions[
-            self.config.get("openedx_version", "ironwood")
+            self.config.get("openedx_version", "koa")
         ]
         source_image_prefix = self.openedx_version.value["docker_image_prefix"]
         self.base_image = self.config.get(
@@ -298,11 +351,18 @@ class Project:
         if openedx_customizations_dir.is_dir():
             self.openedx_customizations_dir = openedx_customizations_dir
 
+        e2e_dir = self.root / "e2e"
+        if e2e_dir.is_dir():
+            self.e2e_dir = e2e_dir
+
         self.image_name = self.themes_image_name
+        self.materialize_derex_settings = self.config.get(
+            "materialize_derex_settings", True
+        )
 
     def update_default_settings(self, default_settings_dir, destination_settings_dir):
         """Update default settings in a specified directory.
-        Given a directory where to look for default settings modules recursively
+        Given a directory where to look for default settings modules, recursively
         copy or update them into the destination directory.
         Additionally add a warning asking not to manually edit files.
         If files needs to be overwritten, print a diff.
@@ -341,29 +401,24 @@ class Project:
                 destination.chmod(current_mode | 0o700)
                 destination.write_text(new_text)
 
-    def _populate_settings(self):
-        """If the project includes user defined settings, add ours to that directory
-        to let the project's settings use the line
-
-            from .derex import *
-
-        Also add a base.py file with the above content if it does not exist.
+    def _materialize_settings(self):
+        """If the project includes user defined settings and
+        `materialize_derex_settings` is True for the project then
+        copy current derex default settings to the project settings
+        directory.
+        This is useful to keep track of settings changes between
+        version upgrades.
         """
-        if self.settings_dir is None:
+        if self.settings_dir is None or not self.materialize_derex_settings:
             return
 
         base_settings = self.settings_dir / "base.py"
         if not base_settings.is_file():
-            base_settings.write_text("from .derex import *\n")
+            base_settings.write_text("from derex_django.settings.default import *\n")
 
-        init = self.settings_dir / "__init__.py"
-        if not init.is_file():
-            init.write_text('"""Settings for edX"""')
-
-        derex_runner_settings_dir = abspath_from_egg(
-            "derex.runner", "derex/runner/settings/README.rst"
-        ).parent
-        self.update_default_settings(derex_runner_settings_dir, self.settings_dir)
+        self.update_default_settings(
+            DEREX_DJANGO_SETTINGS_PATH, self.settings_dir / "derex"
+        )
 
     def get_plugin_directories(self, plugin: str) -> Dict[str, Path]:
         """
@@ -384,23 +439,17 @@ class Project:
         """Return an Enum object that includes possible settings for this project.
         This enum must be dynamic, since it depends on the contents of the project
         settings directory.
-        For this reason we use the functional API for python Enum, which means we're
-        limited to IntEnums. For this reason we'll be using `settings.name` instead
-        of `settings.value` throughout the code.
         """
         if self._available_settings is not None:
             return self._available_settings
-        if self.settings_dir is None:
-            available_settings = IntEnum("settings", "base")
-        else:
-            settings_names = []
+        available_settings = {"default": "derex_django.settings.default"}
+        if self.settings_dir is not None:
             for file in self.settings_dir.iterdir():
                 if file.suffix == ".py" and file.stem != "__init__":
-                    settings_names.append(file.stem)
-
-            available_settings = IntEnum("settings", " ".join(settings_names))
-        self._available_settings = available_settings
-        return available_settings
+                    available_settings[file.stem] = f"derex_settings.{file.stem}"
+        available_settings_enum = Enum("ProjectSettings", available_settings)
+        self._available_settings = available_settings_enum
+        return available_settings_enum
 
     def get_container_env(self):
         """Return a dictionary to be used as environment variables for all containers
@@ -422,6 +471,25 @@ class Project:
 
     def secret(self, name: str) -> str:
         return get_secret(DerexSecrets[name])
+
+    def get_openedx_customizations(self) -> dict:
+        """Return a mapping of customized files to be mounted in
+        the container in order to replace default edx-platform modules.
+        """
+        openedx_customizations = {}
+        for openedx_customizations_dir in [
+            DEREX_OPENEDX_CUSTOMIZATIONS_PATH / self.openedx_version.name,
+            self.openedx_customizations_dir,
+        ]:
+            if openedx_customizations_dir and openedx_customizations_dir.exists():
+                for file_path in openedx_customizations_dir.rglob("*"):
+                    if file_path.is_file():
+                        source = str(file_path)
+                        destination = str(file_path).replace(
+                            str(openedx_customizations_dir), "/openedx/edx-platform"
+                        )
+                        openedx_customizations[destination] = source
+        return openedx_customizations
 
 
 def get_requirements_hash(path: Path) -> str:
@@ -466,26 +534,6 @@ class DebugBaseImageProject(Project):
     @requirements_image_name.setter
     def requirements_image_name(self, value):
         pass
-
-
-class OpenEdXVersions(Enum):
-    hawthorn = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/hawthorn.master",
-        "docker_image_prefix": "derex/openedx-hawthorn",
-        "python_version": "2.7",
-    }
-    ironwood = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/ironwood.master",
-        "docker_image_prefix": "derex/openedx-ironwood",
-        "python_version": "2.7",
-    }
-    juniper = {
-        "git_repo": "https://github.com/edx/edx-platform.git",
-        "git_branch": "open-release/juniper.master",
-        "docker_image_prefix": "derex/openedx-juniper",
-    }
 
 
 class ProjectNotFound(ValueError):

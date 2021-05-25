@@ -25,6 +25,7 @@ def test_complete_project(workdir, complete_project):
     assert type(project.config) == dict
     assert project.requirements_dir == project_path / "requirements"
     assert project.themes_dir == project_path / "themes"
+    assert project.e2e_dir == project_path / "e2e"
     assert project.name == f"{project.openedx_version.name}-complete"
 
     if project.openedx_version.name == "ironwood":
@@ -46,6 +47,7 @@ def test_minimal_project(minimal_project):
     assert type(project.config) == dict
     assert project.requirements_dir is None
     assert project.themes_dir is None
+    assert project.e2e_dir is None
     assert project.name == f"{project.openedx_version.name}-minimal"
     assert project.requirements_image_name == project.image_name
     assert project.themes_image_name == project.image_name
@@ -118,11 +120,16 @@ def test_docker_compose_addition_per_runmode(minimal_project, mocker, capsys):
 
 def test_settings_enum(minimal_project):
     with minimal_project:
-        assert Project().settings == Project().get_available_settings().base
+        assert (
+            Project().settings.value == Project().get_available_settings().default.value
+        )
 
         create_settings_file(Project().root, "production")
         Project().settings = Project().get_available_settings().production
-        assert Project().settings == Project().get_available_settings().production
+        assert (
+            Project().settings.value
+            == Project().get_available_settings().production.value
+        )
 
 
 def test_image_prefix(minimal_project):
@@ -141,7 +148,7 @@ def test_image_prefix(minimal_project):
         assert project.themes_image_name.startswith(project.image_prefix)
 
 
-def test_populate_settings(minimal_project):
+def test_materialize_settings(minimal_project):
     with minimal_project:
         default_settings_dir = Project().settings_directory_path()
         assert default_settings_dir.is_dir()
@@ -151,17 +158,18 @@ def test_populate_settings(minimal_project):
 
         assert default_settings_dir != project.settings_directory_path()
 
-        project._populate_settings()
-        assert (project.settings_dir / "base.py").is_file(), str(
+        project._materialize_settings()
+        assert (project.settings_dir / "__init__.py").is_file(), str(
             sorted((project.settings_dir).iterdir())
         )
         assert (project.settings_dir / "derex").is_dir(), str(
             sorted((project.settings_dir).iterdir())
         )
-        base_py = project.settings_dir / "derex" / "base.py"
-        assert base_py.is_file()
-        assert (project.settings_dir / "derex" / "__init__.py").is_file()
+        assets_py = project.settings_dir / "derex" / "build" / "assets.py"
+        assert assets_py.is_file()
 
+        base_py = project.settings_dir / "derex" / "default" / "__init__.py"
+        assert base_py.is_file()
         assert os.access(str(base_py), os.W_OK)
 
         # In case a settings file was already present, it should be overwritten,
@@ -169,7 +177,7 @@ def test_populate_settings(minimal_project):
         base_py.write_text("# Changed")
         base_py.chmod(0o444)
         assert not os.access(str(base_py), os.W_OK)
-        project._populate_settings()
+        project._materialize_settings()
         assert os.access(str(base_py), os.W_OK)
 
 
@@ -180,7 +188,7 @@ def test_container_variables(minimal_project):
             "project_name": "minimal",
             "variables": {
                 "lms_site_name": {
-                    "base": "dev.onlinecourses.example",
+                    "default": "dev.onlinecourses.example",
                     "production": "onlinecourses.example",
                 }
             },
@@ -215,7 +223,7 @@ def test_container_variables_json_serialized(minimal_project):
             "project_name": "minimal",
             "variables": {
                 "ALL_JWT_AUTH": {
-                    "base": {
+                    "default": {
                         "JWT_AUDIENCE": "jwt-audience",
                         "JWT_SECRET_KEY": "jwt-secret",
                     },
@@ -231,7 +239,7 @@ def test_container_variables_json_serialized(minimal_project):
         project = Project()
         env = project.get_container_env()
         assert "DEREX_JSON_ALL_JWT_AUTH" in env
-        expected = config["variables"]["ALL_JWT_AUTH"]["base"]
+        expected = config["variables"]["ALL_JWT_AUTH"]["default"]
         assert expected == json.loads(env["DEREX_JSON_ALL_JWT_AUTH"])
 
         project.settings = project._available_settings.production
@@ -247,7 +255,7 @@ def test_secret_variables(complete_project):
         config = {
             "variables": {
                 "ALL_MYSQL_ROOT_PASSWORD": {
-                    "base": "base-secret-password",
+                    "default": "base-secret-password",
                     "production": "production-secret-password",
                 },
             },
@@ -257,7 +265,7 @@ def test_secret_variables(complete_project):
         project = Project()
         env = project.get_container_env()
         assert "DEREX_ALL_MYSQL_ROOT_PASSWORD" in env
-        expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["base"]
+        expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["default"]
         assert expected == env["DEREX_ALL_MYSQL_ROOT_PASSWORD"]
 
         project.settings = project._available_settings.production

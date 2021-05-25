@@ -9,7 +9,7 @@ recursive-include derex/runner/compose_files *
 recursive-include derex/runner/fixtures *
 recursive-include derex/runner/settings * *.py
 recursive-include derex/runner/templates *
-recursive-include derex_django *
+recursive-include docker-definition/derex_django *
 recursive-include docker-definition *
 recursive-include tests *
 recursive-exclude * __pycache__

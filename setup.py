@@ -20,7 +20,7 @@ requirements = [
     "pluggy",
     "pymongo",
     "pymysql",
-    "pyyaml",
+    "PyYAML>=5.4",
     "rich",
 ]
 
@@ -58,13 +58,13 @@ setup(
     include_package_data=True,
     keywords="derex.runner",
     name="derex.runner",
-    packages=find_namespace_packages(include=["derex.*"]) + ["derex_django"],
+    packages=find_namespace_packages(include=["derex.*"]),
     namespace_packages=["derex"],
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
     extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.2.2",
+    version="0.3.0",
     zip_safe=False,
 )

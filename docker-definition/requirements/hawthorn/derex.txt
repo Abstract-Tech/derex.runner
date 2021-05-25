@@ -1,9 +1,0 @@
-# Here we put our additional derex requirements
-# They will be constrained to openedx base requirements
-
-flower<0.9.6
-gevent
-whitenoise<5
-pdbpp
-ipython
-ipdb

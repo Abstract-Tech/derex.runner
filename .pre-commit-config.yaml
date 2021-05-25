@@ -7,6 +7,9 @@ repos:
         exclude: .bumpversion.cfg
       - id: debug-statements
       - id: check-added-large-files
+        exclude: "^\
+          examples/.*/complete/themes/.*/lms/static/css/.*\
+          $"
       - id: end-of-file-fixer
         exclude: .bumpversion.cfg
       - id: check-yaml
@@ -15,7 +18,11 @@ repos:
     rev: 3.8.1
     hooks:
       - id: flake8
-        exclude: derex/runner/settings/derex/*
+        args:
+          - "--per-file-ignores=\
+            docker-definition/derex_django/derex_django/settings/default/*.py,\
+            derex/runner/compose_files/openedx_customizations/*\
+            :F821,F405,F403,E266"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.770
@@ -23,9 +30,11 @@ repos:
       - id: mypy
         args:
           - --ignore-missing-imports
-        exclude: "examples/.*|\
-          derex/runner/settings/derex/.*|\
-          derex_django/setup.py"
+        exclude: "^\
+          examples/.*|\
+          docker-definition/derex_django/derex_django/settings/default/.*|\
+          docker-definition/derex_django/setup.py\
+          $"
 
   - repo: https://github.com/ambv/black
     rev: 19.10b0

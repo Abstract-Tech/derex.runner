@@ -1,0 +1,21 @@
+# Test Open edX services
+version: "3.5"
+
+services:
+  cypress:
+    image: cypress/included:6.4.0
+    container_name: {{ project.name }}_cypress
+    environment:
+      HTTP_PROXY: http://httpserver:80
+      NO_PROXY: localhost,fonts.googleapis.com,fonts.gstatic.com,files.edx.org,*.cloudfront.net
+      CI: 1
+    command: npx cypress run
+    working_dir: /e2e
+    volumes:
+      - {{ project.e2e_dir }}:/e2e
+    networks:
+      derex:
+
+networks:
+  derex:
+    name: derex

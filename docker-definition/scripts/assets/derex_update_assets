@@ -1,0 +1,12 @@
+#!/bin/sh
+set -ex
+
+# We can't use 'paver update_assets' command since it will
+# always try to load settings from modules relative to the
+# lms or cms 'envs' folder.
+
+derex_process_xmodule_assets
+derex_process_npm_assets
+derex_webpack_build
+derex_compile_sass
+derex_collect_assets
