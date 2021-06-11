@@ -3,7 +3,7 @@ parameters:
     type: string
     default: "true"
   - name: AS_PYTHON_PACKAGE
-    type: bool
+    type: boolean
     default: False
 
 steps:
