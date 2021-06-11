@@ -1,5 +1,5 @@
 -r requirements.txt
--r requirements_doc.txt
+-r requirements_doc.in
 black
 bump2version
 coverage

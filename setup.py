@@ -20,8 +20,11 @@ requirements = [
     "pluggy",
     "pymongo",
     "pymysql",
-    "PyYAML>=5.4",
     "rich",
+    # Package constrained due to dependabot alerts
+    "PyYAML>=5.4",
+    "py>=1.10.0",
+    "urllib3>=1.26.5",
 ]
 
 setup_requirements = ["setuptools"]
