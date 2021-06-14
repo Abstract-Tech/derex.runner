@@ -70,7 +70,7 @@ class OpenEdXVersions(Enum):
         "python_version": "3.8",
         "pip_version": "21.0.1",
         "node_version": "v12.19.0",
-        "mysql_image": "mysql:5.7.33",
+        "mysql_image": "mysql:5.7.34",
         "mongodb_image": "mongo:3.6.23",
     }
 
