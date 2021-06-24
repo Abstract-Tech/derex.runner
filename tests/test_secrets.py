@@ -28,8 +28,7 @@ def test_master_secret_default_filename(mocker):
 
 
 def test_master_secret_default_filename_not_readable(mocker):
-    """If the file exists but is not readable we should log an error.
-    """
+    """If the file exists but is not readable we should log an error."""
     from derex.runner.secrets import _get_master_secret
 
     mocker.patch("derex.runner.secrets.os.access", return_value=False)
@@ -67,8 +66,8 @@ def test_master_secret_custom_filename(tmp_path, monkeypatch):
 
 
 def test_derived_secret():
-    from derex.runner.secrets import get_secret
     from derex.runner.secrets import compute_entropy
+    from derex.runner.secrets import get_secret
 
     foo_secret = get_secret(FooSecrets.foo)
     # The same name should always yield the same secrets
@@ -102,8 +101,8 @@ except ImportError:
     only_one_scrypt_implementations, reason="We don't have both openssl>=1.1 and scrypt"
 )
 def test_derived_secret_no_scrypt_same_result_as_with_scrypt():
-    from derex.runner.secrets import scrypt_hash_stdlib
     from derex.runner.secrets import scrypt_hash_addon
+    from derex.runner.secrets import scrypt_hash_stdlib
 
     TEST_CASES = [("aaa", "bbb"), ("The master secret", "the service")]
     for a, b in TEST_CASES:

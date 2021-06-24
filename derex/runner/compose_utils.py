@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 def run_docker_compose(
     compose_argv: List[str], dry_run: bool = False, exit_afterwards: bool = False
 ):
-    """Run a docker-compose command with the specified arguments.
-    """
+    """Run a docker-compose command with the specified arguments."""
     system_argv = sys.argv
     try:
         sys.argv = ["docker-compose"] + compose_argv

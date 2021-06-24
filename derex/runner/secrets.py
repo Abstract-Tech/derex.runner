@@ -34,8 +34,7 @@ def scrypt_hash_stdlib(main_secret: str, name: str) -> bytes:
 
 
 def scrypt_hash_addon(main_secret: str, name: str) -> bytes:
-    """
-    """
+    """ """
     from scrypt import scrypt
 
     return scrypt.hash(main_secret.encode("utf-8"), name.encode("utf-8"), N=2, r=8, p=1)
@@ -97,8 +96,7 @@ def _get_master_secret() -> Optional[str]:
 
 
 def get_secret(secret: DerexSecrets) -> str:
-    """Derive a secret using the master secret and the provided name.
-    """
+    """Derive a secret using the master secret and the provided name."""
     binary_secret = scrypt_hash(MASTER_SECRET, secret.name)
     # Pad the binary string so that its length is a multiple of 3
     # This will make sure its base64 representation is equals-free
@@ -107,8 +105,7 @@ def get_secret(secret: DerexSecrets) -> str:
 
 
 class DerexSecretError(ValueError):
-    """The master secret provided to derex is not valid or could not be found.
-    """
+    """The master secret provided to derex is not valid or could not be found."""
 
 
 def compute_entropy(s: str) -> float:

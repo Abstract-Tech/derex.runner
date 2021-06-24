@@ -29,7 +29,7 @@ requirements = [
 
 setup_requirements = ["setuptools"]
 
-test_requirements = ["pytest", "pytest-mock>=v3.1.0"]
+test_requirements = ["pytest", "pytest-mock>=v3.1.0", "scrypt"]
 
 extras_requirements = {
     "test": test_requirements,

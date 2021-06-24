@@ -58,7 +58,7 @@ def get_mysql_client(
     host: str,
     user: str,
     password: str,
-    port: Optional[int] = 3306,
+    port: int = 3306,
     database: Optional[str] = None,
     **kwargs,
 ) -> pymysql.cursors.Cursor:

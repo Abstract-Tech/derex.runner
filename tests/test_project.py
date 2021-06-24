@@ -77,9 +77,10 @@ def test_ddc_project_addition(minimal_project, mocker, capsys):
     class CustomAdditional:
         @staticmethod
         @hookimpl
-        def ddc_project_options(project: Project,) -> Dict[str, Union[str, List[str]]]:
-            """See derex.runner.plugin_spec.ddc_project_options docstring
-            """
+        def ddc_project_options(
+            project: Project,
+        ) -> Dict[str, Union[str, List[str]]]:
+            """See derex.runner.plugin_spec.ddc_project_options docstring"""
             return {
                 "options": ["custom-additional"],
                 "name": "custom",

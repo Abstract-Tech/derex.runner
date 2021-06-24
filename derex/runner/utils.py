@@ -20,8 +20,7 @@ def get_dir_hash(
     followlinks: bool = False,
     excluded_extensions: List = [],
 ) -> str:
-    """Given a directory return an hash based on its contents
-    """
+    """Given a directory return an hash based on its contents"""
     if not os.path.isdir(dirname):
         raise TypeError(f"{dirname} is not a directory.")
 
@@ -65,7 +64,7 @@ truthy = frozenset(("t", "true", "y", "yes", "on", "1"))
 
 
 def asbool(s: Any) -> bool:
-    """ Return the boolean value ``True`` if the case-lowered value of string
+    """Return the boolean value ``True`` if the case-lowered value of string
     input ``s`` is a `truthy string`. If ``s`` is already one of the
     boolean values ``True`` or ``False``, return it.
     Lifted from pyramid.settings.

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 def test_asbool():
-    """It's lifted from pyramid.settings, but testing it here won't harm.
-    """
+    """It's lifted from pyramid.settings, but testing it here won't harm."""
     from derex.runner.utils import asbool
 
     assert asbool(True) is True

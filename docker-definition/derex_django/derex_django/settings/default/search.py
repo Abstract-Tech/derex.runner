@@ -1,5 +1,9 @@
 ELASTIC_SEARCH_CONFIG = [
-    {"host": "elasticsearch", "port": 9200, "use_ssl": False,}  # noqa: E231
+    {
+        "host": "elasticsearch",
+        "port": 9200,
+        "use_ssl": False,
+    }  # noqa: E231
 ]
 SEARCH_ENGINE = "search.elastic.ElasticSearchEngine"
 SEARCH_INITIALIZER = (

@@ -207,8 +207,7 @@ class Project:
 
     @property
     def settings(self):
-        """Name of the module to use as DJANGO_SETTINGS_MODULE
-        """
+        """Name of the module to use as DJANGO_SETTINGS_MODULE"""
         current_status = self._get_status("settings", "default")
         return self.get_available_settings()[current_status]
 
@@ -229,8 +228,7 @@ class Project:
         return DEREX_DJANGO_SETTINGS_PATH
 
     def _get_status(self, name: str, default: Optional[str] = None) -> Optional[str]:
-        """Read value for the desired status from the project directory.
-        """
+        """Read value for the desired status from the project directory."""
         filepath = self.private_filepath(name)
         if filepath.exists():
             return filepath.read_text()
@@ -265,8 +263,7 @@ class Project:
             (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
 
     def _load(self, path: Union[Path, str] = None):
-        """Load project configuraton from the given directory.
-        """
+        """Load project configuraton from the given directory."""
         if not path:
             path = os.getcwd()
         self.root = find_project_root(Path(path))
@@ -493,8 +490,7 @@ class Project:
 
 
 def get_requirements_hash(path: Path) -> str:
-    """Given a directory, return a hash of the contents of the text files it contains.
-    """
+    """Given a directory, return a hash of the contents of the text files it contains."""
     hasher = hashlib.sha256()
     logger.debug(
         f"Calculating hash for requirements dir {path}; initial (empty) hash is {hasher.hexdigest()}"
@@ -537,5 +533,4 @@ class DebugBaseImageProject(Project):
 
 
 class ProjectNotFound(ValueError):
-    """No derex project could be found.
-    """
+    """No derex project could be found."""

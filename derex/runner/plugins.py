@@ -27,7 +27,7 @@ def setup_plugin_manager():
 # Used internally by `Registry` for each item in its sorted list.
 # Provides an easier to read API when editing the code later.
 # For example, `item.name` is more clear than `item[0]`.
-_PriorityItem = namedtuple("PriorityItem", ["name", "priority"])
+_PriorityItem = namedtuple("_PriorityItem", ["name", "priority"])
 
 
 class Registry(object):
@@ -158,7 +158,7 @@ class Registry(object):
             self._is_sorted = True
 
     def add(self, key, value, location):
-        """ Register a key by location. """
+        """Register a key by location."""
         if len(self) == 0:
             # This is the first item. Set priority to 50.
             priority = 50
