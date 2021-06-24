@@ -34,8 +34,7 @@ VOLUMES = {
 
 
 def is_docker_working() -> bool:
-    """Check if we can successfully connect to the docker daemon.
-    """
+    """Check if we can successfully connect to the docker daemon."""
     try:
         client.ping()
         return True
@@ -113,8 +112,7 @@ def check_services(services: Iterable[str], max_seconds: int = 1) -> bool:
 
 
 def load_dump(relpath):
-    """Loads a mysql dump into the derex mysql database.
-    """
+    """Loads a mysql dump into the derex mysql database."""
     from derex.runner.mysql import MYSQL_ROOT_PASSWORD
 
     dump_path = abspath_from_egg("derex.runner", relpath)
@@ -180,8 +178,7 @@ def build_image(
 
 
 def pull_images(image_names: List[str]):
-    """Pull the given image to the local docker daemon.
-    """
+    """Pull the given image to the local docker daemon."""
     # digest = client.api.inspect_distribution(image_name)["Descriptor"]["digest"]
     for image_name in image_names:
         print(f"Pulling image {image_name}")
@@ -193,8 +190,7 @@ def pull_images(image_names: List[str]):
 
 
 def image_exists(needle: str) -> bool:
-    """If the given image tag exist in the local docker repository, return True.
-    """
+    """If the given image tag exist in the local docker repository, return True."""
     docker_client = docker.APIClient()
     images = docker_client.images()
     images.sort(key=lambda el: el["Created"], reverse=True)
@@ -207,8 +203,7 @@ def image_exists(needle: str) -> bool:
 
 
 class BuildError(RuntimeError):
-    """An error occurred while building a docker image
-    """
+    """An error occurred while building a docker image"""
 
 
 def get_running_containers() -> Dict:
@@ -240,8 +235,7 @@ def get_exposed_container_names() -> List:
 
 
 def run_minio_shell(command: str = "sh", tty: bool = True):
-    """Invoke a minio shell
-    """
+    """Invoke a minio shell"""
     minio_key = get_secret(DerexSecrets.minio)
     os.system(
         f"docker run {'-ti ' if tty else ''}--rm --network derex --entrypoint /bin/sh minio/mc -c '"

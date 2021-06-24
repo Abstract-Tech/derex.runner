@@ -43,7 +43,7 @@ def cleanup_mysql(start_mysql):
 
 @pytest.mark.slowtest
 def test_derex_mysql(start_mysql):
-    """Test the `derex mysql copy` cli command """
+    """Test the `derex mysql copy` cli command"""
     from derex.runner.cli.mysql import copy_database_cmd
     from derex.runner.cli.mysql import create_database_cmd
     from derex.runner.cli.mysql import drop_database_cmd
@@ -92,8 +92,10 @@ def test_derex_mysql_reset(start_mysql, mocker, minimal_project):
 
 @pytest.mark.slowtest
 def test_derex_mysql_reset_password(start_mysql, mocker):
-    """Test the `derex mysql copy` cli command """
-    from derex.runner.cli.mysql import create_user_cmd, reset_mysql_password_cmd, shell
+    """Test the `derex mysql copy` cli command"""
+    from derex.runner.cli.mysql import create_user_cmd
+    from derex.runner.cli.mysql import reset_mysql_password_cmd
+    from derex.runner.cli.mysql import shell
 
     for host in ["localhost", "%"]:
         runner.invoke(create_user_cmd, [DEREX_TEST_USER, "secret", host])

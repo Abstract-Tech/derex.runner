@@ -224,7 +224,10 @@ def reset_mysql_cmd(context, force):
 @mysql.command(name="reset-root-password")
 @click.argument("current_password", type=str, required=True)
 @click.option(
-    "--force", is_flag=True, default=False, help="Do not ask for confirmation",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Do not ask for confirmation",
 )
 def reset_mysql_password_cmd(current_password: str, force: bool):
     """Reset the mysql root user password with the one derived from

@@ -42,8 +42,7 @@ class BaseServices:
     @staticmethod
     @hookimpl
     def ddc_services_options() -> Dict[str, Union[str, List[str]]]:
-        """See derex.runner.plugin_spec.ddc_services_options docstring.
-        """
+        """See derex.runner.plugin_spec.ddc_services_options docstring."""
         services_compose_path = generate_ddc_services_compose()
         options = [
             "--project-name",
@@ -64,8 +63,7 @@ class BaseProject:
     @staticmethod
     @hookimpl
     def ddc_project_options(project: Project) -> Dict[str, Union[str, List[str]]]:
-        """See derex.runner.plugin_spec.ddc_project_options docstring
-        """
+        """See derex.runner.plugin_spec.ddc_project_options docstring"""
         project_compose_path = generate_ddc_project_compose(project)
         options = ["--project-name", project.name, "-f", str(project_compose_path)]
         return {"options": options, "name": "base-project", "priority": "_begin"}
@@ -75,8 +73,7 @@ class LocalServices:
     @staticmethod
     @hookimpl
     def ddc_services_options() -> Dict[str, Union[str, List[str]]]:
-        """See derex.runner.plugin_spec.ddc_services_options docstring.
-        """
+        """See derex.runner.plugin_spec.ddc_services_options docstring."""
         local_path = (
             Path(os.getenv("DEREX_ETC_PATH", DEREX_ETC_PATH))
             / "docker-compose-services.yml"
@@ -95,8 +92,7 @@ class LocalProject:
     @staticmethod
     @hookimpl
     def ddc_project_options(project: Project) -> Dict[str, Union[str, List[str]]]:
-        """See derex.runner.plugin_spec.ddc_project_options docstring
-        """
+        """See derex.runner.plugin_spec.ddc_project_options docstring"""
         options: List[str] = []
         if project.local_compose:
             options = ["-f", str(project.local_compose)]
@@ -111,8 +107,7 @@ class LocalProjectRunmode:
     @staticmethod
     @hookimpl
     def ddc_project_options(project: Project) -> Dict[str, Union[str, List[str]]]:
-        """See derex.runner.plugin_spec.ddc_project_options docstring
-        """
+        """See derex.runner.plugin_spec.ddc_project_options docstring"""
         local_path = project.root / f"docker-compose-{project.runmode.value}.yml"
         options: List[str] = []
         if local_path.is_file():

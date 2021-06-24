@@ -38,9 +38,10 @@ def cleanup_mongodb(start_mongodb):
 
 
 def test_derex_mongodb(start_mongodb):
-    from derex.runner.mongodb import list_databases
     from derex.runner.cli.mongodb import copy_mongodb
     from derex.runner.cli.mongodb import drop_mongodb
+    from derex.runner.mongodb import list_databases
+
     import derex.runner.mongodb
 
     reload(derex.runner.mongodb)
@@ -65,11 +66,9 @@ def test_derex_mongodb(start_mongodb):
 
 
 def test_derex_mongodb_reset_password(mocker, start_mongodb):
-    from derex.runner.cli.mongodb import (
-        create_user_cmd,
-        reset_mongodb_password_cmd,
-        shell,
-    )
+    from derex.runner.cli.mongodb import create_user_cmd
+    from derex.runner.cli.mongodb import reset_mongodb_password_cmd
+    from derex.runner.cli.mongodb import shell
 
     assert_result_ok(
         runner.invoke(create_user_cmd, [DEREX_TEST_USER, "secret", "--role=root"])

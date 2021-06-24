@@ -28,7 +28,9 @@ def mongodb(context: click.core.Context):
                         "Database", "Tables", "Django users", show_lines=True
                     )
                     table.add_row(
-                        db["name"], str(db["sizeOnDisk"]), str(db["empty"]),
+                        db["name"],
+                        str(db["sizeOnDisk"]),
+                        str(db["empty"]),
                     )
                     console.print(table)
                     break
@@ -113,7 +115,10 @@ def list_users():
 @click.argument("user", type=str)
 @click.argument("password", type=str)
 @click.option(
-    "--role", type=str, multiple=True, help="Role to assign to the user",
+    "--role",
+    type=str,
+    multiple=True,
+    help="Role to assign to the user",
 )
 def create_user_cmd(user: str, password: str, role: Optional[Tuple]):
     """Create a mongodb user."""
@@ -166,7 +171,10 @@ def copy_mongodb(
 @mongodb.command(name="reset-root-password")
 @click.argument("current_password", type=str, required=False)
 @click.option(
-    "--force", is_flag=True, default=False, help="Do not ask for confirmation",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Do not ask for confirmation",
 )
 def reset_mongodb_password_cmd(current_password: Optional[str], force: bool):
     """Reset the mongodb root user password with the one derived

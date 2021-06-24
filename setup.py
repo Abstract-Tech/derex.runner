@@ -20,13 +20,16 @@ requirements = [
     "pluggy",
     "pymongo",
     "pymysql",
-    "PyYAML>=5.4",
     "rich",
+    # Package constrained due to dependabot alerts
+    "PyYAML>=5.4",
+    "py>=1.10.0",
+    "urllib3>=1.26.5",
 ]
 
 setup_requirements = ["setuptools"]
 
-test_requirements = ["pytest", "pytest-mock>=v3.1.0"]
+test_requirements = ["pytest", "pytest-mock>=v3.1.0", "scrypt"]
 
 extras_requirements = {
     "test": test_requirements,
@@ -65,6 +68,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.3.0",
+    version="0.3.1",
     zip_safe=False,
 )

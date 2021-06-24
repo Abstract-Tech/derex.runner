@@ -25,8 +25,7 @@ def setup_logging():
 
 
 def setup_logging_decorator(func):
-    """Decorator to run the setup_logging function before the decorated one.
-    """
+    """Decorator to run the setup_logging function before the decorated one."""
 
     def inner(*args, **kwargs):
         setup_logging()

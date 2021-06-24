@@ -1,5 +1,5 @@
 -r requirements.txt
--r requirements_doc.txt
+-r requirements_doc.in
 black
 bump2version
 coverage
@@ -15,6 +15,7 @@ pytest-cov
 pytest-mock>=v3.1.0
 pytest-runner
 pyyaml
+scrypt
 requests
 tox
 twine

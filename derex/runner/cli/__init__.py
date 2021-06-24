@@ -35,8 +35,7 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 @setup_logging_decorator
 def derex(ctx):
-    """Derex directs edX: commands to manage an Open edX installation
-    """
+    """Derex directs edX: commands to manage an Open edX installation"""
     # Optimize --help and bash completion by importing
     from derex.runner.project import Project
 
@@ -74,17 +73,15 @@ def derex(ctx):
 @derex.group()
 @click.pass_context
 def debug(ctx):
-    """Debugging utilities
-    """
+    """Debugging utilities"""
 
 
 @derex.command()
 @click.pass_obj
 def reset_mailslurper(project):
-    """Reset the mailslurper database.
-    """
-    from derex.runner.mysql import drop_database
+    """Reset the mailslurper database."""
     from derex.runner.docker_utils import load_dump
+    from derex.runner.mysql import drop_database
 
     drop_database("mailslurper")
     click.echo("Priming mailslurper database")
@@ -147,7 +144,10 @@ def reindex_courses(project, course_ids):
 
 @derex.command()
 @click.option(
-    "--tty/--no-tty", required=False, default=True, help="Allocate a tty",
+    "--tty/--no-tty",
+    required=False,
+    default=True,
+    help="Allocate a tty",
 )
 @click.pass_obj
 @ensure_project
@@ -268,10 +268,13 @@ def minio_shell():
 
 @debug.command("print-secret")
 @click.argument(
-    "secret", type=str, required=True,
+    "secret",
+    type=str,
+    required=True,
 )
 def print_secret(secret):
-    from derex.runner.secrets import get_secret, DerexSecrets
+    from derex.runner.secrets import DerexSecrets
+    from derex.runner.secrets import get_secret
 
     derex_secret = getattr(DerexSecrets, secret, None)
     if not derex_secret:

@@ -14,8 +14,8 @@ DDC_PROJECT_TEMPLATE_PATH = derex_path(
 )
 DDC_TEST_TEMPLATE_PATH = derex_path("derex/runner/templates/docker-compose-test.yml.j2")
 MAILSLURPER_JSON_TEMPLATE = derex_path("derex/runner/compose_files/mailslurper.json.j2")
-DEREX_DJANGO_PATH = derex_path("docker-definition/derex_django/README.rst").parent
-DEREX_DJANGO_SETTINGS_PATH = DEREX_DJANGO_PATH / "derex_django/settings"
+DEREX_DJANGO_PATH = derex_path("derex/django/__init__.py").parent
+DEREX_DJANGO_SETTINGS_PATH = DEREX_DJANGO_PATH / "settings"
 DEREX_OPENEDX_CUSTOMIZATIONS_PATH = derex_path(
     "derex/runner/compose_files/openedx_customizations/README.rst"
 ).parent

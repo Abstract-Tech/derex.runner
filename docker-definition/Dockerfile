@@ -204,7 +204,7 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
     set -ex; \
     cp -a /dev/ /mysql; \
     export MYSQL_ALLOW_EMPTY_PASSWORD=1; \
-    echo -e '[mysqld]\n'port=3399 >> /mysql/etc/mysql/conf.d/custom_port.cnf; \
+    echo -e '[mysqld]\nport=3399\ncollation-server = utf8_general_ci\ncharacter-set-server = utf8' >> /mysql/etc/mysql/conf.d/custom_port.cnf; \
     chroot /mysql /usr/local/bin/docker-entrypoint.sh mysqld > /mysql/mysqld.out & \
     until grep "MySQL init process done. Ready for start up" /mysql/mysqld.out ; do sleep 1; done; \
     until chroot /mysql mysqladmin -P 3399 create edxapp ; do sleep 1; done; \
@@ -216,4 +216,4 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
 
 ENV DJANGO_SETTINGS_MODULE=derex_django.settings.default
 ENV SERVICE_VARIANT=lms
-ENV DEREX_VERSION=0.3.0
+ENV DEREX_VERSION=0.3.1

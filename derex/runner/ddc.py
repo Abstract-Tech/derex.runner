@@ -91,7 +91,9 @@ def check_docker():
 
 
 def run_ddc_services(
-    argv: List[str], dry_run: bool = False, exit_afterwards: bool = False,
+    argv: List[str],
+    dry_run: bool = False,
+    exit_afterwards: bool = False,
 ):
     """Run a docker-compose command relative to the system services.
     Plugin arguments are added to arguments passed in this function sorted by

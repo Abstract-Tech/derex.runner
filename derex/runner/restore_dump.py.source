@@ -71,8 +71,7 @@ def run_fixtures():
 
 
 def execfile_py3(filepath, globals=None, locals=None):
-    """Taken from https://stackoverflow.com/a/41658338
-    """
+    """Taken from https://stackoverflow.com/a/41658338"""
     if globals is None:
         globals = {}
     globals.update({"__file__": filepath, "__name__": "__main__"})
