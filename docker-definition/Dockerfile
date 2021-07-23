@@ -213,4 +213,4 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
 
 ENV DJANGO_SETTINGS_MODULE=derex_django.settings.default
 ENV SERVICE_VARIANT=lms
-ENV DEREX_VERSION=0.3.1
+ENV DEREX_VERSION=0.3.1.dev1
