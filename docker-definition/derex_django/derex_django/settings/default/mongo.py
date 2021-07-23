@@ -9,6 +9,11 @@ from xmodule.modulestore.modulestore_settings import update_module_store_setting
 DATA_DIR = Path("/openedx/data")
 
 MONGODB_HOST = "mongodb"
+if DEREX_OPENEDX_VERSION == "lilac":
+    MONGODB_HOST = "mongodb4"
+else:
+    MONGODB_HOST = "mongodb"
+
 MONGODB_DB_NAME = os.environ["MONGODB_DB_NAME"]
 DOC_STORE_CONFIG = {
     "host": MONGODB_HOST,

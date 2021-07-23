@@ -12,3 +12,6 @@ DATABASES = {
         "PORT": "3306",
     }
 }
+
+if DEREX_OPENEDX_VERSION == "lilac":
+    DATABASES["default"]["HOST"] = "mysql57"
