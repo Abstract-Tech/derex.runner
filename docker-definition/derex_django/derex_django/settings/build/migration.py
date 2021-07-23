@@ -47,7 +47,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "edxapp",
-        "HOST": "127.0.0.1",
+        "HOST": "/mysql/run/mysqld/mysqld.sock",
         "PORT": "3399",
     }
 }

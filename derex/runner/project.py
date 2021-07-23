@@ -44,6 +44,7 @@ class OpenEdXVersions(Enum):
         "node_version": "v10.22.1",
         "mysql_image": "mysql:5.6.36",
         "mongodb_image": "mongo:3.2.21",
+        "elasticsearch_image": "elasticsearch:1.5.2",
     }
     juniper = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
@@ -56,6 +57,7 @@ class OpenEdXVersions(Enum):
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.6.36",
         "mongodb_image": "mongo:3.6.23",
+        "elasticsearch_image": "elasticsearch:1.5.2",
     }
     koa = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
@@ -72,6 +74,20 @@ class OpenEdXVersions(Enum):
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.7.34",
         "mongodb_image": "mongo:3.6.23",
+        "elasticsearch_image": "elasticsearch:1.5.2",
+    }
+    lilac = {
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/lilac.master",
+        "edx_platform_release": "lilac",
+        "docker_image_prefix": "derex/openedx-lilac",
+        "alpine_version": "alpine3.14",
+        "python_version": "3.8",
+        "pip_version": "21.1.3",
+        "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.7.34",
+        "mongodb_image": "mongo:4.4.6",
+        "elasticsearch_image": "elasticsearch:7.8.1",
     }
 
 

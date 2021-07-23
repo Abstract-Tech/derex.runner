@@ -6,20 +6,12 @@
 # in the place you want to examine. When execution stops there, run
 # sudo nsenter --target $(pgrep sleep) --mount --uts --ipc --net --pid sh
 
-ARG ALPINE_VERSION=alpine3.11
-ARG PYTHON_VERSION=3.6
-FROM docker.io/python:${PYTHON_VERSION}-${ALPINE_VERSION} as libgeos
-
-RUN --mount=type=cache,target=/var/cache/apk apk add alpine-sdk
-ENV GEOS_VERSION=3.8.0
-
-RUN wget -c http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2 -O - | tar xjf - --directory /usr/local && \
-    cd /usr/local/geos-${GEOS_VERSION} && ./configure && make -j 4 && make install
+ARG ALPINE_VERSION=alpine3.14
+ARG PYTHON_VERSION=3.8
 
 FROM docker.io/python:${PYTHON_VERSION}-${ALPINE_VERSION} as base
 # This image will be used to build all other images in this Dockerfile
 # The base image is defined later, and it has rmlint added to this base
-ENV GEOS_VERSION=3.8.0
 
 RUN wget -q -O - "https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-amd64-v0.6.1.tar.gz" | tar xzf - --directory /usr/local/bin
 
@@ -38,25 +30,21 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     sqlite \
     xmlsec \
     wget \
-    bash
+    bash \
+    geos-dev
 
-COPY scripts/derex_patch_ldconfig_to_fix_shapely /tmp/derex_patch_ldconfig_to_fix_shapely
-
-COPY --from=libgeos /usr/local/lib/libgeos* /usr/lib/
-# Patch ldconfig and test that libgeos works
-RUN /tmp/derex_patch_ldconfig_to_fix_shapely && \
-     python -c "from  ctypes import CDLL; CDLL('$(echo /usr/lib/libgeos_c.so)').GEOSversion"
+RUN geos-config --cflags
 
 # we want to use paver without remembering to specify these
 ENV NO_PREREQ_INSTALL=True
 ENV NO_PYTHON_UNINSTALL=True
 
-ARG PIP_VERSION=21.0.1
+ARG PIP_VERSION=20.2.3
 RUN pip install -U pip==${PIP_VERSION}
 
 FROM base as sourceonly
-ARG EDX_PLATFORM_RELEASE=koa
-ARG EDX_PLATFORM_VERSION=open-release/koa.master
+ARG EDX_PLATFORM_RELEASE=lilac
+ARG EDX_PLATFORM_VERSION=open-release/lilac.master
 ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
 
 RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ /openedx/requirements/ && \
@@ -77,6 +65,9 @@ RUN cp /openedx/edx-platform/requirements/edx/base.txt /openedx/requirements/ope
     `# Generating metadata for package <package> produced metadata for project name django-ratelimit. Fix your #egg=ratelimit fragments.` \
     sed -e "s|#egg=ratelimit|#egg=django-ratelimit|" -i /openedx/requirements/openedx_base_fixed.txt && \
     sed -e "s|#egg=pystache_custom-dev|#egg=pystache-custom|" -i /openedx/requirements/openedx_base_fixed.txt && \
+    `# On lilac xmlsec==1.3.9 required by python-saml suffers from a bug wich was solved only in version 1.3.10` \
+    `# https://github.com/mehcode/python-xmlsec/commit/ce45868701220368f156114978c784cc5200d80c` \
+    sed -e "s|xmlsec==1.3.9|xmlsec==1.3.10|" -i /openedx/requirements/openedx_base_fixed.txt && \
     cat /openedx/requirements/openedx_base_fixed.txt | sed -e "/git+https/!s/-e /-e \/openedx\/edx-platform\//" > /openedx/requirements/openedx_wheels.txt && \
     `# scipy 1.4.1 has a problem and does not build. Our fork includes a fix` \
     sed -e "s|.*scipy==1.4.1.*|https://github.com/Abstract-Tech/scipy/tarball/maintenance/1.4.x#egg=scipy|" -i /openedx/requirements/openedx_wheels.txt && \
@@ -106,7 +97,13 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     pkgconfig \
     sqlite-dev \
     swig \
-    xmlsec-dev && \
+    xmlsec \
+    xmlsec-dev \
+    # The following are needed just to compile gevent
+    make \
+    gcc \
+    musl-dev \
+    file && \
     `# From https://github.com/jfloff/alpine-python/issues/32` \
     sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i
 
@@ -136,7 +133,7 @@ RUN pip install scons && \
     glib-dev \
     json-glib
 
-RUN wget -q https://github.com/sahib/rmlint/tarball/e56626d39134b7ac6317c19940c446eace01d7ad -O - | tar xvzf - && \
+RUN wget -q https://github.com/sahib/rmlint/tarball/29bd07e29edf6879be933dc0e7275a90a154c00e -O - | tar xvzf - && \
     cd sahib-rmlint* && \
     scons && \
     mv rmlint /usr/local/bin/
@@ -179,7 +176,7 @@ RUN --mount=type=bind,from=translations,target=/translations \
 FROM nostatic as nostatic-dev
 # This image has node dependencies installed, and can be used to compile assets
 
-ARG NODE_VERSION=v10.22.1
+ARG NODE_VERSION=v12.13.1
 ENV NODE_URL=https://unofficial-builds.nodejs.org/download/release/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64-musl.tar.xz
 
 WORKDIR /openedx/edx-platform
@@ -200,14 +197,14 @@ FROM dev-nodump as dev
 # TODO: fixtures should not be included in the image
 COPY fixtures /openedx/fixtures/
 RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
-    --mount=type=bind,from=docker.io/mysql:5.6.36,target=/mysql,rw=true \
+    --mount=type=bind,from=docker.io/mysql:5.7.34,target=/mysql,rw=true \
     set -ex; \
     cp -a /dev/ /mysql; \
     export MYSQL_ALLOW_EMPTY_PASSWORD=1; \
     echo -e '[mysqld]\nport=3399\ncollation-server = utf8_general_ci\ncharacter-set-server = utf8' >> /mysql/etc/mysql/conf.d/custom_port.cnf; \
-    chroot /mysql /usr/local/bin/docker-entrypoint.sh mysqld > /mysql/mysqld.out & \
-    until grep "MySQL init process done. Ready for start up" /mysql/mysqld.out ; do sleep 1; done; \
-    until chroot /mysql mysqladmin -P 3399 create edxapp ; do sleep 1; done; \
+    chroot /mysql /usr/local/bin/docker-entrypoint.sh mysqld > /mysql/mysqld.out 2>&1 & \
+    until grep "mysqld: ready for connections." /mysql/mysqld.out; do sleep 1; done; \
+    until chroot /mysql mysqladmin -P 3399 create edxapp; do sleep 1; done; \
     export DJANGO_SETTINGS_MODULE="derex_django.settings.build.migration"; \
     export DEREX_OPENEDX_VERSION=${EDX_PLATFORM_RELEASE}; \
     SERVICE_VARIANT="lms" python manage.py lms migrate; \

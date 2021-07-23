@@ -1,1 +1,1 @@
-DEREX_OPENEDX_SUPPORTED_VERSIONS = ["ironwood", "juniper", "koa"]
+DEREX_OPENEDX_SUPPORTED_VERSIONS = ["ironwood", "juniper", "koa", "lilac"]

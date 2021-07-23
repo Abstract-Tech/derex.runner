@@ -32,11 +32,11 @@ i18n_tool extract
 
 i18n_tool generate
 
-python manage.py lms --settings=derex_django.settings.build.assets compilemessages -v2
-python manage.py cms --settings=derex_django.settings.build.assets compilemessages -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py lms compilemessages -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py cms compilemessages -v2
 
-python manage.py lms --settings=derex_django.settings.build.assets compilejsi18n -v2
-python manage.py cms --settings=derex_django.settings.build.assets compilejsi18n -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py lms compilejsi18n -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py cms compilejsi18n -v2
 
 # This check is currently done in the azure pipeline.
 # i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)
