@@ -5,6 +5,7 @@ from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import SECRETS_CONF_FILENAME
+from derex.runner.microfrontends import get_microfrontend_environment
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import get_dir_hash
@@ -45,6 +46,7 @@ class OpenEdXVersions(Enum):
         "mysql_image": "mysql:5.6.36",
         "mongodb_image": "mongo:3.2.21",
         "elasticsearch_image": "elasticsearch:1.5.2",
+        "microfrontends": {},
     }
     juniper = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
@@ -58,6 +60,7 @@ class OpenEdXVersions(Enum):
         "mysql_image": "mysql:5.6.36",
         "mongodb_image": "mongo:3.6.23",
         "elasticsearch_image": "elasticsearch:1.5.2",
+        "microfrontends": {},
     }
     koa = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
@@ -75,6 +78,7 @@ class OpenEdXVersions(Enum):
         "mysql_image": "mysql:5.7.34",
         "mongodb_image": "mongo:3.6.23",
         "elasticsearch_image": "elasticsearch:1.5.2",
+        "microfrontends": {},
     }
     lilac = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
@@ -88,6 +92,28 @@ class OpenEdXVersions(Enum):
         "mysql_image": "mysql:5.7.34",
         "mongodb_image": "mongo:4.4.6",
         "elasticsearch_image": "elasticsearch:7.8.1",
+        "microfrontends": {
+            "account": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-account.git",
+                "environment": get_microfrontend_environment(),
+            },
+            "profile": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-profile.git",
+                "environment": get_microfrontend_environment(),
+            },
+            "learning": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-learning.git",
+                "environment": get_microfrontend_environment(),
+            },
+            "gradebook": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-gradebook.git",
+                "environment": get_microfrontend_environment(),
+            },
+        },
     }
 
 
