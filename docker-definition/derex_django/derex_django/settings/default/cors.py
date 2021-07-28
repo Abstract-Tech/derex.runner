@@ -1,10 +1,10 @@
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
 
-FEATURES["ENABLE_CORS_HEADERS"]: True
+FEATURES["ENABLE_CORS_HEADERS"] = True
 
 CORS_ORIGIN_ALLOW_ALL = False
-CORS_ALLOW_INSECURE = False
+CORS_ALLOW_INSECURE = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = corsheaders_default_headers + ("use-jwt-cookie",)
 CORS_ORIGIN_WHITELIST = [
