@@ -1,9 +1,10 @@
 # -coding: utf8-
 """Utility functions to deal with docker.
 """
-from derex.runner.secrets import DerexSecrets
-from derex.runner.secrets import get_secret
-from derex.runner.utils import abspath_from_egg
+from derex.runner import abspath_from_egg
+from derex.runner.constants import DerexSecrets
+from derex.runner.exceptions import BuildError
+from derex.runner.project import Project
 from pathlib import Path
 from requests.exceptions import RequestException
 from typing import Dict
@@ -23,14 +24,6 @@ import time
 client = docker.from_env()
 api_client = docker.APIClient()
 logger = logging.getLogger(__name__)
-VOLUMES = {
-    "derex_elasticsearch",
-    "derex_mongodb",
-    "derex_mysql",
-    "derex_rabbitmq",
-    "derex_portainer_data",
-    "derex_minio",
-}
 
 
 def is_docker_working() -> bool:
@@ -49,18 +42,18 @@ def docker_has_experimental() -> bool:
     return bool(client.api.info().get("ExperimentalBuild"))
 
 
-def ensure_volumes_present():
+def ensure_volumes_present(project: Project):
     """Make sure the derex network necessary for our docker-compose files to
     work is in place.
     """
-    missing = VOLUMES - {el.name for el in client.volumes.list()}
+    missing = project.docker_volumes - {el.name for el in client.volumes.list()}
     for volume in missing:
         logger.warning("Creating docker volume '%s'", volume)
         client.volumes.create(volume)
 
 
-def wait_for_service(service: str, max_seconds: int = 35) -> int:
-    """With a freshly created container services might need a bit of time to start.
+def wait_for_container(container_name: str, max_seconds: int = 35) -> int:
+    """A freshly created container might need a bit of time to start.
     This functions waits up to max_seconds seconds for the healthcheck on the container
     to report as healthy.
     Returns an exit code 0 or raises an exception:
@@ -71,17 +64,17 @@ def wait_for_service(service: str, max_seconds: int = 35) -> int:
     """
     for i in range(max_seconds):
         try:
-            container_info = api_client.inspect_container(service)
+            container_info = api_client.inspect_container(container_name)
         except docker.errors.NotFound:
             raise RuntimeError(
-                f"{service} service not found.\n"
+                f"{container_name} container not found.\n"
                 "Maybe you forgot to run\n"
                 "ddc-services up -d"
             )
         container_status = container_info.get("State").get("Status")
         if container_status not in ["running", "restarting"]:
             raise RuntimeError(
-                f'Service {service} is not running (status="{container_status}")\n'
+                f'{container_name} container is not running (status="{container_status}")\n'
                 "Maybe you forgot to run\n"
                 "ddc-services up -d"
             )
@@ -89,34 +82,32 @@ def wait_for_service(service: str, max_seconds: int = 35) -> int:
             healthcheck = container_info.get("State").get("Health").get("Status")
         except AttributeError:
             raise NotImplementedError(
-                f"{service} service doesn't declare any healthcheck.\n"
+                f"{container_name} container doesn't declare any healthcheck.\n"
             )
         if healthcheck == "healthy":
             return 0
         time.sleep(1)
-        logger.warning(f"Waiting for {service} to be ready")
-    raise TimeoutError(f"Can't connect to {service} service")
+        logger.warning(f"Waiting for {container_name} to be ready")
+    raise TimeoutError(f"Can't connect to {container_name} container")
 
 
-def check_services(services: Iterable[str], max_seconds: int = 1) -> bool:
-    """Check if the specified services are running and healthy.
-    For every service it will retry for a `max_seconds` amount of time.
-    Returns False if any of the service is unhealthy, True otherwise.
+def check_containers(containers: Iterable[str], max_seconds: int = 1) -> bool:
+    """Check if the specified containers are running and healthy.
+    For every container it will retry for a `max_seconds` amount of time.
+    Returns False if any of the container is unhealthy, True otherwise.
     """
     try:
-        for service in services:
-            wait_for_service(service, max_seconds)
+        for container in containers:
+            wait_for_container(container, max_seconds)
     except (TimeoutError, RuntimeError, NotImplementedError):
         return False
     return True
 
 
-def load_dump(relpath):
+def load_dump(project: Project, relative_path: Path):
     """Loads a mysql dump into the derex mysql database."""
-    from derex.runner.mysql import MYSQL_ROOT_PASSWORD
-
-    dump_path = abspath_from_egg("derex.runner", relpath)
-    image = client.containers.get("mysql").image
+    dump_path = abspath_from_egg("derex.runner", relative_path)
+    image = client.containers.get(project.mysql_host).image
     logger.info("Resetting email database")
     try:
         client.containers.run(
@@ -124,7 +115,7 @@ def load_dump(relpath):
             [
                 "sh",
                 "-c",
-                f"mysql -h mysql -p{MYSQL_ROOT_PASSWORD} < /dump/{dump_path.name}",
+                f"mysql -h {project.mysql_host} -p{project.mysql_password} < /dump/{dump_path.name}",
             ],
             network="derex",
             volumes={dump_path.parent: {"bind": "/dump"}},
@@ -202,10 +193,6 @@ def image_exists(needle: str) -> bool:
     return False
 
 
-class BuildError(RuntimeError):
-    """An error occurred while building a docker image"""
-
-
 def get_running_containers() -> Dict:
     if "derex" in [network.name for network in client.networks.list()]:
         return {
@@ -234,9 +221,9 @@ def get_exposed_container_names() -> List:
     return result
 
 
-def run_minio_shell(command: str = "sh", tty: bool = True):
+def run_minio_shell(project: Project, command: str = "sh", tty: bool = True):
     """Invoke a minio shell"""
-    minio_key = get_secret(DerexSecrets.minio)
+    minio_key = project.get_secret(DerexSecrets.minio)
     os.system(
         f"docker run {'-ti ' if tty else ''}--rm --network derex --entrypoint /bin/sh minio/mc -c '"
         f'mc config host add local http://minio:80 minio_derex "{minio_key}" --api s3v4 ; set -ex; {command}\''

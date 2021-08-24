@@ -78,7 +78,7 @@ def complete_project(request, workdir_copy):
 @pytest.fixture(scope=("session"))
 def sys_argv(session_mocker):
     @contextlib.contextmanager
-    def my_cm(eargs):
+    def context_manager(eargs):
         with session_mocker.mock_module.patch.object(sys, "argv", eargs):
             try:
                 yield
@@ -86,7 +86,7 @@ def sys_argv(session_mocker):
                 if exc.code != 0:
                     raise
 
-    return my_cm
+    return context_manager
 
 
 def pytest_configure(config):

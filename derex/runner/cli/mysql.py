@@ -1,6 +1,8 @@
+from derex.runner.cli.utils import ensure_project
+from derex.runner.cli.utils import red
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
-from derex.runner.project import ProjectRunMode
+from derex.runner.project import ProjectEnvironment
 from derex.runner.utils import get_rich_console
 from derex.runner.utils import get_rich_table
 from typing import Optional
@@ -19,7 +21,7 @@ def mysql(context: click.core.Context):
         if isinstance(context.obj, Project):
             click.echo()
             project = context.obj
-            for db in show_databases():
+            for db in show_databases(project):
                 if db[0] == project.mysql_db_name:
                     click.echo(f'Current MySQL databases for project "{project.name}"')
                     console = get_rich_console()
@@ -37,12 +39,14 @@ def mysql(context: click.core.Context):
 
 
 @mysql.command(name="shell")
+@click.pass_obj
+@ensure_project
 @click.argument("command", type=str, required=False)
-def shell(command: Optional[str]):
+def shell(project: Project, command: Optional[str]):
     """Execute a root session of the mysql client"""
     from derex.runner.mysql import execute_root_shell
 
-    execute_root_shell(command)
+    execute_root_shell(project, command)
 
 
 @mysql.group("create")
@@ -65,101 +69,99 @@ def show(context: click.core.Context):
 
 @create.command(name="database")
 @click.pass_obj
+@ensure_project
 @click.argument("db_name", type=str, required=False)
-def create_database_cmd(project: Optional[Project], db_name: str):
+def create_database_cmd(project: Project, db_name: str):
     """Create a mysql database."""
-    if not any([project, db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="db_name",
-            param_type="str",
-            message="Either specify a database name or run in a derex project.",
-        )
-    if not db_name and project:
+    if not db_name:
         db_name = project.mysql_db_name
-
     from derex.runner.mysql import create_database
 
-    create_database(db_name)
+    create_database(project, db_name)
     return 0
 
 
 @create.command(name="user")
+@click.pass_obj
+@ensure_project
 @click.argument("user", type=str)
 @click.argument("password", type=str)
 @click.argument("host", type=str, default="localhost")
-def create_user_cmd(user: str, password: str, host: str):
+def create_user_cmd(project: Project, user: str, password: str, host: str):
     """Create a mysql user"""
     from derex.runner.mysql import create_user
 
-    create_user(user, password, host)
+    create_user(project, user, password, host)
     return 0
 
 
 @drop.command(name="database")
 @click.pass_obj
+@ensure_project
 @click.argument("db_name", type=str, required=False)
-def drop_database_cmd(project: Optional[Project], db_name: str):
+def drop_database_cmd(project: Project, db_name: str):
     """Drop a mysql database"""
-    if not any([project, db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="db_name",
-            param_type="str",
-            message="Either specify a database name or run in a derex project.",
-        )
-    if not db_name and project:
+    if not db_name:
         db_name = project.mysql_db_name
 
     if click.confirm(f'Are you sure you want to drop database "{db_name}" ?'):
         from derex.runner.mysql import drop_database
 
-        drop_database(db_name)
+        drop_database(project, db_name)
     return 0
 
 
 @drop.command(name="user")
+@click.pass_obj
+@ensure_project
 @click.argument("user", type=str)
 @click.argument("host", type=str, default="localhost")
-def drop_user_cmd(user: str, host: str):
+def drop_user_cmd(project: Project, user: str, host: str):
     """Drop a mysql user"""
     if click.confirm(f"Are you sure you want to drop user '{user}'@'{host}' ?"):
         from derex.runner.mysql import drop_user
 
-        drop_user(user, host)
+        drop_user(project, user, host)
     return 0
 
 
 @show.command(name="databases")
-def show_databases_cmd():
+@click.pass_obj
+@ensure_project
+def show_databases_cmd(project: Project):
     """List all MySQL databases"""
     from derex.runner.mysql import show_databases
 
     console = get_rich_console()
     table = get_rich_table("Database", "Tables", "Django users", show_lines=True)
-    for database in show_databases():
+    for database in show_databases(project):
         table.add_row(database[0], str(database[1]), str(database[2]))
     console.print(table)
     return 0
 
 
 @show.command(name="users")
-def show_users_cmd():
+@click.pass_obj
+@ensure_project
+def show_users_cmd(project: Project):
     """List all MySQL users"""
     from derex.runner.mysql import list_users
 
     console = get_rich_console()
     table = get_rich_table("User", "Host", "Password", show_lines=True)
-    for user in list_users():
+    for user in list_users(project):
         table.add_row(user[0], user[1], user[2])
     console.print(table)
     return 0
 
 
 @mysql.command("copy-database")
+@click.pass_obj
+@ensure_project
 @click.argument("source_db_name", type=str, required=True)
 @click.argument("destination_db_name", type=str)
-@click.pass_obj
 def copy_database_cmd(
-    project: Optional[Project], source_db_name: str, destination_db_name: Optional[str]
+    project: Project, source_db_name: str, destination_db_name: Optional[str]
 ):
     """
     Copy an existing mysql database. If no destination database is given it defaults
@@ -186,29 +188,27 @@ def copy_database_cmd(
 
 
 @mysql.command(name="reset")
-@click.pass_context
+@click.pass_obj
+@ensure_project
 @click.option(
     "--force",
     is_flag=True,
     default=False,
     help="Do not ask for confirmation and allow resetting mysql database if runmode is production",
 )
-def reset_mysql_cmd(context, force):
+def reset_mysql_cmd(project: Project, force: bool):
     """Reset MySQL database for the current project"""
-
-    if context.obj is None:
-        click.echo("This command needs to be run inside a derex project")
-        return 1
-    project = context.obj
-
     from derex.runner.mysql import reset_mysql_openedx
 
-    if project.runmode is not ProjectRunMode.debug and not force:
+    if project.environment is not ProjectEnvironment.development and not force:
         # Safety belt: we don't want people to run this in production
-        context.fail(
-            "The command mysql reset can only be run in `debug` runmode.\n"
-            "Use --force to override"
+        click.echo(
+            red(
+                "The command mysql reset can only be run in `development` environment.\n"
+                "Use --force to override"
+            )
         )
+        return 1
 
     if not force:
         if not click.confirm(
@@ -222,6 +222,8 @@ def reset_mysql_cmd(context, force):
 
 
 @mysql.command(name="reset-root-password")
+@click.pass_obj
+@ensure_project
 @click.argument("current_password", type=str, required=True)
 @click.option(
     "--force",
@@ -229,13 +231,11 @@ def reset_mysql_cmd(context, force):
     default=False,
     help="Do not ask for confirmation",
 )
-def reset_mysql_password_cmd(current_password: str, force: bool):
+def reset_mysql_password_cmd(project: Project, current_password: str, force: bool):
     """Reset the mysql root user password with the one derived from
     the Derex main secret."""
-    from derex.runner.constants import MYSQL_ROOT_USER
-
     if click.confirm(
-        f'This is going to reset the password for the mysql "{MYSQL_ROOT_USER}" user '
+        f'This is going to reset the password for the mysql "{project.mysql_user}" user '
         "with the one computed by derex.\n"
         "Are you sure you want to continue?"
     ):

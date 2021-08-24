@@ -20,6 +20,7 @@ def setup_plugin_manager():
     plugin_manager.register(compose_generation.BaseProject)
     plugin_manager.register(compose_generation.LocalServices)
     plugin_manager.register(compose_generation.LocalProject)
+    plugin_manager.register(compose_generation.LocalProjectEnvironment)
     plugin_manager.register(compose_generation.LocalProjectRunmode)
     return plugin_manager
 

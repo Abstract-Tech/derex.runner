@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 """Console script for derex.runner."""
-from .build import build
-from .mongodb import mongodb
-from .mysql import mysql
-from .test import test
-from .utils import ensure_project
-from .utils import red
 from click_plugins import with_plugins
-from derex.runner.logging_utils import setup_logging_decorator
+from derex.runner.cli.build import build
+from derex.runner.cli.caddy import caddy
+from derex.runner.cli.mongodb import mongodb
+from derex.runner.cli.mysql import mysql
+from derex.runner.cli.test import test
+from derex.runner.cli.utils import ensure_project
+from derex.runner.cli.utils import red
+from derex.runner.exceptions import DerexSecretError
+from derex.runner.exceptions import ProjectNotFound
+from derex.runner.logging_utils import setup_logging
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
-from derex.runner.project import ProjectNotFound
+from derex.runner.project import ProjectEnvironment
 from derex.runner.project import ProjectRunMode
-from derex.runner.secrets import HAS_MASTER_SECRET
 from derex.runner.utils import get_rich_console
 from derex.runner.utils import get_rich_table
 from typing import Any
@@ -33,7 +35,7 @@ logger = logging.getLogger(__name__)
 @click.group(invoke_without_command=True)
 @click.version_option()
 @click.pass_context
-@setup_logging_decorator
+@setup_logging
 def derex(ctx):
     """Derex directs edX: commands to manage an Open edX installation"""
     # Optimize --help and bash completion by importing
@@ -94,7 +96,7 @@ def reset_mailslurper(project):
 @ensure_project
 def compile_theme(project):
     """Compile theme sass files"""
-    from derex.runner.ddc import run_ddc_project
+    from derex.runner.ddc import run_ddc
 
     if project.themes_dir is None:
         click.echo("No theme directory present in this project")
@@ -112,21 +114,21 @@ def compile_theme(project):
             paver compile_sass --theme-dirs /openedx/themes --themes {themes}
             chown {uid}:{uid} /openedx/themes/* -R""",
     ]
-    run_ddc_project(compose_args, DebugBaseImageProject(), exit_afterwards=True)
+    run_ddc(compose_args, "project", DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command()
 @click.pass_obj
-@click.argument("course_ids", nargs=-1)
 @ensure_project
-def reindex_courses(project, course_ids):
+@click.argument("course_ids", nargs=-1)
+def reindex_courses(project: Project, course_ids: list):
     """Reindex all courses on elasticsearch.
     Course ids may be specified as arguemnts in order
     to reindex specific courses.
 
     e.g. `derex reindex_courses course-v1:edX+DemoX+Demo_Course`"""
 
-    from derex.runner.ddc import run_ddc_project
+    from derex.runner.ddc import run_ddc
 
     django_cmd = ["python", "manage.py", "cms", "reindex_course"]
 
@@ -139,7 +141,7 @@ def reindex_courses(project, course_ids):
         django_cmd.append("--setup")
 
     compose_args = ["run", "--rm", "cms", "sh", "-c", " ".join(django_cmd)]
-    run_ddc_project(compose_args, DebugBaseImageProject(), exit_afterwards=True)
+    run_ddc(compose_args, "project", DebugBaseImageProject(), exit_afterwards=True)
 
 
 @derex.command()
@@ -155,10 +157,12 @@ def create_bucket(project, tty):
     """Create S3 buckets on Minio"""
     from derex.runner.docker_utils import run_minio_shell
 
-    click.echo(f"Creating bucket {project.name} with dowload policy on /profile-images")
-    command = f"mc mb --ignore-existing local/{project.name}; "
-    command += f"mc policy set download local/{project.name}/profile-images"
-    run_minio_shell(command, tty=tty)
+    click.echo(
+        f"Creating bucket {project.minio_bucket} with dowload policy on /profile-images"
+    )
+    command = f"mc mb --ignore-existing local/{project.minio_bucket}; "
+    command += f"mc policy set download local/{project.minio_bucket}/profile-images"
+    run_minio_shell(project, command, tty=tty)
 
 
 @derex.command()
@@ -166,7 +170,7 @@ def create_bucket(project, tty):
 @ensure_project
 def reset_rabbitmq(project):
     """Create rabbitmq vhost"""
-    from derex.runner.ddc import run_ddc_services
+    from derex.runner.ddc import run_ddc
 
     vhost = f"{project.name}_edxqueue"
     compose_args = [
@@ -179,7 +183,7 @@ def reset_rabbitmq(project):
         rabbitmqctl set_permissions -p {vhost} guest ".*" ".*" ".*"
         """,
     ]
-    run_ddc_services(compose_args, exit_afterwards=True)
+    run_ddc(compose_args, "services", exit_afterwards=True)
     click.echo(f"Rabbitmq vhost {vhost} created")
     return 0
 
@@ -191,15 +195,9 @@ def reset_rabbitmq(project):
     required=False,
     callback=lambda _, __, value: value and ProjectRunMode[value],
 )
-@click.option(
-    "--force/-f",
-    required=False,
-    default=False,
-    help="Allows switching to production mode without a main secret defined",
-)
 @click.pass_obj
 @ensure_project
-def runmode(project: Project, runmode: Optional[ProjectRunMode], force):
+def runmode(project: Project, runmode: Optional[ProjectRunMode]):
     """Get/set project runmode (debug/production)"""
     if runmode is None:
         click.echo(project.runmode.name)
@@ -209,17 +207,6 @@ def runmode(project: Project, runmode: Optional[ProjectRunMode], force):
                 f"The current project runmode is already {runmode.name}", err=True
             )
             return
-        if not force:
-            if runmode is ProjectRunMode.production:
-                if not HAS_MASTER_SECRET:
-                    click.echo(
-                        red("Set a master secret before switching to production"),
-                        err=True,
-                    )
-                    sys.exit(1)
-                    return 1
-                    # We need https://github.com/Santandersecurityresearch/DrHeader/pull/102
-                    # for the return 1 to work, but it's not released yet
         previous_runmode = project.runmode
         project.runmode = runmode
         click.echo(
@@ -259,27 +246,84 @@ def settings(project: Project, settings: Optional[Any]):
         project.settings = settings
 
 
+@derex.command()
+@click.argument(
+    "environment",
+    type=click.Choice(ProjectEnvironment.__members__),
+    required=False,
+    callback=lambda _, __, value: value and ProjectEnvironment[value],
+)
+@click.option(
+    "--force/-f",
+    required=False,
+    default=False,
+    help="Allows switching to production environment without a main secret defined",
+)
+@click.pass_obj
+@ensure_project
+def environment(
+    project: Project, environment: Optional[ProjectEnvironment], force: bool
+):
+    """Get/set project environment (development/staging/production)"""
+    if environment is None:
+        click.echo(project.environment.value)
+    else:
+        if project.environment is environment:
+            click.echo(
+                f"The current project environment is already {environment.name}",
+                err=True,
+            )
+            return
+        if not force:
+            if environment in [
+                ProjectEnvironment.production,
+                ProjectEnvironment.staging,
+            ]:
+                try:
+                    if not project.has_main_secret(environment):
+                        click.echo(
+                            red(
+                                "Set a main secret before switching to a production environment"
+                            ),
+                            err=True,
+                        )
+                        sys.exit(1)
+                        return 1
+                except DerexSecretError as exception:
+                    click.echo(red(str(exception)), err=True)
+                    return 1
+        previous_environment = project.environment
+        project.environment = environment
+        click.echo(
+            f"Switched environment: {previous_environment.name} → {environment.name}",
+            err=True,
+        )
+
+
 @debug.command()
-def minio_shell():
+@click.pass_obj
+@ensure_project
+def minio_shell(project: Project):
     from derex.runner.docker_utils import run_minio_shell
 
-    run_minio_shell()
+    run_minio_shell(project)
 
 
 @debug.command("print-secret")
+@click.pass_obj
+@ensure_project
 @click.argument(
     "secret",
     type=str,
     required=True,
 )
-def print_secret(secret):
-    from derex.runner.secrets import DerexSecrets
-    from derex.runner.secrets import get_secret
+def print_secret(project: Project, secret: str):
+    from derex.runner.constants import DerexSecrets
 
     derex_secret = getattr(DerexSecrets, secret, None)
     if not derex_secret:
         raise click.exceptions.ClickException(f'No secrets found for "{secret}"')
-    click.echo(get_secret(derex_secret))
+    click.echo(project.get_secret(derex_secret))
     return 0
 
 
@@ -292,11 +336,11 @@ def print_secret(secret):
 )
 def minio_update_key(old_key: str):
     """Run minio to re-key data with the new secret"""
-    from derex.runner.ddc import run_ddc_services
-    from derex.runner.docker_utils import wait_for_service
-    from derex.runner.utils import derex_path
+    from derex.runner import derex_path
+    from derex.runner.ddc import run_ddc
+    from derex.runner.docker_utils import wait_for_container
 
-    wait_for_service("minio")
+    wait_for_container("minio")
     MINIO_SCRIPT_PATH = derex_path("derex/runner/compose_files/minio-update-key.sh")
     click.echo("Updating MinIO secret key...")
     compose_args = [
@@ -313,7 +357,7 @@ def minio_update_key(old_key: str):
         "/minio-update-key.sh",
     ]
     try:
-        run_ddc_services(compose_args)
+        run_ddc(compose_args, "services")
     except RuntimeError:
         return 1
 
@@ -323,15 +367,16 @@ def minio_update_key(old_key: str):
     # We'll let `docker-compose up` recreate it for us, if needed
     click.echo("\nRecreating MinIO container...")
     compose_args = ["up", "-d", "minio"]
-    run_ddc_services(compose_args)
+    run_ddc(compose_args, "services")
 
-    wait_for_service("minio")
+    wait_for_container("minio")
     click.echo("\nMinIO secret key updated successfully!")
     return 0
 
 
 derex.add_command(mysql)
 derex.add_command(mongodb)
+derex.add_command(caddy)
 derex.add_command(build)
 derex.add_command(test)
 

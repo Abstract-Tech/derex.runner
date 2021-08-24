@@ -1,0 +1,41 @@
+{%- if project.mysql_host == "mysql57" %}
+
+  {{ project.mysql_host }}:
+    image: {{ project.openedx_version.value["mysql_image"] }}
+    restart: unless-stopped
+    container_name: {{ project.mysql_host }}
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: {{ project.mysql_password }}
+    healthcheck:
+      test: mysqladmin ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.mysql_docker_volume }}:/var/lib/mysql
+    networks:
+      - derex
+
+{%- else %}
+
+  {{ project.mysql_host }}:
+    image: {{ project.openedx_version.value["mysql_image"] }}
+    restart: unless-stopped
+    container_name: {{ project.mysql_host }}
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: {{ project.mysql_password }}
+    healthcheck:
+      test: mysqladmin ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.mysql_docker_volume }}:/var/lib/mysql
+    networks:
+      - derex
+
+{%- endif %}

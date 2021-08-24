@@ -26,33 +26,24 @@ def test_derex_runmode(minimal_project, mocker):
         result = runner.invoke(derex_cli_group, ["runmode"])
         assert result.exit_code == 0, result.output
         assert result.output == "debug\n"
-        # Until this PR is merged we can't peek into `.stderr`
-        # https://github.com/pallets/click/pull/1194
-        assert result.stderr_bytes == b""
+        assert result.stderr == ""
 
         result = runner.invoke(derex_cli_group, ["runmode", "aaa"])
         assert result.exit_code == 2, result.output
         assert "Usage:" in result.stderr
 
-        mocker.patch("derex.runner.cli.HAS_MASTER_SECRET", new=False)
-        result = runner.invoke(derex_cli_group, ["runmode", "production"])
-        assert result.exit_code == 1, result.output
-        assert "Set a master secret" in result.stderr_bytes.decode("utf8")
-
-        mocker.patch("derex.runner.cli.HAS_MASTER_SECRET", new=True)
         result = runner.invoke(derex_cli_group, ["runmode", "production"])
         assert result.exit_code == 0, result.output
-        assert "debug → production" in result.stderr_bytes.decode("utf8")
+        assert "debug → production" in result.stderr
 
-        mocker.patch("derex.runner.cli.HAS_MASTER_SECRET", new=True)
         result = runner.invoke(derex_cli_group, ["runmode", "production"])
         assert result.exit_code == 0, result.output
-        assert "already production" in result.stderr_bytes.decode("utf8")
+        assert "already production" in result.stderr
 
         result = runner.invoke(derex_cli_group, ["runmode"])
         assert result.exit_code == 0, result.output
         assert result.output == "production\n"
-        assert result.stderr_bytes == b""
+        assert result.stderr == ""
 
 
 def test_derex_runmode_wrong(minimal_project):
@@ -64,6 +55,50 @@ def test_derex_runmode_wrong(minimal_project):
         result = runner.invoke(derex_cli_group, "runmode")
         # Ensure presence of error message
         assert "garbage-not-a-valid-runmode" in result.stderr
+        assert "is not valid as" in result.stderr
+
+
+def test_derex_environment(minimal_project, mocker):
+    with minimal_project:
+        result = runner.invoke(derex_cli_group, ["environment"])
+        assert result.exit_code == 0, result.output
+        assert result.output == "development\n"
+        assert result.stderr == ""
+
+        result = runner.invoke(derex_cli_group, ["environment", "aaa"])
+        assert result.exit_code == 2, result.output
+        assert "Usage:" in result.stderr
+
+        mocker.patch("derex.runner.project.Project.has_main_secret", return_value=False)
+        result = runner.invoke(derex_cli_group, ["environment", "production"])
+        assert result.exit_code == 1, result.output
+        assert "Set a main secret" in result.stderr
+
+        mocker.patch("derex.runner.project.Project.has_main_secret", return_value=True)
+        result = runner.invoke(derex_cli_group, ["environment", "production"])
+        assert result.exit_code == 0, result.output
+        assert "development → production" in result.stderr
+
+        mocker.patch("derex.runner.project.Project.has_main_secret", return_value=True)
+        result = runner.invoke(derex_cli_group, ["environment", "production"])
+        assert result.exit_code == 0, result.output
+        assert "already production" in result.stderr
+
+        result = runner.invoke(derex_cli_group, ["environment"])
+        assert result.exit_code == 0, result.output
+        assert result.output == "production\n"
+        assert result.stderr == ""
+
+
+def test_derex_environment_wrong(minimal_project):
+    with minimal_project:
+        project = Project()
+        # Use low level API to inject invalid value
+        project._set_status("environment", "garbage-not-a-valid-environment")
+
+        result = runner.invoke(derex_cli_group, "environment")
+        # Ensure presence of error message
+        assert "garbage-not-a-valid-environment" in result.stderr
         assert "is not valid as" in result.stderr
 
 

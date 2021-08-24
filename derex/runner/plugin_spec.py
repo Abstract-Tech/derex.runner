@@ -10,7 +10,9 @@ hookspec = pluggy.HookspecMarker("derex.runner")
 
 
 @hookspec
-def ddc_services_options() -> Dict[str, Union[str, float, int, List[str]]]:
+def ddc_services_options(
+    project: Project,
+) -> Dict[str, Union[str, float, int, List[str]]]:
     """Return a dict describing how to add this plugin.
     The dict `name` and `priority` keys will be used to determine ordering.
     The `options` key contains a list of strings pointing to docker-compose yml files

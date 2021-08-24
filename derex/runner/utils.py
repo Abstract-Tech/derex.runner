@@ -1,16 +1,22 @@
-from functools import partial
+from derex.runner.constants import CONF_FILENAME
+from derex.runner.exceptions import ProjectNotFound
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+from logging import getLogger
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from typing import Any
 from typing import List
-from typing import Optional
 from typing import Union
 
 import hashlib
-import importlib_metadata
 import os
 import re
+
+
+logger = getLogger(__name__)
+truthy = frozenset(("t", "true", "y", "yes", "on", "1"))
 
 
 def get_dir_hash(
@@ -60,9 +66,6 @@ def get_dir_hash(
     return hasher.hexdigest()
 
 
-truthy = frozenset(("t", "true", "y", "yes", "on", "1"))
-
-
 def asbool(s: Any) -> bool:
     """Return the boolean value ``True`` if the case-lowered value of string
     input ``s`` is a `truthy string`. If ``s`` is already one of the
@@ -77,19 +80,6 @@ def asbool(s: Any) -> bool:
     return s.lower() in truthy
 
 
-def abspath_from_egg(egg: str, path: str) -> Optional[Path]:
-    """Given a path relative to the egg root, find the absolute
-    filesystem path for that resource.
-    For instance this file's absolute path can be found passing
-    derex/runner/utils.py
-    to this function.
-    """
-    for file in importlib_metadata.files(egg):
-        if str(file) == path:
-            return file.locate()
-    return None
-
-
 def get_rich_console(*args, **kwargs):
     return Console(*args, **kwargs)
 
@@ -98,4 +88,40 @@ def get_rich_table(*args, **kwargs):
     return Table(*args, show_header=True, **kwargs)
 
 
-derex_path = partial(abspath_from_egg, "derex.runner")
+def get_requirements_hash(path: Path) -> str:
+    """Given a directory, return a hash of the contents of the text files it contains."""
+    hasher = hashlib.sha256()
+    logger.debug(
+        f"Calculating hash for requirements dir {path}; initial (empty) hash is {hasher.hexdigest()}"
+    )
+    for file in sorted(path.iterdir()):
+        if file.is_file():
+            hasher.update(file.read_bytes())
+        logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
+    return hasher.hexdigest()
+
+
+def find_project_root(path: Path) -> Path:
+    """Find the project directory walking up the filesystem starting on the
+    given path until a configuration file is found.
+    """
+    current = path
+    while current != current.parent:
+        if (current / CONF_FILENAME).is_file():
+            return current
+        current = current.parent
+    raise ProjectNotFound(
+        f"No directory found with a {CONF_FILENAME} file in it, starting from {path}"
+    )
+
+
+def compile_jinja_template(
+    template_path: Path, destination: Path, context: dict = {}
+) -> Path:
+    """Write a compiled jinja2 template using the given context variables"""
+    template = Environment(loader=FileSystemLoader(template_path.parent)).from_string(
+        template_path.read_text()
+    )
+    rendered_template = template.render(**context)
+    destination.write_text(rendered_template)
+    return destination
