@@ -6,8 +6,8 @@ import os
 import sys
 
 
-def setup_logging():
-    loglevel = getattr(logging, os.environ.get("DEREX_LOGLEVEL", "WARN"))
+def do_setup_logging():
+    loglevel = getattr(logging, os.environ.get("DEREX_LOGLEVEL", "WARNING"))
     for logger in ("urllib3.connectionpool", "compose", "docker"):
         logging.getLogger(logger).setLevel(loglevel)
 
@@ -24,11 +24,11 @@ def setup_logging():
     )
 
 
-def setup_logging_decorator(func):
+def setup_logging(func):
     """Decorator to run the setup_logging function before the decorated one."""
 
     def inner(*args, **kwargs):
-        setup_logging()
+        do_setup_logging()
         func(*args, **kwargs)
 
     return inner

@@ -1,0 +1,29 @@
+{
+    auto_https off
+}
+(logging) {
+    log {
+        output file /var/log/caddy-https-access.log {
+            roll_size 50mb      # Rotate after 50 MB
+            roll_keep 20        # Keep at most 20 log files
+            roll_keep_for 2160h # Keep rotated files for 90 days
+        }
+    }
+}
+(handle_errors) {
+    handle_errors {
+        @5xx {
+            expression {http.error.status_code} > 499
+            expression {http.error.status_code} < 600
+        }
+        rewrite @5xx /5xx.html
+        file_server {
+            root /etc/caddy/server-static
+        }
+    }
+}
+
+# Used by health check
+http://localhost:8080 {
+    respond /health-check 200
+}

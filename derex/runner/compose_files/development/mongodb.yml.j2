@@ -1,0 +1,70 @@
+{%- if project.mongodb_host == "mongodb44" %}
+
+  {{ project.mongodb_host }}:
+    image: {{ project.openedx_version.value["mongodb_image"] }}
+    restart: unless-stopped
+    container_name: {{ project.mongodb_host }}
+    command: mongod --nojournal
+      --storageEngine wiredTiger
+      --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: {{ project.mongodb_user }}
+      MONGO_INITDB_ROOT_PASSWORD: {{ project.mongodb_password }}"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.mongodb_docker_volume }}:/data/db
+    networks:
+      - derex
+
+{%- elif project.mongodb_host == "mongodb36" %}
+
+  {{ project.mongodb_host }}:
+    image: {{ project.openedx_version.value["mongodb_image"] }}
+    restart: unless-stopped
+    container_name: {{ project.mongodb_host }}
+    command: mongod --smallfiles --nojournal
+      --storageEngine wiredTiger
+      --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: {{ project.mongodb_user }}
+      MONGO_INITDB_ROOT_PASSWORD: {{ project.mongodb_password }}"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.mongodb_docker_volume }}:/data/db
+    networks:
+      - derex
+
+{%- else %}
+
+  {{ project.mongodb_host }}:
+    image: {{ project.openedx_version.value["mongodb_image"] }}
+    restart: unless-stopped
+    container_name: {{ project.mongodb_host }}
+    command: mongod --smallfiles --nojournal
+      --storageEngine wiredTiger
+      --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: {{ project.mongodb_user }}
+      MONGO_INITDB_ROOT_PASSWORD: {{ project.mongodb_password }}"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.mongodb_docker_volume }}:/data/db
+    networks:
+      - derex
+
+{%- endif %}

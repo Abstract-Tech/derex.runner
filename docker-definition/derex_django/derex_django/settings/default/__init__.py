@@ -44,6 +44,7 @@ if SERVICE_VARIANT == "lms":
 if SERVICE_VARIANT == "cms":
     from cms.envs.common import *  # noqa: F401, F403
 
+
 _settings_modules = [
     "django_settings",
     "mysql",

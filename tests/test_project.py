@@ -1,6 +1,6 @@
 from derex.runner.constants import CONF_FILENAME
 from derex.runner.constants import SECRETS_CONF_FILENAME
-from derex.runner.ddc import run_ddc_project
+from derex.runner.ddc import run_ddc
 from derex.runner.project import Project
 from derex.runner.project import ProjectRunMode
 from pathlib import Path
@@ -92,7 +92,7 @@ def test_ddc_project_addition(minimal_project, mocker, capsys):
         with docker_compose_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
-        run_ddc_project([], project, dry_run=True)
+        run_ddc([], "project", project, dry_run=True)
         output = capsys.readouterr().out
         # The last option should be the path of the user docker compose file for this project
         assert output.endswith(f"-f {docker_compose_path}\n")
@@ -100,11 +100,11 @@ def test_ddc_project_addition(minimal_project, mocker, capsys):
 
 def test_docker_compose_addition_per_runmode(minimal_project, mocker, capsys):
     with minimal_project:
-        docker_compose_debug_path = Project().root / "docker-compose-debug.yml"
+        docker_compose_debug_path = Project().root / "docker-compose-runmode-debug.yml"
         with docker_compose_debug_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
-        run_ddc_project([], project, dry_run=True)
+        run_ddc([], "project", project, dry_run=True)
         output = capsys.readouterr().out
         # The last option should be the path of the debug docker compose
         assert output.endswith(f"-f {docker_compose_debug_path}\n")
@@ -113,7 +113,7 @@ def test_docker_compose_addition_per_runmode(minimal_project, mocker, capsys):
         default_project_docker_compose_file = project.private_filepath(
             "docker-compose.yml"
         )
-        run_ddc_project([], project, dry_run=True)
+        run_ddc([], "project", project, dry_run=True)
         output = capsys.readouterr().out
         # The last option should be the path of the project default docker compose file
         assert output.endswith(f"-f {default_project_docker_compose_file}\n")

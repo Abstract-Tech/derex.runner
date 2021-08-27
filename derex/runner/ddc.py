@@ -4,10 +4,10 @@ These wrappers invoke `docker-compose` functions to get their job done.
 They put a `docker.compose.yml` file in place based on user configuration.
 """
 from derex.runner.compose_utils import run_docker_compose
+from derex.runner.constants import ProjectEnvironment
 from derex.runner.docker_utils import ensure_volumes_present
 from derex.runner.docker_utils import is_docker_working
-from derex.runner.docker_utils import wait_for_service
-from derex.runner.logging_utils import setup_logging
+from derex.runner.docker_utils import wait_for_container
 from derex.runner.plugins import setup_plugin_manager
 from derex.runner.plugins import sort_and_validate_plugins
 from derex.runner.project import DebugBaseImageProject
@@ -40,78 +40,50 @@ def ddc_parse_args(compose_args: List[str]) -> Tuple[List[str], bool]:
 
 def ddc_services():
     """Derex docker-compose: run docker-compose with additional parameters.
-    Adds docker compose file paths for services and administrative tools.
-    If the environment variable DEREX_ADMIN_SERVICES is set to a falsey value,
-    only the core ones will be started (mysql, mongodb etc) and the nice-to-have
-    will not (portainer and adminer).
+    Adds docker compose file paths for services relative to the host.
 
     Besides the regular docker-compose options it also accepts the --dry-run
     option; in case it's specified docker-compose will not be invoked, but
     a line will be printed showing what would have been invoked.
     """
-    check_docker()
-    setup_logging()
-    args, dry_run = ddc_parse_args(sys.argv)
-    run_ddc_services(args, dry_run=dry_run, exit_afterwards=True)
+    compose_args, dry_run = ddc_parse_args(sys.argv)
+    run_ddc(list(compose_args), "services", dry_run=dry_run, exit_afterwards=True)
 
 
 def ddc_project():
     """Proxy for docker-compose: writes a docker-compose.yml file with the
     configuration of this project, and then run `docker-compose` on it.
 
-    You probably want do run `ddc-project up -d` and `ddc-project logs -f`.
+    Besides the regular docker-compose options it also accepts the --dry-run
+    option; in case it's specified docker-compose will not be invoked, but
+    a line will be printed showing what would have been invoked.
+
+    You probably want to run `ddc-project up -d` and `ddc-project logs -f`.
     """
-    check_docker()
-    setup_logging()
-    try:
-        project = Project()
-    except ValueError as exc:
-        click.echo(str(exc))
-        sys.exit(1)
     compose_args, dry_run = ddc_parse_args(sys.argv)
-    # If trying to start up containers, first check that needed services are running
-    is_start_cmd = any(param in compose_args for param in ["up", "start"])
-    if is_start_cmd:
-        for service in ["mysql", "mongodb", "rabbitmq"]:
-            try:
-                wait_for_service(service)
-            except (TimeoutError, RuntimeError, NotImplementedError) as exc:
-                click.echo(click.style(str(exc), fg="red"))
-                sys.exit(1)
-    run_ddc_project(list(compose_args), project, dry_run=dry_run, exit_afterwards=True)
+    run_ddc(list(compose_args), "project", dry_run=dry_run, exit_afterwards=True)
 
 
-def check_docker():
-    if not is_docker_working():
-        click.echo(click.style("Could not connect to docker.", fg="red"))
-        click.echo(
-            "Is it installed and running? Make sure the docker command works and try again."
-        )
-        sys.exit(1)
+def check_docker(func):
+    """Decorator to check if docker is working before executing the decorated function."""
+
+    def inner(*args, **kwargs):
+        if not is_docker_working():
+            click.echo(click.style("Could not connect to docker.", fg="red"))
+            click.echo(
+                "Is it installed and running? Make sure the docker command works and try again."
+            )
+            sys.exit(1)
+        func(*args, **kwargs)
+
+    return inner
 
 
-def run_ddc_services(
-    argv: List[str],
-    dry_run: bool = False,
-    exit_afterwards: bool = False,
-):
-    """Run a docker-compose command relative to the system services.
-    Plugin arguments are added to arguments passed in this function sorted by
-    plugin priority.
-
-    Used by ddc-services cli command.
-    """
-    ensure_volumes_present()
-    plugins_argv = sort_and_validate_plugins(
-        setup_plugin_manager().hook.ddc_services_options()
-    )
-    compose_argv = plugins_argv + argv
-    run_docker_compose(compose_argv, dry_run, exit_afterwards)
-
-
-def run_ddc_project(
-    argv: List[str],
-    project: Project,
+@check_docker
+def run_ddc(
+    compose_args: List[str],
+    variant: str,
+    project: Optional[Project] = None,
     dry_run: bool = False,
     exit_afterwards: bool = False,
 ):
@@ -119,13 +91,41 @@ def run_ddc_project(
     Plugin arguments are added to arguments passed in this function sorted by
     plugin priority.
 
-    Used by ddc-project cli command.
+    Used by both ddc-services and ddc-project cli command.
     """
-    plugins_argv = sort_and_validate_plugins(
-        setup_plugin_manager().hook.ddc_project_options(project=project),
-    )
-    compose_argv = plugins_argv + argv
-    run_docker_compose(compose_argv, dry_run, exit_afterwards)
+    if not project:
+        try:
+            project = Project()
+        except ValueError as exc:
+            click.echo(str(exc))
+            sys.exit(1)
+
+    ensure_volumes_present(project)
+
+    if variant == "project":
+        plugins_args = sort_and_validate_plugins(
+            setup_plugin_manager().hook.ddc_project_options(project=project),
+        )
+        if project.environment is ProjectEnvironment.development:
+            # If trying to start up containers, first check that needed services are running
+            is_start_cmd = any(param in compose_args for param in ["up", "start"])
+            if is_start_cmd:
+                for service in [project.mysql_host, project.mongodb_host, "rabbitmq"]:
+                    try:
+                        wait_for_container(service)
+                    except (TimeoutError, RuntimeError, NotImplementedError) as exc:
+                        click.echo(click.style(str(exc), fg="red"))
+                        sys.exit(1)
+    elif variant == "services":
+        plugins_args = sort_and_validate_plugins(
+            setup_plugin_manager().hook.ddc_services_options(project=project)
+        )
+    else:
+        raise RuntimeError(
+            "ddc variant argument must be either `project` or `services`"
+        )
+    compose_args = plugins_args + compose_args
+    run_docker_compose(compose_args, dry_run, exit_afterwards)
 
 
 def run_django_script(
@@ -153,7 +153,7 @@ def run_django_script(
     ]
 
     try:
-        run_ddc_project(compose_args, project=DebugBaseImageProject())
+        run_ddc(compose_args, "project", DebugBaseImageProject())
     finally:
         result_json = open(result_path).read()
         try:

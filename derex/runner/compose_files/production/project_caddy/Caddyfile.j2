@@ -1,0 +1,12 @@
+:80 {
+    reverse_proxy {http.request.host}.derex:80
+}
+
+:81 {
+    reverse_proxy {http.request.host}.derex:81
+}
+
+# Used by health check
+:8080 {
+    respond /health-check 200
+}

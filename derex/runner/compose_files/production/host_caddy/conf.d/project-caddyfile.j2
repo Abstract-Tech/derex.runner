@@ -1,0 +1,19 @@
+{{ project.config.lms_hostname }} {{ project.config.lms_preview_hostname }} {
+    reverse_proxy http://{{ project.name }}_{{ project.environment.name }}.localhost.derex {
+        header_up X-Forwarded-Port 443
+    }
+    import logging
+    import handle_errors
+}
+{{ project.config.cms_hostname }} {
+    reverse_proxy http://studio.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+    import logging
+    import handle_errors
+}
+{{ project.config.flower_hostname }} {
+    reverse_proxy http://flower.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+}
+
+{{ project.config.minio_hostname }} {
+    reverse_proxy http://minio.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+}

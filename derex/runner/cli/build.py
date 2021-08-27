@@ -1,8 +1,8 @@
-from .utils import ensure_project
 from derex.runner import __version__
+from derex.runner import abspath_from_egg
+from derex.runner.cli.utils import ensure_project
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
-from derex.runner.utils import abspath_from_egg
 from distutils.spawn import find_executable
 
 import click
@@ -111,6 +111,70 @@ def final_refresh(ctx, project: Project):
     ),
 )
 def openedx(version, target, push, only_print_image_name, docker_opts):
+    """Build openedx image using docker. Defaults to dev image target."""
+    dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
+    build_arguments = []
+    for spec in version.value.items():
+        build_arguments.append("--build-arg")
+        build_arguments.append(f"{spec[0].upper()}={spec[1]}")
+    docker_image_prefix = version.value["docker_image_prefix"]
+    image_name = f"{docker_image_prefix}-{target}:{__version__}"
+    if only_print_image_name:
+        click.echo(image_name)
+        return
+    push_arg = ",push=true" if push else ""
+    command = [
+        "docker",
+        "buildx",
+        "build",
+        str(dockerdir),
+        "-t",
+        image_name,
+        *build_arguments,
+        f"--target={target}",
+    ]
+    transifex_path = os.path.expanduser("~/.transifexrc")
+    if os.path.exists(transifex_path):
+        command.extend(["--secret", f"id=transifex,src={transifex_path}"])
+    if docker_opts:
+        command.extend(docker_opts.format(**locals()).split())
+    print("Invoking\n" + " ".join(command), file=sys.stderr)
+    os.execve(find_executable(command[0]), command, os.environ)
+
+
+@build.command()
+@click.argument(
+    "version",
+    type=click.Choice(OpenEdXVersions.__members__),
+    required=True,
+    callback=lambda _, __, value: value and OpenEdXVersions[value],
+)
+@click.option(
+    "-t",
+    "--target",
+    type=click.Choice(["source", "production"]),
+    default="dev",
+    help="Target to build (source, production)",
+)
+@click.option(
+    "--push/--no-push", default=False, help="Also push image to registry after building"
+)
+@click.option(
+    "--only-print-image-name/--do-build",
+    default=False,
+    help="Only print image name for the given target",
+)
+@click.option(
+    "-d",
+    "--docker-opts",
+    envvar="DOCKER_OPTS",
+    default="--output type=image,name={docker_image_prefix}-{target}{push_arg}",
+    help=(
+        "Additional options to pass to the docker invocation.\n"
+        "By default outputs the image to the local docker daemon."
+    ),
+)
+def microfrontend(version, target, push, only_print_image_name, docker_opts):
     """Build openedx image using docker. Defaults to dev image target."""
     dockerdir = abspath_from_egg("derex.runner", "docker-definition/Dockerfile").parent
     build_arguments = []

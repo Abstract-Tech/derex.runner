@@ -1,13 +1,27 @@
+from base64 import b64encode
 from derex.runner import __version__
 from derex.runner.constants import CONF_FILENAME
 from derex.runner.constants import DEREX_DJANGO_SETTINGS_PATH
+from derex.runner.constants import DEREX_ETC_PATH
+from derex.runner.constants import DEREX_MAIN_SECRET_DEFAULT_MAX_SIZE
+from derex.runner.constants import DEREX_MAIN_SECRET_DEFAULT_MIN_ENTROPY
+from derex.runner.constants import DEREX_MAIN_SECRET_DEFAULT_MIN_SIZE
 from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
+from derex.runner.constants import DerexSecrets
+from derex.runner.constants import MINIO_ROOT_USER
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
+from derex.runner.constants import OpenEdXVersions
+from derex.runner.constants import ProjectEnvironment
+from derex.runner.constants import ProjectRunMode
 from derex.runner.constants import SECRETS_CONF_FILENAME
-from derex.runner.secrets import DerexSecrets
-from derex.runner.secrets import get_secret
+from derex.runner.exceptions import DerexSecretError
+from derex.runner.secrets import compute_entropy
+from derex.runner.secrets import get_derex_secrets_env
+from derex.runner.secrets import scrypt_hash
+from derex.runner.utils import find_project_root
 from derex.runner.utils import get_dir_hash
+from derex.runner.utils import get_requirements_hash
 from enum import Enum
 from logging import getLogger
 from pathlib import Path
@@ -16,7 +30,6 @@ from typing import Optional
 from typing import Union
 
 import difflib
-import hashlib
 import json
 import os
 import re
@@ -26,58 +39,6 @@ import yaml
 
 logger = getLogger(__name__)
 DEREX_RUNNER_PROJECT_DIR = ".derex"
-
-
-class OpenEdXVersions(Enum):
-    # Values will be passed as uppercased named arguments to the docker build
-    # e.g. --build-arg EDX_PLATFORM_RELEASE=koa
-    ironwood = {
-        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
-        "edx_platform_version": "open-release/ironwood.master",
-        "edx_platform_release": "ironwood",
-        "docker_image_prefix": "derex/openedx-ironwood",
-        "alpine_version": "alpine3.11",
-        "python_version": "2.7",
-        "pip_version": "20.3.4",
-        # The latest node release does not work on ironwood
-        # (node-sass version fails to compile)
-        "node_version": "v10.22.1",
-        "mysql_image": "mysql:5.6.36",
-        "mongodb_image": "mongo:3.2.21",
-    }
-    juniper = {
-        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
-        "edx_platform_version": "open-release/juniper.master",
-        "edx_platform_release": "juniper",
-        "docker_image_prefix": "derex/openedx-juniper",
-        "alpine_version": "alpine3.11",
-        "python_version": "3.6",
-        "pip_version": "21.0.1",
-        "node_version": "v12.19.0",
-        "mysql_image": "mysql:5.6.36",
-        "mongodb_image": "mongo:3.6.23",
-    }
-    koa = {
-        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
-        # We set koa.3 since as today (20 may 2021) koa.master codebase is broken
-        "edx_platform_version": "open-release/koa.3",
-        "edx_platform_release": "koa",
-        "docker_image_prefix": "derex/openedx-koa",
-        # We are stuck on alpine3.12 since SciPy won't build
-        # on gcc>=10 due to fortran incompatibility issues.
-        # See more at https://gcc.gnu.org/gcc-10/porting_to.html
-        "alpine_version": "alpine3.12",
-        "python_version": "3.8",
-        "pip_version": "21.0.1",
-        "node_version": "v12.19.0",
-        "mysql_image": "mysql:5.7.34",
-        "mongodb_image": "mongo:3.6.23",
-    }
-
-
-class ProjectRunMode(Enum):
-    debug = "debug"  # The first is the default
-    production = "production"
 
 
 class Project:
@@ -127,6 +88,18 @@ class Project:
     # The directory containing cypress tests
     e2e_dir: Optional[Path] = None
 
+    # The host directory where to lookup for global host configurations
+    derex_etc_path: Optional[Path] = None
+
+    # Toggle the host Caddy server should be enabled
+    enable_host_caddy: bool
+
+    # The directory containing the project Caddy configuration files
+    project_caddy_dir: Optional[Path] = None
+
+    # The directory containing the host Caddy configuration files
+    host_caddy_dir: Optional[Path] = None
+
     # The image name of the image that includes requirements
     requirements_image_name: str
 
@@ -156,6 +129,113 @@ class Project:
     _available_settings = None
 
     @property
+    def etc_path(self) -> Path:
+        return Path(os.getenv("DEREX_ETC_PATH", DEREX_ETC_PATH))
+
+    @property
+    def main_secret_path(self) -> str:
+        return self.config.get("main_secret_path", self.root / "main_secret")
+
+    @property
+    def main_secret_max_size(self) -> str:
+        return self.config.get(
+            "main_secret_max_size", DEREX_MAIN_SECRET_DEFAULT_MAX_SIZE
+        )
+
+    @property
+    def main_secret_min_size(self) -> str:
+        return self.config.get(
+            "main_secret_min_size", DEREX_MAIN_SECRET_DEFAULT_MIN_SIZE
+        )
+
+    @property
+    def main_secret_min_entropy(self) -> str:
+        return self.config.get(
+            "main_secret_min_entropy", DEREX_MAIN_SECRET_DEFAULT_MIN_ENTROPY
+        )
+
+    @property
+    def main_secret(self) -> str:
+        """Derex uses a main secret to derive all other secrets.
+        This functions finds the main secret for the current project,
+        and if it can't find it it will return a default one.
+        """
+        return self.get_main_secret(self.environment) or "Default secret"
+
+    def has_main_secret(self, environment: ProjectEnvironment) -> bool:
+        """Return wheter a main secret exists for a given environment"""
+        return bool(self.get_main_secret(environment))
+
+    def get_main_secret(self, environment: ProjectEnvironment) -> Optional[str]:
+        """In a development environment the main secret is shared among projects.
+        Its location can be customized through the environment variable `DEREX_MAIN_SECRET_PATH`.
+
+        In a staging or production environment the main secret is tied to a project.
+        The default location is in the project root, but can be customized
+        via the project configuration `main_secret_path`.
+        """
+
+        if environment == ProjectEnvironment.development:
+            # Get configurations from environment
+            filepath = get_derex_secrets_env("path", Path)
+            max_size = get_derex_secrets_env("max_size", int)
+            min_size = get_derex_secrets_env("min_size", int)
+            min_entropy = get_derex_secrets_env("min_entropy", int)
+        else:
+            # Get configurations from project
+            filepath = self.main_secret_path
+            max_size = self.main_secret_max_size
+            min_size = self.main_secret_min_size
+            min_entropy = self.main_secret_min_entropy
+
+        if os.access(filepath, os.R_OK):
+            main_secret = filepath.read_text().strip()
+            if len(main_secret) > max_size:
+                raise DerexSecretError(
+                    f"Main secret in {filepath} is too large: {len(main_secret)} (should be {max_size} at most)"
+                )
+            if len(main_secret) < min_size:
+                raise DerexSecretError(
+                    f"Main secret in {filepath} is too small: {len(main_secret)} (should be {min_size} at least)"
+                )
+            if compute_entropy(main_secret) < min_entropy:
+                raise DerexSecretError(
+                    f"Main secret in {filepath} has not enough entropy: {compute_entropy(main_secret)} (should be {min_entropy} at least)"
+                )
+            return main_secret
+
+        if filepath.exists():
+            logger.error(
+                f"File {filepath} is not readable; using default master secret"
+            )
+        return None
+
+    @property
+    def mysql_host(self) -> str:
+        mysql_version = self.openedx_version.value["mysql_image"].split(":")[1]
+        mysql_major_version = mysql_version.split(".")[0]
+        mysql_minor_version = mysql_version.split(".")[1]
+        return f"mysql{mysql_major_version}{mysql_minor_version}"
+
+    @property
+    def elasticsearch_host(self) -> str:
+        elasticsearch_version = self.openedx_version.value["elasticsearch_image"].split(
+            ":"
+        )[1]
+        elasticsearch_major_version = elasticsearch_version.split(".")[0]
+        elasticsearch_minor_version = elasticsearch_version.split(".")[1]
+        return (
+            f"elasticsearch{elasticsearch_major_version}{elasticsearch_minor_version}"
+        )
+
+    @property
+    def mongodb_host(self) -> str:
+        mongo_version = self.openedx_version.value["mongodb_image"].split(":")[1]
+        mongo_major_version = mongo_version.split(".")[0]
+        mongo_minor_version = mongo_version.split(".")[1]
+        return f"mongodb{mongo_major_version}{mongo_minor_version}"
+
+    @property
     def mysql_db_name(self) -> str:
         return self.config.get("mysql_db_name", f"{self.name}_openedx")
 
@@ -164,12 +244,172 @@ class Project:
         return self.config.get("mysql_user", MYSQL_ROOT_USER)
 
     @property
+    def mysql_password(self) -> str:
+        return self.config.get("mysql_password", self.get_secret(DerexSecrets.mysql))
+
+    @property
     def mongodb_db_name(self) -> str:
         return self.config.get("mongodb_db_name", f"{self.name}_openedx")
 
     @property
     def mongodb_user(self) -> str:
         return self.config.get("mongodb_user", MONGODB_ROOT_USER)
+
+    @property
+    def mongodb_password(self) -> str:
+        return self.config.get(
+            "mongodb_password", self.get_secret(DerexSecrets.mongodb)
+        )
+
+    @property
+    def minio_user(self) -> str:
+        return self.config.get("minio_user", MINIO_ROOT_USER)
+
+    @property
+    def minio_password(self) -> str:
+        return self.config.get("minio_password", self.get_secret(DerexSecrets.minio))
+
+    @property
+    def minio_bucket(self) -> str:
+        return self.config.get("minio_bucket", self.name)
+
+    @property
+    def lms_hostname(self) -> str:
+        return self.config.get("lms_hostname", f"{self.name}.localhost")
+
+    @property
+    def preview_hostname(self) -> str:
+        return self.config.get("cms_hostname", f"preview.{self.lms_hostname}")
+
+    @property
+    def cms_hostname(self) -> str:
+        return self.config.get("cms_hostname", f"studio.{self.lms_hostname}")
+
+    @property
+    def flower_hostname(self) -> str:
+        return self.config.get("flower_hostname", f"flower.{self.lms_hostname}")
+
+    @property
+    def minio_hostname(self) -> str:
+        return self.config.get("minio_hostname", f"minio.{self.lms_hostname}")
+
+    @property
+    def mongodb_docker_volume(self) -> str:
+        if self.environment is ProjectEnvironment.development:
+            mongodb_docker_volume = f"derex_{self.mongodb_host}"
+        else:
+            mongodb_docker_volume = (
+                f"{self.name}_{self.environment.name}_{self.mongodb_host}"
+            )
+        return self.config.get("mongodb_docker_volume", mongodb_docker_volume)
+
+    @property
+    def elasticsearch_docker_volume(self) -> str:
+        if self.environment is ProjectEnvironment.development:
+            elasticsearch_docker_volume = f"derex_{self.elasticsearch_host}"
+        else:
+            elasticsearch_docker_volume = (
+                f"{self.name}_{self.environment.name}_{self.elasticsearch_host}"
+            )
+        return self.config.get(
+            "elasticsearch_docker_volume", elasticsearch_docker_volume
+        )
+
+    @property
+    def mysql_docker_volume(self) -> str:
+        if self.environment is ProjectEnvironment.development:
+            mysql_docker_volume = f"derex_{self.mysql_host}"
+        else:
+            mysql_docker_volume = (
+                f"{self.name}_{self.environment.name}_{self.mysql_host}"
+            )
+        return self.config.get("mysql_docker_volume", mysql_docker_volume)
+
+    @property
+    def rabbitmq_docker_volume(self) -> str:
+        if self.environment is ProjectEnvironment.development:
+            rabbitmq_docker_volume = "derex_rabbitmq"
+        else:
+            rabbitmq_docker_volume = f"{self.name}_{self.environment.name}_rabbitmq"
+        return self.config.get("rabbitmq_docker_volume", rabbitmq_docker_volume)
+
+    @property
+    def minio_docker_volume(self) -> str:
+        if self.environment is ProjectEnvironment.development:
+            minio_docker_volume = "derex_minio"
+        else:
+            minio_docker_volume = f"{self.name}_{self.environment.name}_minio"
+        return self.config.get("minio_docker_volume", minio_docker_volume)
+
+    @property
+    def openedx_data_docker_volume(self) -> str:
+        if self.environment is ProjectEnvironment.development:
+            openedx_data_docker_volume = f"derex_{self.name}_openedx_data"
+        else:
+            openedx_data_docker_volume = (
+                f"{self.name}_{self.environment.name}_openedx_data"
+            )
+        return self.config.get("openedx_data_docker_volume", openedx_data_docker_volume)
+
+    @property
+    def openedx_media_docker_volume(self) -> str:
+        if self.environment is ProjectEnvironment.development:
+            openedx_media_docker_volume = f"derex_{self.name}_openedx_media"
+        else:
+            openedx_media_docker_volume = (
+                f"{self.name}_{self.environment.name}_openedx_media"
+            )
+        return self.config.get(
+            "openedx_media_docker_volume", openedx_media_docker_volume
+        )
+
+    @property
+    def docker_volumes(self):
+        return {
+            self.mongodb_docker_volume,
+            self.elasticsearch_docker_volume,
+            self.mysql_docker_volume,
+            self.rabbitmq_docker_volume,
+            self.minio_docker_volume,
+            self.openedx_media_docker_volume,
+            self.openedx_data_docker_volume,
+        }
+
+    @property
+    def environment(self) -> ProjectEnvironment:
+        """The environment of this project, either development, staging or production.
+        In a development environment secret and services (like the HTTP server, databases,
+        search backends and message brokers) are shared among projects.
+        In a production environment instead services are bound to a specific project.
+
+        The environment is also used to give a name to project containers and volumes.
+        """
+        name = "environment"
+        mode_str = self._get_status(name)
+        if mode_str is not None:
+            if mode_str in ProjectEnvironment.__members__:
+                return ProjectEnvironment[mode_str]
+            # We found a string but we don't recognize it: warn the user
+            logger.warning(
+                f"Value `{mode_str}` found in `{self.private_filepath(name)}` "
+                "is not valid as environment "
+                f"(valid values are {[environment for environment in ProjectEnvironment.__members__]})"
+            )
+        default = self.config.get(f"default_{name}")
+        if default:
+            if default not in ProjectEnvironment.__members__:
+                logger.warning(
+                    f"Value `{default}` found in config `{self.root / CONF_FILENAME}` "
+                    "is not a valid default for environment "
+                    f"(valid values are {[environment for environment in ProjectEnvironment.__members__]})"
+                )
+            else:
+                return ProjectEnvironment[default]
+        return next(iter(ProjectEnvironment))  # Return the first by default
+
+    @environment.setter
+    def environment(self, value: ProjectEnvironment):
+        self._set_status("environment", value.name)
 
     @property
     def runmode(self) -> ProjectRunMode:
@@ -187,7 +427,7 @@ class Project:
             logger.warning(
                 f"Value `{mode_str}` found in `{self.private_filepath(name)}` "
                 "is not valid as runmode "
-                "(valid values are `debug` and `production`)"
+                f"(valid values are {[runmode for runmode in ProjectRunMode.__members__]})"
             )
         default = self.config.get(f"default_{name}")
         if default:
@@ -195,7 +435,7 @@ class Project:
                 logger.warning(
                     f"Value `{default}` found in config `{self.root / CONF_FILENAME}` "
                     "is not a valid default for runmode "
-                    "(valid values are `debug` and `production`)"
+                    f"(valid values are {[runmode for runmode in ProjectRunMode.__members__]})"
                 )
             else:
                 return ProjectRunMode[default]
@@ -352,12 +592,24 @@ class Project:
         if e2e_dir.is_dir():
             self.e2e_dir = e2e_dir
 
+        project_caddy_dir = self.root / self.environment.value / "internal_caddy"
+        if project_caddy_dir.is_dir():
+            self.project_caddy_dir = project_caddy_dir
+
+        host_caddy_dir = self.etc_path / "caddy"
+        if host_caddy_dir.is_dir():
+            self.host_caddy_dir = host_caddy_dir
+
+        self.enable_host_caddy = self.config.get("enable_host_caddy", True)
+
         self.image_name = self.themes_image_name
         self.materialize_derex_settings = self.config.get(
             "materialize_derex_settings", True
         )
 
-    def update_default_settings(self, default_settings_dir, destination_settings_dir):
+    def update_default_settings(
+        self, default_settings_dir: Path, destination_settings_dir: Path
+    ):
         """Update default settings in a specified directory.
         Given a directory where to look for default settings modules, recursively
         copy or update them into the destination directory.
@@ -466,8 +718,16 @@ class Project:
                     result[f"DEREX_{variable.upper()}"] = value
         return result
 
+    def get_secret(self, secret: DerexSecrets) -> str:
+        """Derive a secret using the master secret and the provided name."""
+        binary_secret = scrypt_hash(self.main_secret, secret.name)
+        # Pad the binary string so that its length is a multiple of 3
+        # This will make sure its base64 representation is equals-free
+        new_length = len(binary_secret) + (3 - len(binary_secret) % 3)
+        return b64encode(binary_secret.rjust(new_length, b" ")).decode()
+
     def secret(self, name: str) -> str:
-        return get_secret(DerexSecrets[name])
+        return self.get_secret(DerexSecrets[name])
 
     def get_openedx_customizations(self) -> dict:
         """Return a mapping of customized files to be mounted in
@@ -489,33 +749,6 @@ class Project:
         return openedx_customizations
 
 
-def get_requirements_hash(path: Path) -> str:
-    """Given a directory, return a hash of the contents of the text files it contains."""
-    hasher = hashlib.sha256()
-    logger.debug(
-        f"Calculating hash for requirements dir {path}; initial (empty) hash is {hasher.hexdigest()}"
-    )
-    for file in sorted(path.iterdir()):
-        if file.is_file():
-            hasher.update(file.read_bytes())
-        logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
-    return hasher.hexdigest()
-
-
-def find_project_root(path: Path) -> Path:
-    """Find the project directory walking up the filesystem starting on the
-    given path until a configuration file is found.
-    """
-    current = path
-    while current != current.parent:
-        if (current / CONF_FILENAME).is_file():
-            return current
-        current = current.parent
-    raise ProjectNotFound(
-        f"No directory found with a {CONF_FILENAME} file in it, starting from {path}"
-    )
-
-
 class DebugBaseImageProject(Project):
     """A project that is always in debug mode and always uses the base image,
     irregardless of the presence of requirements.
@@ -530,7 +763,3 @@ class DebugBaseImageProject(Project):
     @requirements_image_name.setter
     def requirements_image_name(self, value):
         pass
-
-
-class ProjectNotFound(ValueError):
-    """No derex project could be found."""

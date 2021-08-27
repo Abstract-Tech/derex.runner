@@ -22,3 +22,11 @@ def ensure_project(func):
 
 def red(string: str) -> str:
     return click.style(string, fg="red")
+
+
+def green(string: str) -> str:
+    return click.style(string, fg="green")
+
+
+def yellow(string: str) -> str:
+    return click.style(string, fg="yellow")

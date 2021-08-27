@@ -117,4 +117,4 @@ ENV/
 examples/tests/ironwood.2.tar.gz
 examples/tests/edx-demo-course-*
 
-!derex/runner/compose_files/openedx_customizations/**
+!derex/runner/compose_files/common/openedx_customizations/**

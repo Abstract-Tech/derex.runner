@@ -14,8 +14,8 @@ x-common:
   networks:
     - derex
   volumes:
-    - derex_{{ project.name }}_media:/openedx/media
-    - derex_{{ project.name }}_data:/openedx/data/
+    - derex_{{ project.name }}_openedx_media:/openedx/media
+    - derex_{{ project.name }}_openedx_data:/openedx/data/
     {%- if project.settings_directory_path() %}
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/derex_settings
     {%- endif %}
@@ -44,12 +44,14 @@ x-common:
     DJANGO_SETTINGS_MODULE: {{ project.settings.value }}
     DEREX_PROJECT: {{ project.name }}
     DEREX_OPENEDX_VERSION: {{ project.openedx_version.name }}
+    MYSQL_HOST: {{ project.mysql_host }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
     MYSQL_USER: {{ project.mysql_user }}
-    MYSQL_PASSWORD: {{ project.secret("mysql") }}
+    MYSQL_PASSWORD: {{ project.mysql_password }}
+    MONGODB_HOST: {{ project.mongodb_host }}
     MONGODB_DB_NAME: {{ project.mongodb_db_name }}
     MONGODB_USER: {{ project.mongodb_user }}
-    MONGODB_PASSWORD: {{ project.secret("mongodb") }}
+    MONGODB_PASSWORD: {{ project.mongodb_password }}
     DEREX_MINIO_SECRET: {{ project.secret("minio") }}
     {%- for key, value in project.get_container_env().items() %}
     {{ key }}: {{ value | tojson }}
@@ -66,13 +68,12 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: lms
-    container_name: {{ project.name }}_flower
     networks:
       - derex
     networks:
-        derex:
-          aliases:
-            - flower.{{ project.name }}.localhost.derex
+      derex:
+        aliases:
+          - flower.{{ project.name }}.localhost.derex
 
   lms:
     <<: *common-conf
@@ -97,10 +98,10 @@ services:
       <<: *common-env
       SERVICE_VARIANT: lms
     networks:
-        derex:
-          aliases:
-            - {{ project.name }}.localhost.derex
-            - preview.{{ project.name }}.localhost.derex
+      derex:
+        aliases:
+          - {{ project.name }}.localhost.derex
+          - preview.{{ project.name }}.localhost.derex
 
   cms:
     <<: *common-conf
@@ -125,8 +126,6 @@ services:
     environment:
       <<: *common-env
       SERVICE_VARIANT: cms
-    {% if project.runmode.value == "debug" -%}
-    {% endif %}
     networks:
         derex:
           aliases:
@@ -146,6 +145,10 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: lms
+    networks:
+      derex:
+        aliases:
+          - lms-worker.{{ project.name }}.localhost.derex
 
   cms_worker:
     <<: *common-conf
@@ -161,11 +164,17 @@ services:
       <<: *common-env
       C_FORCE_ROOT: "True"
       SERVICE_VARIANT: cms
+    networks:
+      derex:
+        aliases:
+          - cms-worker.{{ project.name }}.localhost.derex
 
 networks:
   derex:
     name: derex
 
 volumes:
-  derex_{{ project.name }}_data:
-  derex_{{ project.name }}_media:
+  {%- for volume in project.docker_volumes %}
+  {{ volume}}:
+    external: true
+  {%- endfor %}

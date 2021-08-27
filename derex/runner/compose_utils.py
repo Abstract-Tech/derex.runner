@@ -23,7 +23,7 @@ def run_docker_compose(
             if exit_afterwards:
                 main()
             else:
-                with exit_cm():
+                with exit_context_manager():
                     main()
         else:
             click.echo("Would have run:\n")
@@ -33,7 +33,7 @@ def run_docker_compose(
 
 
 @contextmanager
-def exit_cm():
+def exit_context_manager():
     # Context manager to monkey patch sys.exit calls
     import sys
 

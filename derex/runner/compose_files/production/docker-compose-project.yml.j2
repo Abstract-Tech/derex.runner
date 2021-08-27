@@ -1,0 +1,307 @@
+# Open edX services
+version: "3.5"
+
+x-common:
+  &common-conf
+  {% if project.runmode.name == "production" -%}
+  image: {{ project.image_name }}
+  restart: unless-stopped
+  {% else -%}
+  image: {{ project.requirements_image_name }}
+  {% endif -%}
+  tmpfs:
+    - /tmp/
+  networks:
+    - {{ project.name }}_{{ project.environment.name }}_network
+  volumes:
+    - {{ project.name }}_{{ project.environment.name }}_openedx_media:/openedx/media
+    - {{ project.name }}_{{ project.environment.name }}_openedx_data:/openedx/data/
+    {%- if project.settings_directory_path() %}
+    - {{ project.settings_directory_path() }}:/openedx/edx-platform/derex_settings
+    {%- endif %}
+    - {{ derex_django_path }}:/openedx/derex_django
+    {%- if openedx_customizations %}{%- for dest, src in openedx_customizations.items() %}
+    - {{ src }}:{{ dest }}
+    {%- endfor %}{%- endif %}
+    {%- if project.requirements_dir and not project.requirements_volumes %}
+    - {{ project.requirements_dir }}:/openedx/derex.requirements
+    {%- endif -%}
+    {%- if project.requirements_volumes %}{%- for src, dest in project.requirements_volumes.items() %}
+    - {{ src }}:{{ dest }}
+    {%- endfor %}{%- endif %}
+    {%- if project.fixtures_dir %}
+    - {{ project.fixtures_dir }}:/openedx/fixtures
+    {%- endif -%}
+    {%- if project.themes_dir %}
+    - {{ project.themes_dir }}:/openedx/themes
+    {%- endif -%}
+    {%- if project.runmode.value == "production" %}
+    - {{ wsgi_py_path }}:/openedx/edx-platform/wsgi.py
+    {%- endif %}
+
+  environment:
+    &common-env
+    DJANGO_SETTINGS_MODULE: {{ project.settings.value }}
+    DEREX_PROJECT: {{ project.name }}_{{ project.environment.name }}
+    DEREX_OPENEDX_VERSION: {{ project.openedx_version.name }}
+    MYSQL_DB_NAME: {{ project.mysql_db_name }}
+    MYSQL_USER: {{ project.mysql_user }}
+    MYSQL_PASSWORD: {{ project.mysql_password }}
+    MONGODB_DB_NAME: {{ project.mongodb_db_name }}
+    MONGODB_USER: {{ project.mongodb_user }}
+    MONGODB_PASSWORD: {{ project.mongodb_password }}
+    DEREX_MINIO_SECRET: {{ project.minio_password }}
+    {%- for key, value in project.get_container_env().items() %}
+    {{ key }}: {{ value | tojson }}
+    {%- endfor %}
+
+services:
+  flower:
+    <<: *common-conf
+    command:
+      sh -c 'echo Obtaining broker configuration from edx. This is a bit slow;
+             export FLOWER_OPTIONS=$$(echo "from django.conf import settings; print(\"--broker=\" + settings.BROKER_URL + \" --broker_api=http://\" + settings.CELERY_BROKER_USER + \":\" + settings.CELERY_BROKER_PASSWORD + \"@\" + settings.CELERY_BROKER_HOSTNAME + \":15672/api/\") " | ./manage.py lms shell);
+             echo Done. Flower options are \"$$FLOWER_OPTIONS\";
+             exec flower --port=80 $$FLOWER_OPTIONS'
+    environment:
+      <<: *common-env
+      SERVICE_VARIANT: lms
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+          aliases:
+            - flower.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+
+  lms:
+    <<: *common-conf
+    {% if project.runmode.value == "debug" -%}
+    command:
+      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver --noreload 0:80'
+    {% else -%}
+    command:
+      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
+        --bind 0.0.0.0:80
+        --max-requests 1000
+        --workers 3
+        --max-requests-jitter 200
+        --worker-class gevent
+        --worker-tmp-dir /dev/shm
+        --log-file=-
+        wsgi:application'
+    healthcheck:
+      test: ["CMD", "wget", "localhost:80/heartbeat", "-q", "-O", "/dev/null"]
+    {% endif -%}
+    environment:
+      <<: *common-env
+      SERVICE_VARIANT: lms
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+          aliases:
+            - {{ project.name }}_{{ project.environment.name }}.localhost.derex
+            - preview.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+
+  cms:
+    <<: *common-conf
+    {% if project.runmode.value == "debug" -%}
+    command:
+      sh -c 'exec ./manage.py $${SERVICE_VARIANT} runserver --noreload 0:80'
+    {% else -%}
+    command:
+      sh -c 'exec gunicorn --name $${SERVICE_VARIANT}
+        --bind 0.0.0.0:80
+        --max-requests 1000
+        --workers 3
+        --max-requests-jitter 200
+        --worker-class gevent
+        --worker-tmp-dir /dev/shm
+        --log-file=-
+        --timeout 300
+        wsgi:application'
+    healthcheck:
+      test: ["CMD", "wget", "localhost:80/heartbeat", "-q", "-O", "/dev/null"]
+    {% endif -%}
+    environment:
+      <<: *common-env
+      SERVICE_VARIANT: cms
+    {% if project.runmode.value == "debug" -%}
+    {% endif %}
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+          aliases:
+            - studio.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+
+  lms_worker:
+    <<: *common-conf
+    command:
+      sh -c 'celery worker -A lms.celery:APP --loglevel=INFO -n openedx.lms -Q openedx.lms.default --beat'
+    healthcheck:
+      test: celery inspect ping -A lms.celery:APP -d celery@openedx.lms
+      interval: 15m
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    environment:
+      <<: *common-env
+      C_FORCE_ROOT: "True"
+      SERVICE_VARIANT: lms
+
+  cms_worker:
+    <<: *common-conf
+    command:
+      sh -c 'celery worker -A cms.celery:APP --loglevel=INFO -n openedx.cms -Q openedx.cms.default --beat'
+    healthcheck:
+      test: celery inspect ping -A cms.celery:APP -d celery@openedx.cms
+      interval: 15m
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    environment:
+      <<: *common-env
+      C_FORCE_ROOT: "True"
+      SERVICE_VARIANT: cms
+
+  mongodb:
+    image: {{ project.openedx_version.value["mongodb_image"] }}
+    restart: unless-stopped
+    command: mongod --smallfiles --nojournal
+      --storageEngine wiredTiger
+      --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "{{ project.mongodb_user }}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{ project.mongodb_password }}"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.name }}_{{ project.environment.name }}_mongodb:/data/db
+    networks:
+      - {{ project.name }}_{{ project.environment.name }}_network
+
+  mysql:
+    image: {{ project.openedx_version.value["mysql_image"] }}
+    restart: unless-stopped
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      MYSQL_USER: "{{ project.mysql_user }}"
+      MYSQL_ROOT_PASSWORD: "{{ project.mysql_password }}"
+    healthcheck:
+      test: mysqladmin ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.name }}_{{ project.environment.name }}_mysql:/var/lib/mysql
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+
+  elasticsearch:
+    image: {{ project.openedx_version.value["elasticsearch_image"] }}
+    restart: unless-stopped
+    environment:
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "cluster.name=openedx"
+      # For the memory lock to work, the container should be started with
+      # sufficient high a value for "Max locked memory".
+      # For docker on a systemctl distro (like Ubuntu) this can be achieved with
+      # echo -e "[Service]\nLimitMEMLOCK=infinity" | SYSTEMD_EDITOR=tee sudo -E systemctl edit docker.service
+      # sudo systemctl daemon-reload
+      # sudo systemctl restart docker
+      - "bootstrap.memory_lock=true"
+    healthcheck:
+      test: curl --silent --fail localhost:9200/_cluster/health || exit 1
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - {{ project.name }}_{{ project.environment.name }}_elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+
+  rabbitmq:
+    image: rabbitmq:3.6.16-alpine
+    restart: unless-stopped
+    hostname: rabbitmq
+    healthcheck:
+      test: rabbitmqctl node_health_check | grep "Health check passed" -q
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - {{ project.name }}_{{ project.environment.name }}_rabbitmq:/etc/rabbitmq/
+      - {{ project.name }}_{{ project.environment.name }}_rabbitmq:/var/lib/rabbitmq
+      - {{ project.name }}_{{ project.environment.name }}_rabbitmq:/var/log/rabbitmq/
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+
+  memcached:
+    image: memcached:1.6.3-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: nc -z 127.0.0.1 11211
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+        aliases:
+          - memcached.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+
+  minio:
+    image: minio/minio:RELEASE.2020-06-03T22-13-49Z
+    restart: unless-stopped
+    volumes:
+      - {{ project.name }}_{{ project.environment.name }}_minio:/data
+    environment:
+      MINIO_ACCESS_KEY: minio_derex
+      MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"
+    command: server --address :80 /data
+    healthcheck:
+      test: curl --silent --fail http://localhost:80/minio/health/live
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      {{ project.name }}_{{ project.environment.name }}_network:
+        aliases:
+          - minio.{{ project.name }}_{{ project.environment.name }}.localhost.derex
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    volumes:
+      - {{ project.project_caddy_dir }}:/etc/caddy
+    healthcheck:
+      test: wget -q -O - http://localhost:8080
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - {{ project.name }}_{{ project.environment.name }}_network
+      - derex
+
+
+volumes:
+  {%- for volume in project.docker_volumes %}
+  {{ volume}}:
+    external: true
+  {%- endfor %}
+
+networks:
+  {{ project.name }}_{{ project.environment.name }}_network:
+    name: {{ project.name }}_{{ project.environment.name }}_network
+  derex:
+    external: true
+    name: derex
