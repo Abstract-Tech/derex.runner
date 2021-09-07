@@ -10,6 +10,8 @@ steps:
       set -ex
       export DEREX_ADMIN_SERVICES=False
       ddc-services up -d
+      # Give it some seconds to boot
+      sleep 15
     displayName: "Start services docker containers"
 
   - script: |

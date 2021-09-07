@@ -112,25 +112,24 @@ def check_services(services: Iterable[str], max_seconds: int = 1) -> bool:
 
 def load_dump(relpath):
     """Loads a mysql dump into the derex mysql database."""
+    from derex.runner.ddc import run_ddc_services
     from derex.runner.mysql import MYSQL_ROOT_PASSWORD
 
+    wait_for_service("mysql", 30)
     dump_path = abspath_from_egg("derex.runner", relpath)
-    image = client.containers.get("mysql").image
-    logger.info("Resetting email database")
-    try:
-        client.containers.run(
-            image.tags[0],
-            [
-                "sh",
-                "-c",
-                f"mysql -h mysql -p{MYSQL_ROOT_PASSWORD} < /dump/{dump_path.name}",
-            ],
-            network="derex",
-            volumes={dump_path.parent: {"bind": "/dump"}},
-            auto_remove=True,
-        )
-    except docker.errors.ContainerError as exc:
-        logger.exception(exc)
+    logger.info(f"Loading mysql dump from {dump_path}")
+    compose_args = [
+        "run",
+        "--rm",
+        "-v",
+        f"{dump_path.parent}:/dump",
+        "-T",
+        "mysql",
+        "sh",
+        "-c",
+        f"mysql -h mysql -p{MYSQL_ROOT_PASSWORD} < /dump/{dump_path.name}",
+    ]
+    run_ddc_services(compose_args)
 
 
 def build_image(
