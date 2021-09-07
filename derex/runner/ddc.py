@@ -12,6 +12,7 @@ from derex.runner.plugins import setup_plugin_manager
 from derex.runner.plugins import sort_and_validate_plugins
 from derex.runner.project import DebugBaseImageProject
 from derex.runner.project import Project
+from pathlib import Path
 from tempfile import mkstemp
 from typing import Any
 from typing import List
@@ -20,7 +21,6 @@ from typing import Tuple
 
 import click
 import json
-import os
 import sys
 
 
@@ -135,37 +135,33 @@ def run_django_script(
     with JSON and return it.
     If the script does not output a parsable JSON None is returned.
     """
-    script_fp, script_path = mkstemp(".py", "derex-run-script-")
-    result_fp, result_path = mkstemp(".json", "derex-run-script-result")
-    os.write(script_fp, script_text.encode("utf-8"))
-    os.close(script_fp)
-    compose_args = [
-        "run",
-        "--rm",
-        "-v",
-        f"{result_path}:/result.json",
-        "-v",
-        f"{script_path}:/script.py",
-        context,
-        "sh",
-        "-c",
-        f"echo \"exec(open('/script.py').read())\" | ./manage.py {context} shell > /result.json",
-    ]
+    script_fp, script_str_path = mkstemp(".py", "derex-run-script-")
+    result_fp, result_str_path = mkstemp(".json", "derex-run-script-result")
+    script_path = Path(script_str_path)
+    result_path = Path(result_str_path)
+    with script_path as script:
+        script.write_text(script_text)
+        compose_args = [
+            "run",
+            "--rm",
+            "-v",
+            f"{str(result_path)}:/result.json",
+            "-v",
+            f"{str(script_path)}:/script.py",
+            context,
+            "sh",
+            "-c",
+            f"echo \"exec(open('/script.py').read())\" | ./manage.py {context} shell > /result.json",
+        ]
 
-    try:
-        run_ddc_project(compose_args, project=DebugBaseImageProject())
-    finally:
-        result_json = open(result_path).read()
         try:
-            os.close(result_fp)
-        except OSError:
-            pass
-        try:
-            os.close(script_fp)
-        except OSError:
-            pass
-        os.unlink(result_path)
-        os.unlink(script_path)
+            run_ddc_project(compose_args, project=DebugBaseImageProject())
+        finally:
+            with Path(result_path) as script_result:
+                result_json = script_result.read_text()
+                result_path.unlink()
+        script_path.unlink()
+
     try:
         return json.loads(result_json)
     except json.decoder.JSONDecodeError:
