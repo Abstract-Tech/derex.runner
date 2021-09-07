@@ -751,7 +751,6 @@ class DebugBaseImageProject(Project):
 
 
 class MysqlProject(BaseProject):
-
     @property
     def mysql_host(self) -> str:
         mysql_version = self.openedx_version.value["mysql_image"].split(":")[1]
@@ -781,13 +780,15 @@ class MysqlProject(BaseProject):
             mysql_docker_volume = (
                 f"{self.name}_{self.environment.name}_{self.mysql_host}"
             )
-        mysql_docker_volume = self.config.get("mysql_docker_volume", mysql_docker_volume)
+        mysql_docker_volume = self.config.get(
+            "mysql_docker_volume", mysql_docker_volume
+        )
 
         volumes.append(mysql_docker_volume)
         return volumes
 
 
-class MysqlProjectPlugin():
+class MysqlProjectPlugin:
     project = None
 
     def load(self, project):
@@ -807,11 +808,14 @@ class MysqlProjectPlugin():
             mysql_docker_volume = (
                 f"{self.name}_{self.environment.name}_{self.mysql_host}"
             )
-        mysql_docker_volume = self.config.get("mysql_docker_volume", mysql_docker_volume)
+        mysql_docker_volume = self.config.get(
+            "mysql_docker_volume", mysql_docker_volume
+        )
 
         return [mysql_docker_volume]
 
-class MongodbProjectPlugin():
+
+class MongodbProjectPlugin:
     project = None
 
     def load(self, project):
@@ -829,10 +833,6 @@ class MongodbProjectPlugin():
         return ["mongodb"]
 
 
-
-
-
-
 class Project(
     BaseProject,
     MysqlProject,
@@ -840,9 +840,8 @@ class Project(
     ElasticsearchProject,
     RabbitmqProject,
     MinioProject,
-    OpenedxProject
+    OpenedxProject,
 ):
-
     @property
     def docker_volumes(self):
         return {

@@ -14,6 +14,7 @@ class BaseProject:
     All those information might be overridden from the project derex.config.yaml
     file.
     """
+
     config: dict = {
         "mysql_user": "test_mysql_user",
     }
@@ -43,7 +44,6 @@ class BaseService:
 
 
 class MysqlService(BaseProjectService):
-
     def load(self, project):
         print(f"Loading Mysql info on project {project.name}!")
         self.project = project
@@ -61,9 +61,12 @@ class MysqlService(BaseProjectService):
             mysql_docker_volume = (
                 f"{self.name}_{self.environment.name}_{self.mysql_host}"
             )
-        mysql_docker_volume = self.config.get("mysql_docker_volume", mysql_docker_volume)
+        mysql_docker_volume = self.config.get(
+            "mysql_docker_volume", mysql_docker_volume
+        )
 
         return [mysql_docker_volume]
+
 
 class MongodbService(BaseProjectService):
     project = None
