@@ -41,7 +41,7 @@ logger = getLogger(__name__)
 DEREX_RUNNER_PROJECT_DIR = ".derex"
 
 
-class Project:
+class BaseProject:
     """Represents a derex.runner project, i.e. a directory with a
     `derex.config.yaml` file and optionally a "themes", "settings" and
     "requirements" directory.
@@ -211,13 +211,6 @@ class Project:
         return None
 
     @property
-    def mysql_host(self) -> str:
-        mysql_version = self.openedx_version.value["mysql_image"].split(":")[1]
-        mysql_major_version = mysql_version.split(".")[0]
-        mysql_minor_version = mysql_version.split(".")[1]
-        return f"mysql{mysql_major_version}{mysql_minor_version}"
-
-    @property
     def elasticsearch_host(self) -> str:
         elasticsearch_version = self.openedx_version.value["elasticsearch_image"].split(
             ":"
@@ -234,18 +227,6 @@ class Project:
         mongo_major_version = mongo_version.split(".")[0]
         mongo_minor_version = mongo_version.split(".")[1]
         return f"mongodb{mongo_major_version}{mongo_minor_version}"
-
-    @property
-    def mysql_db_name(self) -> str:
-        return self.config.get("mysql_db_name", f"{self.name}_openedx")
-
-    @property
-    def mysql_user(self) -> str:
-        return self.config.get("mysql_user", MYSQL_ROOT_USER)
-
-    @property
-    def mysql_password(self) -> str:
-        return self.config.get("mysql_password", self.get_secret(DerexSecrets.mysql))
 
     @property
     def mongodb_db_name(self) -> str:
@@ -592,9 +573,13 @@ class Project:
         if e2e_dir.is_dir():
             self.e2e_dir = e2e_dir
 
-        project_caddy_dir = self.root / self.environment.value / "internal_caddy"
-        if project_caddy_dir.is_dir():
+        project_caddy_dir = self.root / "caddy" / "internal_caddy"
+        if self.config.get("project_caddy_dir"):
+            self.project_caddy_dir = self.config.get("project_caddy_dir")
+        elif project_caddy_dir.is_dir():
             self.project_caddy_dir = project_caddy_dir
+        else:
+            self.project_caddy_dir = self.private_filepath("caddy")
 
         host_caddy_dir = self.etc_path / "caddy"
         if host_caddy_dir.is_dir():
@@ -763,3 +748,109 @@ class DebugBaseImageProject(Project):
     @requirements_image_name.setter
     def requirements_image_name(self, value):
         pass
+
+
+class MysqlProject(BaseProject):
+
+    @property
+    def mysql_host(self) -> str:
+        mysql_version = self.openedx_version.value["mysql_image"].split(":")[1]
+        mysql_major_version = mysql_version.split(".")[0]
+        mysql_minor_version = mysql_version.split(".")[1]
+        return f"mysql{mysql_major_version}{mysql_minor_version}"
+
+    @property
+    def mysql_db_name(self) -> str:
+        return self.config.get("mysql_db_name", f"{self.name}_openedx")
+
+    @property
+    def mysql_user(self) -> str:
+        return self.config.get("mysql_user", MYSQL_ROOT_USER)
+
+    @property
+    def mysql_password(self) -> str:
+        return self.config.get("mysql_password", self.get_secret(DerexSecrets.mysql))
+
+    @property
+    def volumes(self) -> str:
+        volumes = super().volumes()
+
+        if self.environment is ProjectEnvironment.development:
+            mysql_docker_volume = f"derex_{self.mysql_host}"
+        else:
+            mysql_docker_volume = (
+                f"{self.name}_{self.environment.name}_{self.mysql_host}"
+            )
+        mysql_docker_volume = self.config.get("mysql_docker_volume", mysql_docker_volume)
+
+        volumes.append(mysql_docker_volume)
+        return volumes
+
+
+class MysqlProjectPlugin():
+    project = None
+
+    def load(self, project):
+        print(f"Loading Mysql on project {project.name}!")
+        self.project = project
+        project.mysql_user = self.mysql_user(project)
+        return
+
+    def mysql_user(self, project) -> str:
+        return project.config.get("mysql_user", "mysql")
+
+    @property
+    def volumes(self):
+        if self.environment is ProjectEnvironment.development:
+            mysql_docker_volume = f"derex_{self.mysql_host}"
+        else:
+            mysql_docker_volume = (
+                f"{self.name}_{self.environment.name}_{self.mysql_host}"
+            )
+        mysql_docker_volume = self.config.get("mysql_docker_volume", mysql_docker_volume)
+
+        return [mysql_docker_volume]
+
+class MongodbProjectPlugin():
+    project = None
+
+    def load(self, project):
+        print(f"Loading MongoDB on project {project.name}!")
+        self.project = project
+        project.mongodb_user = self.mongodb_user(project)
+
+        return project
+
+    def mongodb_user(self, project) -> str:
+        return project.config.get("mongodb_user", "default_mongodb")
+
+    @property
+    def volumes(self):
+        return ["mongodb"]
+
+
+
+
+
+
+class Project(
+    BaseProject,
+    MysqlProject,
+    MongodbProject,
+    ElasticsearchProject,
+    RabbitmqProject,
+    MinioProject,
+    OpenedxProject
+):
+
+    @property
+    def docker_volumes(self):
+        return {
+            self.mongodb_docker_volume,
+            self.elasticsearch_docker_volume,
+            self.mysql_docker_volume,
+            self.rabbitmq_docker_volume,
+            self.minio_docker_volume,
+            self.openedx_media_docker_volume,
+            self.openedx_data_docker_volume,
+        }

@@ -44,9 +44,11 @@ x-common:
     DJANGO_SETTINGS_MODULE: {{ project.settings.value }}
     DEREX_PROJECT: {{ project.name }}_{{ project.environment.name }}
     DEREX_OPENEDX_VERSION: {{ project.openedx_version.name }}
+    MYSQL_HOST: {{ project.mysql_host }}
     MYSQL_DB_NAME: {{ project.mysql_db_name }}
     MYSQL_USER: {{ project.mysql_user }}
     MYSQL_PASSWORD: {{ project.mysql_password }}
+    MONGODB_HOST: {{ project.mongodb_host }}
     MONGODB_DB_NAME: {{ project.mongodb_db_name }}
     MONGODB_USER: {{ project.mongodb_user }}
     MONGODB_PASSWORD: {{ project.mongodb_password }}
@@ -175,7 +177,7 @@ services:
       retries: 3
       start_period: 10s
     volumes:
-      - {{ project.name }}_{{ project.environment.name }}_mongodb:/data/db
+      - {{ project.mongodb_docker_volume }}:/data/db
     networks:
       - {{ project.name }}_{{ project.environment.name }}_network
 
@@ -193,7 +195,7 @@ services:
       retries: 3
       start_period: 10s
     volumes:
-      - {{ project.name }}_{{ project.environment.name }}_mysql:/var/lib/mysql
+      - {{ project.mysql_docker_volume }}:/var/lib/mysql
     networks:
       {{ project.name }}_{{ project.environment.name }}_network:
 
@@ -224,7 +226,7 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - {{ project.name }}_{{ project.environment.name }}_elasticsearch:/usr/share/elasticsearch/data
+      - {{ project.elasticsearch_docker_volume }}:/usr/share/elasticsearch/data
     networks:
       {{ project.name }}_{{ project.environment.name }}_network:
 
@@ -239,9 +241,9 @@ services:
       retries: 3
       start_period: 10s
     volumes:
-      - {{ project.name }}_{{ project.environment.name }}_rabbitmq:/etc/rabbitmq/
-      - {{ project.name }}_{{ project.environment.name }}_rabbitmq:/var/lib/rabbitmq
-      - {{ project.name }}_{{ project.environment.name }}_rabbitmq:/var/log/rabbitmq/
+      - {{ project.rabbitmq_docker_volume }}:/etc/rabbitmq/
+      - {{ project.rabbitmq_docker_volume }}:/var/lib/rabbitmq
+      - {{ project.rabbitmq_docker_volume }}:/var/log/rabbitmq/
     networks:
       {{ project.name }}_{{ project.environment.name }}_network:
 
@@ -263,7 +265,7 @@ services:
     image: minio/minio:RELEASE.2020-06-03T22-13-49Z
     restart: unless-stopped
     volumes:
-      - {{ project.name }}_{{ project.environment.name }}_minio:/data
+      - {{ project.minio_docker_volume }}:/data
     environment:
       MINIO_ACCESS_KEY: minio_derex
       MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"

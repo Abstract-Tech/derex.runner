@@ -68,7 +68,6 @@ services:
           - minio.localhost.derex
           - minio.localhost
 
-  {%- if enable_host_caddy %}
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -89,7 +88,6 @@ services:
       retries: 3
     networks:
       - derex
-  {%- endif %}
 
 networks:
   derex:

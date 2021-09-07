@@ -75,13 +75,7 @@ def listing(context: click.core.Context):
 @click.argument("db_name", type=str, required=False)
 def drop_mongodb(project: Project, db_name: str):
     """Drop a MongoDB database"""
-    if not any([project, db_name]):
-        raise click.exceptions.MissingParameter(
-            param_hint="db_name",
-            param_type="str",
-            message="Either specify a destination database name or run in a derex project.",
-        )
-    if not db_name and project:
+    if not db_name:
         db_name = project.mongodb_db_name
 
     if click.confirm(

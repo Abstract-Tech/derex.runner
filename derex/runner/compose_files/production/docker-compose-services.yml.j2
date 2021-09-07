@@ -1,7 +1,7 @@
 # Services needed for Open edX to work
 version: "3.5"
 services:
-  {%- if project.config.get("enable_host_caddy") %}
+  {%- if enable_host_caddy %}
   caddy:
     restart: unless-stopped
     image: caddy:2-alpine
