@@ -21,7 +21,6 @@ import time
 
 
 client = docker.from_env()
-api_client = docker.APIClient()
 logger = logging.getLogger(__name__)
 VOLUMES = {
     "derex_elasticsearch",
@@ -71,7 +70,7 @@ def wait_for_service(service: str, max_seconds: int = 35) -> int:
     """
     for i in range(max_seconds):
         try:
-            container_info = api_client.inspect_container(service)
+            container_info = client.api.inspect_container(service)
         except docker.errors.NotFound:
             raise RuntimeError(
                 f"{service} service not found.\n"
@@ -191,8 +190,7 @@ def pull_images(image_names: List[str]):
 
 def image_exists(needle: str) -> bool:
     """If the given image tag exist in the local docker repository, return True."""
-    docker_client = docker.APIClient()
-    images = docker_client.images()
+    images = client.api.images()
     images.sort(key=lambda el: el["Created"], reverse=True)
     for image in images:
         if "RepoTags" not in image or not image["RepoTags"]:
