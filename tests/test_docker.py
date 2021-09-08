@@ -27,7 +27,7 @@ def test_ensure_volumes_present(mocker):
 def test_check_services(mocker):
     from derex.runner.docker_utils import check_services
 
-    api_client = mocker.patch("derex.runner.docker_utils.api_client")
+    api_client = mocker.patch("derex.runner.docker_utils.client.api")
 
     container_info = {"State": {"Status": "running", "Health": {"Status": "healthy"}}}
     api_client.inspect_container.return_value = container_info
@@ -48,7 +48,7 @@ def test_wait_for_service(mocker):
         wait_for_service("service", 1)
 
     container_info = {"State": {"Status": "running", "Health": {"Status": "healthy"}}}
-    api_client = mocker.patch("derex.runner.docker_utils.api_client")
+    api_client = mocker.patch("derex.runner.docker_utils.client.api")
     api_client.inspect_container.return_value = container_info
 
     # Test that the result is successfull when the container
