@@ -1,0 +1,65 @@
+# syntax=docker/dockerfile:1.3
+
+{% block requirements %}
+FROM {{ project.final_base_image }} as requirements
+{% if project.requirements_dir -%}
+COPY {{ project.requirements_dir.name }} /derex/requirements/
+{% for requirement_file in project.get_openedx_requirements_files() -%}
+RUN cd /derex/requirements && pip install -r {{ requirement_file }} -c /openedx/requirements/openedx_constraints.txt
+{% endfor -%}
+{% endif -%}
+{% endblock %}
+
+{% block openedx_customizations %}
+FROM requirements as openedx_customizations
+{% for destination, source in openedx_customizations_paths.items() -%}
+COPY {{ source }} {{ destination }}
+{% endfor -%}
+{% endblock %}
+
+{% block scripts %}
+FROM openedx_customizations as scripts
+{% if project.scripts_dir -%}
+    COPY {{ project.scripts_dir.name }} /derex/scripts
+{% endif -%}
+{% endblock %}
+
+{% block settings %}
+FROM scripts as settings
+{% if project.settings_dir -%}
+    COPY {{ project.settings_dir.name }} /derex/settings
+{% endif -%}
+{% endblock %}
+
+{% block translations %}
+FROM settings as translations
+{% if project.translations_dir -%}
+    COPY {{ project.translations_dir.name }} /derex/translations
+{% endif -%}
+{% endblock %}
+
+{% block themes %}
+FROM {{ project.base_image }} as static
+FROM translations as themes
+COPY --from=static /openedx/staticfiles /openedx/staticfiles
+COPY --from=static /openedx/edx-platform/common/static /openedx/edx-platform/common/static
+COPY --from=static /openedx/empty_dump.sql.bz2 /openedx/
+COPY themes/ /openedx/themes/
+{% for theme in project.get_themes() %}
+{% if theme.is_lms_theme() and theme.has_lms_static() %}
+RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/;ln -s /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
+{% elif theme.is_cms_theme() and theme.has_cms_static() %}
+RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/;ln -s /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
+{% endif %}
+{% endfor %}
+{% if project.config.get("update_assets", None) %}
+    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'apk add nodejs-npm; rm -rf /openedx/staticfiles;derex_update_assets; apk del nodejs-npm'
+{% elif project.config.get("collect_assets", None) %}
+    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'apk add nodejs; rm -rf /openedx/staticfiles;derex_collect_assets; apk del nodejs'
+{% endif %}
+RUN derex_cleanup_assets
+{% endblock %}
+
+FROM themes as final
+
+# TODO: read a project dockerfile and have it's contents here

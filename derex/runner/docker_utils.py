@@ -5,10 +5,16 @@ from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from pathlib import Path
+from python_on_whales import docker as pow_docker
 from requests.exceptions import RequestException
+from shutil import copytree
+from shutil import rmtree
+from tempfile import mkdtemp
+from tempfile import mkstemp
 from typing import Dict
 from typing import Iterable
 from typing import List
+from typing import Optional
 
 import docker
 import io
@@ -137,7 +143,7 @@ def build_image(
     paths: List[str],
     tag: str,
     tag_final: bool = False,
-    extra_opts: Dict = {},
+    extra_options: Dict = {},
 ):
     """Build a docker image. Prepares a build context (a tar stream)
     based on the `paths` argument and includes the Dockerfile text passed
@@ -153,8 +159,16 @@ def build_image(
         context_tar.add(path, arcname=Path(path).name)
     context_tar.close()
     context.seek(0)
+
+    if docker_has_experimental():
+        extra_options.update(dict(squash=True))
+    else:
+        logger.warning(
+            "To build a smaller image enable the --experimental flag in the docker server"
+        )
+
     output = client.api.build(
-        fileobj=context, custom_context=True, encoding="gzip", tag=tag, **extra_opts
+        fileobj=context, custom_context=True, encoding="gzip", tag=tag, **extra_options
     )
     for lines in output:
         for line in re.split(br"\r\n|\n", lines):
@@ -173,6 +187,60 @@ def build_image(
         for image in client.api.images():
             if image.get("RepoTags") and tag in image["RepoTags"]:
                 client.api.tag(image["Id"], final_tag)
+
+
+def buildx_image(
+    dockerfile_text: str,
+    paths: List[Path],
+    derex_openedx_customizations_path: Optional[Path],
+    target: str,
+    output: str,
+    tags: List[str],
+    pull: Optional[bool],
+    cache: bool,
+    cache_from: Optional[List],
+    cache_to: Optional[str],
+    cache_tag: Optional[str],
+):
+    tempdir = Path(mkdtemp(prefix="derex-build-"))
+    try:
+        _, dockerfile_str_path = mkstemp(prefix="Dockerfile-", dir=tempdir)
+        dockerfile = Path(dockerfile_str_path)
+        dockerfile.write_text(dockerfile_text)
+
+        if derex_openedx_customizations_path:
+            # Copy derex default openedx customizations
+            copytree(
+                derex_openedx_customizations_path,
+                Path(tempdir / "openedx_customizations"),
+                dirs_exist_ok=True,
+            )
+        for path in paths:
+            destination_tmp_dir_path = Path(tempdir / path.name)
+            copytree(path, destination_tmp_dir_path, dirs_exist_ok=True)
+
+        extra_options = {}
+        if cache_from:
+            extra_options.update(
+                dict(cache_from={"type": "registry", "src": cache_tag})
+            )
+        if cache_to:
+            extra_options.update(dict(cache_to={"type": "registry", "dest": cache_tag}))
+        if cache and not cache_to:
+            extra_options.update(dict(build_args={"BUILDKIT_INLINE_CACHE": "1"}))
+
+        pow_docker.buildx.build(
+            context_path=tempdir,
+            file=dockerfile,
+            target=target,
+            output={"type": output},
+            tags=tags,
+            pull=pull,
+            cache=cache,
+            **extra_options,
+        )
+    finally:
+        rmtree(tempdir)
 
 
 def pull_images(image_names: List[str]):

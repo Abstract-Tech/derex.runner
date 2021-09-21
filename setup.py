@@ -25,6 +25,7 @@ requirements = [
     "PyYAML>=5.4",
     "py>=1.10.0",
     "urllib3>=1.26.5",
+    "python-on-whales",
 ]
 
 setup_requirements = ["setuptools"]
@@ -43,8 +44,6 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
     entry_points={

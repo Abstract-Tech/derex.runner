@@ -283,3 +283,10 @@ def create_settings_file(project_root: Path, filename: str):
         settings_dir.mkdir()
         (settings_dir / "__init__.py").write_text("")
     (settings_dir / f"{filename}.py").write_text("# Empty file")
+
+
+def test_get_openedx_requirements_paths(complete_project):
+    with complete_project:
+        project = Project()
+        requirements_paths = project.get_openedx_requirements_files()
+        assert requirements_paths == ["testplugin.txt", "xblocks.txt"]

@@ -1,4 +1,5 @@
 from derex.runner.utils import derex_path
+from enum import IntEnum
 from pathlib import Path
 
 
@@ -26,6 +27,8 @@ SECRETS_CONF_FILENAME = "derex.secrets.yaml"
 MYSQL_ROOT_USER = "root"
 MONGODB_ROOT_USER = "root"
 
+DEREX_TEMPLATES_DIR = derex_path("derex/runner/templates/README.rst").parent
+
 assert all(
     (
         WSGI_PY_PATH,
@@ -39,3 +42,13 @@ assert all(
         DEREX_OPENEDX_CUSTOMIZATIONS_PATH,
     )
 ), "Some distribution files were not found"
+
+
+class ProjectBuildTargets(IntEnum):
+    requirements = 1
+    openedx_customizations = 2
+    scripts = 3
+    settings = 4
+    translations = 5
+    themes = 6
+    final = 7

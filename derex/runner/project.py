@@ -7,11 +7,13 @@ from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
+from derex.runner.themes import Theme
 from derex.runner.utils import get_dir_hash
 from enum import Enum
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -108,14 +110,23 @@ class Project:
     #: The directory containing requirements, if defined
     requirements_dir: Optional[Path] = None
 
-    #: The directory containing themes, if defined
-    themes_dir: Optional[Path] = None
+    # The directory containing project scripts
+    scripts_dir: Optional[Path] = None
 
     # The directory containing project settings (that feed django.conf.settings)
     settings_dir: Optional[Path] = None
 
     # The directory containing project database fixtures (used on --reset-mysql)
     fixtures_dir: Optional[Path] = None
+
+    # The directory containing project custom translations
+    translations_dir: Optional[Path] = None
+
+    #: The directory containing themes, if defined
+    themes_dir: Optional[Path] = None
+
+    # The directory containing project custom Dockerfile
+    final_dir: Optional[Path] = None
 
     # The directory where plugins can store their custom requirements, settings,
     # fixtures and themes.
@@ -127,11 +138,26 @@ class Project:
     # The directory containing cypress tests
     e2e_dir: Optional[Path] = None
 
+    # The docker registry to use with this project
+    docker_registry: Optional[str]
+
     # The image name of the image that includes requirements
     requirements_image_name: str
 
+    # The image name of the image that includes customizations to openedx source code
+    openedx_customizations_image_name: str
+
+    # The image name of the image that includes bash and python scripts
+    scripts_image_name: str
+
+    # The image name of the image that includes customized translations
+    translations_image_name: str
+
     # The image name of the image that includes requirements and themes
     themes_image_name: str
+
+    # The image name of the image that includes everything required by the project
+    final_image_name: str
 
     # The image name of the final image containing everything needed for this project
     image_name: str
@@ -279,6 +305,7 @@ class Project:
         self.openedx_version = OpenEdXVersions[
             self.config.get("openedx_version", "koa")
         ]
+        self.docker_registry = self.config.get("docker_registry", None)
         source_image_prefix = self.openedx_version.value["docker_image_prefix"]
         self.base_image = self.config.get(
             "base_image", f"{source_image_prefix}-dev:{__version__}"
@@ -286,6 +313,9 @@ class Project:
         self.final_base_image = self.config.get(
             "final_base_image", f"{source_image_prefix}-nostatic:{__version__}"
         )
+        if self.docker_registry:
+            self.base_image = f"{self.docker_registry}/{self.base_image}"
+            self.final_base_image = f"{self.docker_registry}/{self.final_base_image}"
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
         self.name = self.config["project_name"]
@@ -304,9 +334,9 @@ class Project:
             # We only hash text files inside the requirements image:
             # this way changes to code can be made effective by
             # mounting the requirements directory
-            img_hash = get_requirements_hash(self.requirements_dir)
+            requirements_hash = get_requirements_hash(self.requirements_dir)
             self.requirements_image_name = (
-                f"{self.image_prefix}-requirements:{img_hash[:6]}"
+                f"{self.image_prefix}-requirements:{requirements_hash[:6]}"
             )
             requirements_volumes: Dict[str, str] = {}
             # If the requirements directory contains any symlink we mount
@@ -318,23 +348,65 @@ class Project:
                     "/openedx/derex.requirements/" + el.name
                 )
         else:
+            self.requirements_dir = None
             self.requirements_image_name = self.base_image
 
-        themes_dir = self.root / "themes"
-        if themes_dir.is_dir():
-            self.themes_dir = themes_dir
-            img_hash = get_dir_hash(
-                self.themes_dir
-            )  # XXX some files are generated. We should ignore them when we hash the directory
-            self.themes_image_name = f"{self.image_prefix}-themes:{img_hash[:6]}"
+        openedx_customizations_dir = self.root / "openedx_customizations"
+        if openedx_customizations_dir.is_dir():
+            self.openedx_customizations_dir = openedx_customizations_dir
+            openedx_customizations_hash = get_dir_hash(self.openedx_customizations_dir)
+            self.openedx_customizations_image_name = f"{self.image_prefix}-openedx_customizations:{openedx_customizations_hash[:6]}"
         else:
-            self.themes_image_name = self.requirements_image_name
+            self.openedx_customizations_dir = None
+            self.openedx_customizations_image_name = self.requirements_image_name
+
+        scripts_dir = self.root / "scripts"
+        if scripts_dir.is_dir():
+            self.scripts_dir = scripts_dir
+            scripts_hash = get_dir_hash(self.scripts_dir)
+            self.scripts_image_name = f"{self.image_prefix}-scripts:{scripts_hash[:6]}"
+        else:
+            self.scripts_dir = None
+            self.scripts_image_name = self.openedx_customizations_image_name
 
         settings_dir = self.root / "settings"
         if settings_dir.is_dir():
             self.settings_dir = settings_dir
             # TODO: run some sanity checks on the settings dir and raise an
             # exception if they fail
+            settings_hash = get_dir_hash(self.settings_dir)
+            self.settings_image_name = (
+                f"{self.image_prefix}-settings:{settings_hash[:6]}"
+            )
+        else:
+            self.settings_dir = None
+            self.settings_image_name = self.scripts_image_name
+
+        translations_dir = self.root / "translations"
+        if translations_dir.is_dir():
+            self.translations_dir = translations_dir
+            translations_hash = get_dir_hash(self.translations_dir)
+            self.translations_image_name = (
+                f"{self.image_prefix}-translations:{translations_hash[:6]}"
+            )
+        else:
+            self.translations_dir = None
+            self.translations_image_name = self.settings_image_name
+
+        themes_dir = self.root / "themes"
+        if themes_dir.is_dir():
+            self.themes_dir = themes_dir
+            themes_hash = get_dir_hash(
+                self.themes_dir
+            )  # XXX some files are generated. We should ignore them when we hash the directory
+            self.themes_image_name = f"{self.image_prefix}-themes:{themes_hash[:6]}"
+        else:
+            self.themes_dir = None
+            self.themes_image_name = self.requirements_image_name
+
+        # TODO: write a function to hash all the directories involved in the build
+        self.final_image_name = self.themes_image_name
+        self.final_dir = None
 
         fixtures_dir = self.root / "fixtures"
         if fixtures_dir.is_dir():
@@ -343,10 +415,6 @@ class Project:
         plugins_dir = self.root / "plugins"
         if plugins_dir.is_dir():
             self.plugins_dir = plugins_dir
-
-        openedx_customizations_dir = self.root / "openedx_customizations"
-        if openedx_customizations_dir.is_dir():
-            self.openedx_customizations_dir = openedx_customizations_dir
 
         e2e_dir = self.root / "e2e"
         if e2e_dir.is_dir():
@@ -469,24 +537,43 @@ class Project:
     def secret(self, name: str) -> str:
         return get_secret(DerexSecrets[name])
 
-    def get_openedx_customizations(self) -> dict:
+    def get_openedx_requirements_files(self) -> List[str]:
+        requirements_files = []
+        if self.requirements_dir:
+            for requirement_file in self.requirements_dir.rglob("*.txt"):
+                if requirement_file.is_file():
+                    requirements_files.append(requirement_file.name)
+        return requirements_files
+
+    def get_openedx_customizations(self) -> Dict[str, str]:
         """Return a mapping of customized files to be mounted in
         the container in order to replace default edx-platform modules.
+
+        This will return a mapping with both derex and project customizations.
+        Project customizations will override default derex customizations paths.
         """
-        openedx_customizations = {}
+        openedx_customizations: Dict[str, str] = dict()
         for openedx_customizations_dir in [
             DEREX_OPENEDX_CUSTOMIZATIONS_PATH / self.openedx_version.name,
             self.openedx_customizations_dir,
         ]:
             if openedx_customizations_dir and openedx_customizations_dir.exists():
                 for file_path in openedx_customizations_dir.rglob("*"):
-                    if file_path.is_file():
+                    if file_path.is_file() and not file_path.name.endswith(".pyc"):
                         source = str(file_path)
                         destination = str(file_path).replace(
                             str(openedx_customizations_dir), "/openedx/edx-platform"
                         )
                         openedx_customizations[destination] = source
         return openedx_customizations
+
+    def get_themes(self) -> List:
+        themes = []
+        if self.themes_dir:
+            for theme_folder in self.themes_dir.iterdir():
+                if theme_folder.is_dir():
+                    themes.append(Theme(theme_folder))
+        return themes
 
 
 def get_requirements_hash(path: Path) -> str:
