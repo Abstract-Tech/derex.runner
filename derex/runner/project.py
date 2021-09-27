@@ -540,7 +540,7 @@ class Project:
     def get_openedx_requirements_files(self) -> List[str]:
         requirements_files = []
         if self.requirements_dir:
-            for requirement_file in self.requirements_dir.rglob("*.txt"):
+            for requirement_file in self.requirements_dir.glob("*.txt"):
                 if requirement_file.is_file():
                     requirements_files.append(requirement_file.name)
         return requirements_files
