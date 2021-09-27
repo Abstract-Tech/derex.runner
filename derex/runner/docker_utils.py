@@ -225,7 +225,9 @@ def buildx_image(
                 dict(cache_from={"type": "registry", "src": cache_tag})
             )
         if cache_to:
-            extra_options.update(dict(cache_to={"type": "registry", "dest": cache_tag}))
+            extra_options.update(
+                dict(cache_to={"type": "registry", "dest": cache_tag, "mode": "max"})
+            )
         if cache and not cache_to:
             extra_options.update(dict(build_args={"BUILDKIT_INLINE_CACHE": "1"}))
 
