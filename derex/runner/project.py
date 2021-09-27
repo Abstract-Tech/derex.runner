@@ -313,9 +313,6 @@ class Project:
         self.final_base_image = self.config.get(
             "final_base_image", f"{source_image_prefix}-nostatic:{__version__}"
         )
-        if self.docker_registry:
-            self.base_image = f"{self.docker_registry}/{self.base_image}"
-            self.final_base_image = f"{self.docker_registry}/{self.final_base_image}"
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
         self.name = self.config["project_name"]
@@ -420,7 +417,10 @@ class Project:
         if e2e_dir.is_dir():
             self.e2e_dir = e2e_dir
 
-        self.image_name = self.themes_image_name
+        self.image_name = self.final_image_name
+        if self.docker_registry:
+            self.image_name = f"{self.docker_registry}/{self.final_image_name}"
+
         self.materialize_derex_settings = self.config.get(
             "materialize_derex_settings", True
         )
