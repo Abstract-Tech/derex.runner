@@ -47,15 +47,15 @@ COPY --from=static /openedx/empty_dump.sql.bz2 /openedx/
 COPY themes/ /openedx/themes/
 {% for theme in project.get_themes() %}
 {% if theme.is_lms_theme() and theme.has_lms_static() %}
-RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/;ln -s /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
+RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/; ln -s /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
 {% elif theme.is_cms_theme() and theme.has_cms_static() %}
-RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/;ln -s /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
+RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; ln -s /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
 {% endif %}
 {% endfor %}
 {% if project.config.get("update_assets", None) %}
-    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'apk add nodejs-npm; rm -rf /openedx/staticfiles;derex_update_assets; apk del nodejs-npm'
+    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs-npm; rm -rf /openedx/staticfiles; derex_update_assets; apk del nodejs-npm'
 {% elif project.config.get("collect_assets", None) %}
-    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'apk add nodejs; rm -rf /openedx/staticfiles;derex_collect_assets; apk del nodejs'
+    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs; derex_collect_assets; apk del nodejs'
 {% endif %}
 RUN derex_cleanup_assets
 {% endblock %}
