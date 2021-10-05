@@ -159,9 +159,9 @@ def build_project_image(
     output: str,
     registry: Optional[str],
     tag: str,
-    tag_latest: Optional[bool],
-    pull: Optional[bool],
-    no_cache: Optional[bool],
+    tag_latest: bool,
+    pull: bool,
+    no_cache: bool,
     cache_from: bool,
     cache_to: bool,
 ):

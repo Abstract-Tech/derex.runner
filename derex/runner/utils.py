@@ -11,6 +11,23 @@ import hashlib
 import importlib_metadata
 import os
 import re
+import shutil
+
+
+def copydir(source: str, dest: str):
+    """Copy a directory structure overwriting existing files"""
+    for root, dirs, files in os.walk(source):
+        if not os.path.isdir(root):
+            os.makedirs(root)
+
+        for f in files:
+            rel_path = root.replace(source, "").lstrip(os.sep)
+            dest_path = os.path.join(dest, rel_path)
+
+            if not os.path.isdir(dest_path):
+                os.makedirs(dest_path)
+
+            shutil.copyfile(os.path.join(root, f), os.path.join(dest_path, f))
 
 
 def get_dir_hash(

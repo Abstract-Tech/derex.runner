@@ -4,6 +4,7 @@
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
+from derex.runner.utils import copydir
 from pathlib import Path
 from python_on_whales import docker as pow_docker
 from requests.exceptions import RequestException
@@ -196,11 +197,11 @@ def buildx_image(
     target: str,
     output: str,
     tags: List[str],
-    pull: Optional[bool],
+    pull: bool,
     cache: bool,
-    cache_from: Optional[List],
-    cache_to: Optional[str],
-    cache_tag: Optional[str],
+    cache_from: bool,
+    cache_to: bool,
+    cache_tag: bool,
 ):
     tempdir = Path(mkdtemp(prefix="derex-build-"))
     try:
@@ -213,23 +214,23 @@ def buildx_image(
             copytree(
                 derex_openedx_customizations_path,
                 Path(tempdir / "openedx_customizations"),
-                dirs_exist_ok=True,
             )
         for path in paths:
             destination_tmp_dir_path = Path(tempdir / path.name)
-            copytree(path, destination_tmp_dir_path, dirs_exist_ok=True)
+            try:
+                copytree(path, destination_tmp_dir_path)
+            except FileExistsError:
+                copydir(str(path), str(destination_tmp_dir_path))
 
-        extra_options = {}
-        if cache_from:
-            extra_options.update(
-                dict(cache_from={"type": "registry", "src": cache_tag})
-            )
-        if cache_to:
-            extra_options.update(
-                dict(cache_to={"type": "registry", "dest": cache_tag, "mode": "max"})
-            )
+        cache_from_arg: Optional[Dict] = None
+        cache_to_arg: Optional[Dict] = None
+        build_args: Dict = {}
+        if cache_from and cache_tag:
+            cache_from_arg = {"type": "registry", "src": cache_tag}
+        if cache_to and cache_tag:
+            cache_to_arg = {"type": "registry", "dest": cache_tag, "mode": "max"}
         if cache and not cache_to:
-            extra_options.update(dict(build_args={"BUILDKIT_INLINE_CACHE": "1"}))
+            build_args.update({"BUILDKIT_INLINE_CACHE": "1"})
 
         pow_docker.buildx.build(
             context_path=tempdir,
@@ -239,7 +240,9 @@ def buildx_image(
             tags=tags,
             pull=pull,
             cache=cache,
-            **extra_options,
+            cache_from=cache_from_arg,
+            cache_to=cache_to_arg,
+            build_args=build_args,
         )
     finally:
         rmtree(tempdir)
