@@ -177,7 +177,7 @@ def build_project_image(
         tags.append(latest_tag)
 
     cache: bool = False if no_cache else True
-    cache_tag: str
+    cache_tag: Optional[str] = None
     if cache:
         if registry:
             cache_tag = f"{registry}/{image_name}:cache"
