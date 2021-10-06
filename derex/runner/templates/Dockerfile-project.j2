@@ -55,7 +55,7 @@ RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; ln -s /o
 {% if project.config.get("update_assets", None) %}
     RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs-npm; rm -rf /openedx/staticfiles; derex_update_assets; apk del nodejs-npm'
 {% elif project.config.get("collect_assets", None) %}
-    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs; derex_collect_assets; apk del nodejs'
+    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs; derex_compile_sass; derex_collect_assets; apk del nodejs'
 {% endif %}
 RUN derex_cleanup_assets
 {% endblock %}
