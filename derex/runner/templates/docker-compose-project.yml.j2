@@ -16,28 +16,33 @@ x-common:
   volumes:
     - derex_{{ project.name }}_media:/openedx/media
     - derex_{{ project.name }}_data:/openedx/data/
-    {%- if project.settings_directory_path() %}
+    {% if project.runmode.value == "debug" -%}
+    {% if project.settings_directory_path() -%}
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/derex_settings
-    {%- endif %}
+    {% endif -%}
     - {{ derex_django_path }}:/openedx/derex_django
-    {%- if openedx_customizations %}{%- for dest, src in openedx_customizations.items() %}
+    {% if openedx_customizations -%}{% for dest, src in openedx_customizations.items() -%}
     - {{ src }}:{{ dest }}
-    {%- endfor %}{%- endif %}
-    {%- if project.requirements_dir and not project.requirements_volumes %}
+    {% endfor -%}{% endif -%}
+    {% if project.requirements_dir and not project.requirements_volumes -%}
     - {{ project.requirements_dir }}:/openedx/derex.requirements
-    {%- endif -%}
-    {%- if project.requirements_volumes %}{%- for src, dest in project.requirements_volumes.items() %}
+    {% endif -%}
+    {% if project.requirements_volumes -%}{% for src, dest in project.requirements_volumes.items() -%}
     - {{ src }}:{{ dest }}
-    {%- endfor %}{%- endif %}
-    {%- if project.fixtures_dir %}
+    {% endfor -%}{% endif -%}
+    {% if project.fixtures_dir -%}
     - {{ project.fixtures_dir }}:/openedx/fixtures
-    {%- endif -%}
-    {%- if project.themes_dir %}
+    {% endif -%}
+    {% if project.themes_dir -%}
     - {{ project.themes_dir }}:/openedx/themes
-    {%- endif -%}
-    {%- if project.runmode.value == "production" %}
+    {% endif -%}
+    {% if project.translations_dir -%}
+    - {{ project.translations_dir }}:/derex/translations
+    {% endif -%}
+    {% endif -%}
+    {% if project.runmode.value == "production" %}
     - {{ wsgi_py_path }}:/openedx/edx-platform/wsgi.py
-    {%- endif %}
+    {% endif %}
 
   environment:
     &common-env

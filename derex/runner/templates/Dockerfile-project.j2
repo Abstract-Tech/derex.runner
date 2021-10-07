@@ -1,65 +1,106 @@
 # syntax=docker/dockerfile:1.3
 
+{% block environment %}
+FROM {{ project.final_base_image }} as environment
+ENV DJANGO_SETTINGS_MODULE={{ project.settings.value }}
+ENV SERVICE_VARIANT=lms
+ENV DEREX_PROJECT={{ project.name }}
+ENV DEREX_OPENEDX_VERSION={{ project.openedx_version.name }}
+ENV DEREX_VERSION=0.3.2
+ENV MYSQL_DB_NAME={{ project.mysql_db_name }}
+ENV MYSQL_USER={{ project.mysql_user }}
+ENV MYSQL_PASSWORD={{ project.secret("mysql") }}
+ENV MONGODB_DB_NAME={{ project.mongodb_db_name }}
+ENV MONGODB_USER={{ project.mongodb_user }}
+ENV MONGODB_PASSWORD={{ project.secret("mongodb") }}
+ENV DEREX_MINIO_SECRET={{ project.secret("minio") }}
+{% endblock %}
+
 {% block requirements %}
-FROM {{ project.final_base_image }} as requirements
+FROM environment as requirements
 {% if project.requirements_dir -%}
-COPY {{ project.requirements_dir.name }} /derex/requirements/
-{% for requirement_file in project.get_openedx_requirements_files() -%}
-RUN cd /derex/requirements && pip install -r {{ requirement_file }} -c /openedx/requirements/openedx_constraints.txt
-{% endfor -%}
+    COPY {{ project.requirements_dir.name }} /derex/requirements/
+    {% for requirement_file in project.get_openedx_requirements_files() -%}
+        RUN cd /derex/requirements && pip install -r {{ requirement_file }} -c /openedx/requirements/openedx_constraints.txt
+    {% endfor -%}
 {% endif -%}
 {% endblock %}
 
 {% block openedx_customizations %}
 FROM requirements as openedx_customizations
 {% for destination, source in openedx_customizations_paths.items() -%}
-COPY {{ source }} {{ destination }}
+    COPY {{ source }} {{ destination }}
 {% endfor -%}
 {% endblock %}
 
 {% block scripts %}
-FROM openedx_customizations as scripts
+FROM {{ project.final_base_image }} as scripts
 {% if project.scripts_dir -%}
     COPY {{ project.scripts_dir.name }} /derex/scripts
 {% endif -%}
 {% endblock %}
 
 {% block settings %}
-FROM scripts as settings
+FROM environment as settings
 {% if project.settings_dir -%}
-    COPY {{ project.settings_dir.name }} /derex/settings
-{% endif -%}
-{% endblock %}
-
-{% block translations %}
-FROM settings as translations
-{% if project.translations_dir -%}
-    COPY {{ project.translations_dir.name }} /derex/translations
+    COPY {{ project.settings_dir.name }} /openedx/edx-platform/derex_settings
 {% endif -%}
 {% endblock %}
 
 {% block themes %}
-FROM {{ project.base_image }} as static
-FROM translations as themes
-COPY --from=static /openedx/staticfiles /openedx/staticfiles
-COPY --from=static /openedx/edx-platform/common/static /openedx/edx-platform/common/static
-COPY --from=static /openedx/empty_dump.sql.bz2 /openedx/
-COPY themes/ /openedx/themes/
-{% for theme in project.get_themes() %}
-{% if theme.is_lms_theme() and theme.has_lms_static() %}
-RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/; ln -s /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
-{% elif theme.is_cms_theme() and theme.has_cms_static() %}
-RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; ln -s /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
-{% endif %}
-{% endfor %}
-{% if project.config.get("update_assets", None) %}
-    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs-npm; rm -rf /openedx/staticfiles; derex_update_assets; apk del nodejs-npm'
-{% elif project.config.get("collect_assets", None) %}
-    RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from=static,target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs; derex_compile_sass; derex_collect_assets; apk del nodejs'
-{% endif %}
-RUN derex_cleanup_assets
+{% if project.themes_dir -%}
+    FROM {{ project.final_base_image }} as themes
+    COPY --from={{ project.base_image }} /openedx/staticfiles /openedx/staticfiles
+    COPY --from={{ project.base_image }} /openedx/edx-platform/common/static /openedx/edx-platform/common/static
+    COPY themes/ /openedx/themes/
+    {% for theme in project.get_themes() -%}
+        {% if theme.is_lms_theme() and theme.has_lms_static() -%}
+            RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
+        {% elif theme.is_cms_theme() and theme.has_cms_static() -%}
+            RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
+        {% endif -%}
+    {% endfor -%}
+    {% if project.config.get("update_assets", None) -%}
+        RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from={{ project.base_image }},target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs-npm; rm -rf /openedx/staticfiles; derex_update_assets; apk del nodejs-npm'
+    {% elif project.config.get("collect_assets", None) -%}
+        RUN --mount=type=bind,source=/openedx/edx-platform/node_modules,from={{ project.base_image }},target=/openedx/edx-platform/node_modules sh -c 'set -e; apk add nodejs; derex_collect_assets; apk del nodejs'
+    {% endif -%}
+{% endif -%}
 {% endblock %}
 
-FROM themes as final
+{% block translations %}
+{% if project.translations_dir -%}
+    FROM settings as translations
+    COPY {{ project.translations_dir.name }} /derex/translations
+    RUN SERVICE_VARIANT=lms python manage.py lms compilemessages
+    RUN SERVICE_VARIANT=cms python manage.py cms compilemessages
+    RUN SERVICE_VARIANT=lms python manage.py lms compilejsi18n
+    RUN SERVICE_VARIANT=cms python manage.py cms compilejsi18n
+    RUN sh -c 'mkdir -p /openedx/staticfiles/js/i18n/; cp -rf /openedx/edx-platform/lms/static/js/i18n/ /openedx/staticfiles/js/i18n/'
+    RUN sh -c 'apk add gzip; gzip -rkf /openedx/staticfiles/js/i18n/*/*.js; apk del gzip'
+    RUN sh -c 'apk add brotli; brotli -f /openedx/staticfiles/js/i18n/*/*.js; apk del brotli'
+{% endif -%}
+{% endblock %}
+
+{% block final %}
+FROM openedx_customizations as final
+COPY --from={{ project.base_image }} /openedx/empty_dump.sql.bz2 /openedx/
+{% if project.scripts_dir -%}
+    COPY --from=scripts /derex/scripts /derex/scripts
+{% endif -%}
+{% if project.settings_dir -%}
+    COPY --from=settings /openedx/edx-platform/derex_settings /openedx/edx-platform/derex_settings
+{% endif -%}
+{% if project.themes_dir -%}
+    COPY --from=themes /openedx/staticfiles /openedx/staticfiles
+    COPY --from=themes /openedx/edx-platform/common/static /openedx/edx-platform/common/static
+    COPY --from=themes /openedx/themes/ /openedx/themes/
+{% endif -%}
+{% if project.translations_dir -%}
+    COPY --from=translations /derex/translations /derex/translations
+    COPY --from=translations /openedx/staticfiles/js/i18n/ /openedx/staticfiles/js/i18n/
+{% endif -%}
+RUN derex_cleanup_assets
+{% endblock %}
 
 # TODO: read a project dockerfile and have it's contents here

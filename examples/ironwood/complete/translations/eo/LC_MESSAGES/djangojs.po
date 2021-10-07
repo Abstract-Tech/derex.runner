@@ -1,0 +1,2 @@
+msgid "Already have an {platformName} account?"
+msgstr "A test Javascript translation"
