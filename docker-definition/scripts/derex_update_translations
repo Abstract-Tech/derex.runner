@@ -27,16 +27,15 @@ sed -i '/it_IT/ s/# -/-/' conf/locale/config.yaml
 # The Basque translations has issues in Juniper (the only release where it's enabled so far)
 sed -i '/eu_ES/d' conf/locale/config.yaml
 
-i18n_tool transifex pull
-i18n_tool extract
+SERVICE_VARIANT=lms i18n_tool transifex pull
+SERVICE_VARIANT=lms i18n_tool extract
+SERVICE_VARIANT=lms i18n_tool generate
 
-i18n_tool generate
+SERVICE_VARIANT=lms python manage.py lms compilemessages -v2
+SERVICE_VARIANT=cms python manage.py cms compilemessages -v2
 
-python manage.py lms --settings=derex_django.settings.build.assets compilemessages -v2
-python manage.py cms --settings=derex_django.settings.build.assets compilemessages -v2
-
-python manage.py lms --settings=derex_django.settings.build.assets compilejsi18n -v2
-python manage.py cms --settings=derex_django.settings.build.assets compilejsi18n -v2
+SERVICE_VARIANT=lms python manage.py lms compilejsi18n -v2
+SERVICE_VARIANT=cms python manage.py cms compilejsi18n -v2
 
 # This check is currently done in the azure pipeline.
 # i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)

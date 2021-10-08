@@ -195,6 +195,7 @@ def final_refresh(ctx, project: Project):
             "base",
             "sourceonly",
             "wheels",
+            "notranslations",
             "translations",
             "nodump",
         ]
