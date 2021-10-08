@@ -52,7 +52,7 @@ class OpenEdXVersions(Enum):
         "edx_platform_version": "open-release/juniper.master",
         "edx_platform_release": "juniper",
         "docker_image_prefix": "derex/openedx-juniper",
-        "alpine_version": "alpine3.11",
+        "alpine_version": "alpine3.12",
         "python_version": "3.6",
         "pip_version": "21.2.4",
         "node_version": "v12.19.0",
