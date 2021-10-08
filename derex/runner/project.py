@@ -54,7 +54,7 @@ class OpenEdXVersions(Enum):
         "docker_image_prefix": "derex/openedx-juniper",
         "alpine_version": "alpine3.11",
         "python_version": "3.6",
-        "pip_version": "21.0.1",
+        "pip_version": "21.2.4",
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.6.36",
         "mongodb_image": "mongo:3.6.23",
@@ -70,7 +70,7 @@ class OpenEdXVersions(Enum):
         # See more at https://gcc.gnu.org/gcc-10/porting_to.html
         "alpine_version": "alpine3.12",
         "python_version": "3.8",
-        "pip_version": "21.0.1",
+        "pip_version": "21.2.4",
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.7.34",
         "mongodb_image": "mongo:3.6.23",
