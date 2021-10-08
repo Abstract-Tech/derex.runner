@@ -188,6 +188,7 @@ nitpick_ignore = [
     ("py:meth", "str.format"),
     ("py:obj", "object"),
     ("py:obj", "enum.Enum"),
+    ("py:obj", "enum.IntEnum"),
     ("py:obj", "RuntimeError"),
     ("py:obj", "ValueError"),
 ]
