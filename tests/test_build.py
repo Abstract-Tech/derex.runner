@@ -4,12 +4,9 @@ from derex.runner.project import Project
 
 
 def requirements_dockerfile_tests(project, buildx_mock):
-    try:
-        assert f"FROM {project.final_base_image}" in buildx_mock.call_args.args[0]
-        assert "testplugin.txt" in buildx_mock.call_args.args[0]
-        assert "xblocks.txt" in buildx_mock.call_args.args[0]
-    except Exception:
-        raise Exception(buildx_mock.call_args.args[0])
+    assert f"FROM {project.final_base_image}" in buildx_mock.call_args.args[0]
+    assert "testplugin.txt" in buildx_mock.call_args.args[0]
+    assert "xblocks.txt" in buildx_mock.call_args.args[0]
 
 
 def openedx_customizations_dockerfile_tests(project, buildx_mock):
