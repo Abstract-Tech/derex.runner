@@ -16,14 +16,14 @@ x-common:
   volumes:
     - derex_{{ project.name }}_media:/openedx/media
     - derex_{{ project.name }}_data:/openedx/data/
+    {% if openedx_customizations -%}{% for dest, src in openedx_customizations.items() -%}
+    - {{ src }}:{{ dest }}
+    {% endfor -%}{% endif -%}
     {% if project.runmode.value == "debug" -%}
     {% if project.settings_directory_path() -%}
     - {{ project.settings_directory_path() }}:/openedx/edx-platform/derex_settings
     {% endif -%}
     - {{ derex_django_path }}:/openedx/derex_django
-    {% if openedx_customizations -%}{% for dest, src in openedx_customizations.items() -%}
-    - {{ src }}:{{ dest }}
-    {% endfor -%}{% endif -%}
     {% if project.requirements_dir and not project.requirements_volumes -%}
     - {{ project.requirements_dir }}:/openedx/derex.requirements
     {% endif -%}
