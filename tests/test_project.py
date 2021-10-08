@@ -289,4 +289,6 @@ def test_get_openedx_requirements_paths(complete_project):
     with complete_project:
         project = Project()
         requirements_paths = project.get_openedx_requirements_files()
-        assert requirements_paths == ["testplugin.txt", "xblocks.txt"]
+        assert len(requirements_paths) == 2
+        assert "testplugin.txt" in requirements_paths
+        assert "xblocks.txt" in requirements_paths
