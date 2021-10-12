@@ -1,4 +1,3 @@
-from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import DEREX_TEMPLATES_DIR
 from derex.runner.constants import ProjectBuildTargets
 from derex.runner.docker_utils import build_image
@@ -8,7 +7,6 @@ from derex.runner.project import Project
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from pathlib import Path
-from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -38,16 +36,11 @@ def generate_legacy_requirements_dockerfile(project):
 
     openedx_customizations = project.get_openedx_customizations()
     if openedx_customizations:
-        openedx_customizations_paths = [DEREX_OPENEDX_CUSTOMIZATIONS_PATH]
-        if project.openedx_customizations_dir:
-            openedx_customizations_paths.append(project.openedx_customizations_dir)
-
         for destination, source in openedx_customizations.items():
             docker_build_context_source = source
-            for openedx_customization_path in openedx_customizations_paths:
-                docker_build_context_source = docker_build_context_source.replace(
-                    str(openedx_customization_path), "openedx_customizations"
-                )
+            docker_build_context_source = docker_build_context_source.replace(
+                str(project.openedx_customizations_dir), "openedx_customizations"
+            )
             dockerfile_contents.append(
                 f"COPY {docker_build_context_source} {destination}"
             )
@@ -75,14 +68,8 @@ def build_requirements_image(project: Project):
         return
     paths_to_copy = [str(project.requirements_dir)]
 
-    openedx_customizations = project.get_openedx_customizations()
-    if openedx_customizations:
-        openedx_customizations_paths = [DEREX_OPENEDX_CUSTOMIZATIONS_PATH]
-        if project.openedx_customizations_dir:
-            openedx_customizations_paths.append(project.openedx_customizations_dir)
-
-        for openedx_customization_path in openedx_customizations_paths:
-            paths_to_copy.append(openedx_customization_path)
+    if project.openedx_customizations_dir:
+        paths_to_copy.append(project.openedx_customizations_dir)
 
     dockerfile_text = generate_legacy_requirements_dockerfile(project)
     build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_name)
@@ -184,25 +171,6 @@ def build_project_image(
         else:
             cache_tag = f"{image_name}:cache"
 
-    derex_openedx_customizations_path: Optional[Path] = None
-    relative_openedx_customizations_paths: Dict[str, str] = {}
-    for key, value in project.get_openedx_customizations().items():
-        # Make paths relative so that they are copied from the build context directory
-        value = value.replace(
-            f"{str(DEREX_OPENEDX_CUSTOMIZATIONS_PATH)}/{project.openedx_version.name}/",
-            f"{DEREX_OPENEDX_CUSTOMIZATIONS_PATH.name}/",
-        )
-        value = value.replace(
-            f"{str(project.openedx_customizations_dir)}/",
-            f"{DEREX_OPENEDX_CUSTOMIZATIONS_PATH.name}/",
-        )
-        relative_openedx_customizations_paths[key] = value
-
-    if (DEREX_OPENEDX_CUSTOMIZATIONS_PATH / project.openedx_version.name).exists():
-        derex_openedx_customizations_path = (
-            DEREX_OPENEDX_CUSTOMIZATIONS_PATH / project.openedx_version.name
-        )
-
     paths_to_copy: List[Path] = []
     for build_target in ProjectBuildTargets.__members__:
         if target.value >= ProjectBuildTargets[build_target].value:
@@ -216,13 +184,11 @@ def build_project_image(
     dockerfile_template = jinja_environment.get_template("Dockerfile-project.j2")
     dockerfile_text = dockerfile_template.render(
         project=project,
-        openedx_customizations_paths=relative_openedx_customizations_paths,
     )
 
     buildx_image(
         dockerfile_text,
         paths_to_copy,
-        derex_openedx_customizations_path,
         target.name,
         output,
         tags,

@@ -193,7 +193,6 @@ def build_image(
 def buildx_image(
     dockerfile_text: str,
     paths: List[Path],
-    derex_openedx_customizations_path: Optional[Path],
     target: str,
     output: str,
     tags: List[str],
@@ -209,12 +208,6 @@ def buildx_image(
         dockerfile = Path(dockerfile_str_path)
         dockerfile.write_text(dockerfile_text)
 
-        if derex_openedx_customizations_path:
-            # Copy derex default openedx customizations
-            copytree(
-                derex_openedx_customizations_path,
-                Path(tempdir / "openedx_customizations"),
-            )
         for path in paths:
             destination_tmp_dir_path = Path(tempdir / path.name)
             try:

@@ -48,8 +48,8 @@ def test_build_project_image_requirements(complete_project, mocker):
         requirements_dockerfile_tests(project, buildx_mock)
 
         assert buildx_mock.call_args.args[1] == [project.requirements_dir]
-        assert buildx_mock.call_args.args[3] == target.name
-        assert buildx_mock.call_args.args[5] == [tag]
+        assert buildx_mock.call_args.args[2] == target.name
+        assert buildx_mock.call_args.args[4] == [tag]
 
         tag = "my-tag"
 
@@ -67,7 +67,7 @@ def test_build_project_image_requirements(complete_project, mocker):
         )
 
         assert buildx_mock.call_count == 2
-        assert buildx_mock.call_args.args[5] == [tag]
+        assert buildx_mock.call_args.args[4] == [tag]
 
 
 def test_build_project_image_openedx_customizations(complete_project, mocker):
@@ -97,5 +97,5 @@ def test_build_project_image_openedx_customizations(complete_project, mocker):
 
         assert project.requirements_dir in buildx_mock.call_args.args[1]
         assert project.openedx_customizations_dir in buildx_mock.call_args.args[1]
-        assert buildx_mock.call_args.args[3] == target.name
-        assert buildx_mock.call_args.args[5] == [tag]
+        assert buildx_mock.call_args.args[2] == target.name
+        assert buildx_mock.call_args.args[4] == [tag]

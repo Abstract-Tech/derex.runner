@@ -1,7 +1,6 @@
 from derex.runner import __version__
 from derex.runner.constants import CONF_FILENAME
 from derex.runner.constants import DEREX_DJANGO_SETTINGS_PATH
-from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import SECRETS_CONF_FILENAME
@@ -545,26 +544,17 @@ class Project:
                     requirements_files.append(requirement_file.name)
         return requirements_files
 
-    def get_openedx_customizations(self) -> Dict[str, str]:
-        """Return a mapping of customized files to be mounted in
+    def get_openedx_customizations(self) -> List[Path]:
+        """Return a list of customized files to be mounted in
         the container in order to replace default edx-platform modules.
-
-        This will return a mapping with both derex and project customizations.
-        Project customizations will override default derex customizations paths.
         """
-        openedx_customizations: Dict[str, str] = dict()
-        for openedx_customizations_dir in [
-            DEREX_OPENEDX_CUSTOMIZATIONS_PATH / self.openedx_version.name,
-            self.openedx_customizations_dir,
-        ]:
-            if openedx_customizations_dir and openedx_customizations_dir.exists():
-                for file_path in openedx_customizations_dir.rglob("*"):
-                    if file_path.is_file() and not file_path.name.endswith(".pyc"):
-                        source = str(file_path)
-                        destination = str(file_path).replace(
-                            str(openedx_customizations_dir), "/openedx/edx-platform"
-                        )
-                        openedx_customizations[destination] = source
+        openedx_customizations: List[Path] = []
+        if self.openedx_customizations_dir and self.openedx_customizations_dir.exists():
+            for file_path in self.openedx_customizations_dir.rglob("*"):
+                if file_path.is_file() and not file_path.name.endswith(".pyc"):
+                    openedx_customizations.append(
+                        file_path.relative_to(self.openedx_customizations_dir)
+                    )
         return openedx_customizations
 
     def get_themes(self) -> List:

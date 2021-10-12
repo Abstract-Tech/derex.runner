@@ -17,9 +17,6 @@ DDC_TEST_TEMPLATE_PATH = derex_path("derex/runner/templates/docker-compose-test.
 MAILSLURPER_JSON_TEMPLATE = derex_path("derex/runner/compose_files/mailslurper.json.j2")
 DEREX_DJANGO_PATH = derex_path("derex/django/__init__.py").parent
 DEREX_DJANGO_SETTINGS_PATH = DEREX_DJANGO_PATH / "settings"
-DEREX_OPENEDX_CUSTOMIZATIONS_PATH = derex_path(
-    "derex/runner/compose_files/openedx_customizations/README.rst"
-).parent
 
 CONF_FILENAME = "derex.config.yaml"
 SECRETS_CONF_FILENAME = "derex.secrets.yaml"
@@ -39,7 +36,6 @@ assert all(
         MAILSLURPER_JSON_TEMPLATE,
         DEREX_DJANGO_PATH,
         DEREX_DJANGO_SETTINGS_PATH,
-        DEREX_OPENEDX_CUSTOMIZATIONS_PATH,
     )
 ), "Some distribution files were not found"
 
