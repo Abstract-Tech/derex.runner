@@ -45,7 +45,8 @@ steps:
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: Compile theme
 
-  - script: cd ${{ parameters.PROJECT_PATH }} && derex build final
+  - script: cd ${{ parameters.PROJECT_PATH }} && derex build project
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: Build final image
 
   # XXX: Work to have an efficient docker image and re-enable dive checks
