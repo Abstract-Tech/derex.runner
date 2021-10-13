@@ -37,10 +37,10 @@ def get_dir_hash(path: Path) -> str:
     logger.debug(
         f"Calculating hash for dir {path}; initial (empty) hash is {hasher.hexdigest()}"
     )
-    for file in sorted(path.iterdir()):
-        if file.is_file():
-            hasher.update(file.read_bytes())
-        logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
+    for path in sorted(path.iterdir()):
+        if path.is_file() and not path.name.endswith(".pyc"):
+            hasher.update(path.read_bytes())
+        logger.debug(f"Examined contents of {path}; hash so far: {hasher.hexdigest()}")
     return hasher.hexdigest()
 
 
