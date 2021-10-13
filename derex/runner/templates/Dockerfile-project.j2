@@ -28,9 +28,11 @@ FROM environment as requirements
 
 {% block openedx_customizations %}
 FROM requirements as openedx_customizations
-{% for destination, source in openedx_customizations_paths.items() -%}
-    COPY {{ source }} {{ destination }}
+{% if project.openedx_customizations_dir -%}
+{% for path in project.get_openedx_customizations() -%}
+    COPY openedx_customizations/{{ path }} /openedx/edx-platform/{{ path }}
 {% endfor -%}
+{% endif %}
 {% endblock %}
 
 {% block scripts %}

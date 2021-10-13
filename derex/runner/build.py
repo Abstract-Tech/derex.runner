@@ -36,13 +36,9 @@ def generate_legacy_requirements_dockerfile(project):
 
     openedx_customizations = project.get_openedx_customizations()
     if openedx_customizations:
-        for destination, source in openedx_customizations.items():
-            docker_build_context_source = source
-            docker_build_context_source = docker_build_context_source.replace(
-                str(project.openedx_customizations_dir), "openedx_customizations"
-            )
+        for path in openedx_customizations:
             dockerfile_contents.append(
-                f"COPY {docker_build_context_source} {destination}"
+                f"COPY openedx_customizations/{ path } /openedx/edx-platform/{ path }"
             )
 
     compile_command = ("; \\\n").join(
