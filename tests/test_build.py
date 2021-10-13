@@ -4,7 +4,7 @@ from derex.runner.project import Project
 
 
 def requirements_dockerfile_tests(project, buildx_mock):
-    assert f"FROM {project.final_base_image}" in buildx_mock.call_args.args[0]
+    assert f"FROM {project.base_image}" in buildx_mock.call_args.args[0]
     assert "testplugin.txt" in buildx_mock.call_args.args[0]
     assert "xblocks.txt" in buildx_mock.call_args.args[0]
 
@@ -27,7 +27,7 @@ def test_build_project_image_requirements(complete_project, mocker):
     with complete_project:
         project = Project()
         target = ProjectBuildTargets.requirements
-        tag = project.requirements_image_name
+        tag = project.get_build_target_image_name(ProjectBuildTargets.requirements)
 
         buildx_mock = mocker.patch("derex.runner.build.buildx_image")
 
@@ -74,7 +74,9 @@ def test_build_project_image_openedx_customizations(complete_project, mocker):
     with complete_project:
         project = Project()
         target = ProjectBuildTargets.openedx_customizations
-        tag = project.openedx_customizations_image_name
+        tag = project.get_build_target_image_name(
+            ProjectBuildTargets.openedx_customizations
+        )
         buildx_mock = mocker.patch("derex.runner.build.buildx_image")
 
         build_project_image(

@@ -3,15 +3,16 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from typing import Any
-from typing import List
 from typing import Optional
-from typing import Union
 
 import hashlib
 import importlib_metadata
+import logging
 import os
-import re
 import shutil
+
+
+logger = logging.getLogger(__file__)
 
 
 def copydir(source: str, dest: str):
@@ -30,50 +31,16 @@ def copydir(source: str, dest: str):
             shutil.copyfile(os.path.join(root, f), os.path.join(dest_path, f))
 
 
-def get_dir_hash(
-    dirname: Union[Path, str],
-    excluded_files: List = [],
-    ignore_hidden: bool = False,
-    followlinks: bool = False,
-    excluded_extensions: List = [],
-) -> str:
-    """Given a directory return an hash based on its contents"""
-    if not os.path.isdir(dirname):
-        raise TypeError(f"{dirname} is not a directory.")
-
-    hashvalues = []
-    for root, dirs, files in sorted(
-        os.walk(dirname, topdown=True, followlinks=followlinks)
-    ):
-        if ignore_hidden and re.search(r"/\.", root):
-            continue
-
-        for filename in sorted(files):
-            if ignore_hidden and filename.startswith("."):
-                continue
-
-            if filename.split(".")[-1:][0] in excluded_extensions:
-                continue
-
-            if filename in excluded_files:
-                continue
-
-            hasher = hashlib.sha256()
-            filepath = os.path.join(root, filename)
-            if not os.path.exists(filepath):
-                hashvalues.append(hasher.hexdigest())
-            else:
-                with open(filepath, "rb") as fileobj:
-                    while True:
-                        data = fileobj.read(64 * 1024)
-                        if not data:
-                            break
-                        hasher.update(data)
-                hashvalues.append(hasher.hexdigest())
-
+def get_dir_hash(path: Path) -> str:
+    """Given a directory, return a hash of the contents of the text files it contains."""
     hasher = hashlib.sha256()
-    for hashvalue in sorted(hashvalues):
-        hasher.update(hashvalue.encode("utf-8"))
+    logger.debug(
+        f"Calculating hash for dir {path}; initial (empty) hash is {hasher.hexdigest()}"
+    )
+    for file in sorted(path.iterdir()):
+        if file.is_file():
+            hasher.update(file.read_bytes())
+        logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
     return hasher.hexdigest()
 
 

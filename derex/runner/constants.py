@@ -41,10 +41,10 @@ assert all(
 
 
 class ProjectBuildTargets(IntEnum):
-    requirements = 1
-    openedx_customizations = 2
-    scripts = 3
-    settings = 4
-    translations = 5
-    themes = 6
-    final = 7
+    requirements = 1  # Includes custom requirements
+    openedx_customizations = 2  # Includes customizations to openedx source code
+    scripts = 3  # Includes custom scripts
+    settings = 4  # Includes Django settings
+    translations = 5  # Includes customized translations
+    themes = 6  # Includes themes
+    final = 7  # Includes everything required by the project

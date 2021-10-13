@@ -1,4 +1,5 @@
 from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import ProjectBuildTargets
 from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.ddc import run_ddc_project
 from derex.runner.project import Project
@@ -21,23 +22,34 @@ def test_complete_project(workdir, complete_project):
         with workdir(project_path / "themes"):
             project = Project()
 
-    assert project.root == project_loaded_with_path.root
-    assert type(project.config) == dict
-    assert project.requirements_dir == project_path / "requirements"
-    assert project.themes_dir == project_path / "themes"
-    assert project.e2e_dir == project_path / "e2e"
-    assert project.name == f"{project.openedx_version.name}-complete"
+            assert project.root == project_loaded_with_path.root
+            assert type(project.config) == dict
+            assert project.requirements_dir == project_path / "requirements"
+            assert project.themes_dir == project_path / "themes"
+            assert project.e2e_dir == project_path / "e2e"
+            assert project.name == f"{project.openedx_version.name}-complete"
 
-    if project.openedx_version.name == "ironwood":
-        assert (
-            project.requirements_image_name
-            == f"{project.name}/openedx-requirements:6c92de"
-        )
-    elif project.openedx_version.name == "juniper":
-        assert (
-            project.requirements_image_name
-            == f"{project.name}/openedx-requirements:27703b"
-        )
+            if project.openedx_version.name == "ironwood":
+                assert (
+                    project.get_build_target_image_name(
+                        ProjectBuildTargets.requirements
+                    )
+                    == f"{project.name}/openedx-requirements:9c9186"
+                )
+            if project.openedx_version.name == "juniper":
+                assert (
+                    project.get_build_target_image_name(
+                        ProjectBuildTargets.requirements
+                    )
+                    == f"{project.name}/openedx-requirements:a5f2b8"
+                )
+            if project.openedx_version.name == "koa":
+                assert (
+                    project.get_build_target_image_name(
+                        ProjectBuildTargets.requirements
+                    )
+                    == f"{project.name}/openedx-requirements:ec7073"
+                )
 
 
 def test_minimal_project(minimal_project):
@@ -49,9 +61,9 @@ def test_minimal_project(minimal_project):
     assert project.themes_dir is None
     assert project.e2e_dir is None
     assert project.name == f"{project.openedx_version.name}-minimal"
-    assert project.requirements_image_name == project.image_name
-    assert project.themes_image_name == project.image_name
-    assert project.themes_image_name == project.base_image
+    assert project.get_build_target_image_name(ProjectBuildTargets.requirements) is None
+    assert project.get_build_target_image_name(ProjectBuildTargets.themes) is None
+    assert project.docker_image_name == project.base_image
 
 
 def test_runmode(minimal_project):
@@ -146,7 +158,9 @@ def test_image_prefix(minimal_project):
         (Project().root / "requirements").mkdir()
         project = Project()
         assert project.image_prefix == config["image_prefix"]
-        assert project.themes_image_name.startswith(project.image_prefix)
+        assert project.get_build_target_image_name(
+            ProjectBuildTargets.requirements
+        ).startswith(project.image_prefix)
 
 
 def test_materialize_settings(minimal_project):

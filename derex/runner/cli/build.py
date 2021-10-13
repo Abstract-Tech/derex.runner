@@ -87,8 +87,12 @@ def project(
     the target image computed tag and the registry (from option or from project
     config).
     """
+    if not project.get_project_hash():
+        click.echo("No customizations found for this project, nothing to build.")
+        return 0
+
     target_enum = ProjectBuildTargets[target]
-    image_tag = tag or getattr(project, f"{target_enum.name}_image_name")
+    image_tag = tag or project.docker_image_name
     if only_print_image_name:
         click.echo(image_tag)
         return 0
@@ -133,7 +137,7 @@ def requirements(project):
     from derex.runner.build import build_requirements_image
 
     click.echo(
-        f'Building docker image {project.requirements_image_name} ("{project.name}" requirements)'
+        f'Building docker image {project.get_build_target_image_name(ProjectBuildTargets.requirements)} ("{project.name}" requirements)'
     )
     build_requirements_image(project)
 
@@ -148,10 +152,12 @@ def themes(ctx, project: Project):
 
     ctx.forward(requirements)
     click.echo(
-        f'Building docker image {project.themes_image_name} with "{project.name}" themes'
+        f'Building docker image {project.get_build_target_image_name(ProjectBuildTargets.themes)} with "{project.name}" themes'
     )
     build_themes_image(project)
-    click.echo(f"Built image {project.themes_image_name}")
+    click.echo(
+        f"Built image {project.get_build_target_image_name(ProjectBuildTargets.themes)}"
+    )
 
 
 @build.command()
@@ -172,7 +178,7 @@ def final_refresh(ctx, project: Project):
     """Also pull base docker image before starting building"""
     from derex.runner.docker_utils import pull_images
 
-    pull_images([project.base_image, project.final_base_image])
+    pull_images([project.base_image, project.nostatic_base_image])
     ctx.forward(final)
 
 

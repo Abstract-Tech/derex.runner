@@ -68,13 +68,17 @@ def build_requirements_image(project: Project):
         paths_to_copy.append(project.openedx_customizations_dir)
 
     dockerfile_text = generate_legacy_requirements_dockerfile(project)
-    build_image(dockerfile_text, paths_to_copy, tag=project.requirements_image_name)
+    build_image(
+        dockerfile_text,
+        paths_to_copy,
+        tag=project.get_build_target_image_name(ProjectBuildTargets.requirements),
+    )
 
 
 def generate_legacy_themes_dockerfile(project):
     dockerfile_contents = [
-        f"FROM {project.requirements_image_name} as static",
-        f"FROM {project.final_base_image}",
+        f"FROM {project.get_build_target_image_name(ProjectBuildTargets.requirements)} as static",
+        f"FROM {project.nostatic_base_image}",
         "COPY --from=static /openedx/staticfiles /openedx/staticfiles",
         "COPY themes/ /openedx/themes/",
         "COPY --from=static /openedx/edx-platform/common/static /openedx/edx-platform/common/static",
@@ -120,15 +124,15 @@ def build_themes_image(project: Project):
         build_image(
             dockerfile_text,
             paths_to_copy,
-            tag=project.themes_image_name,
+            tag=project.get_build_target_image_name(ProjectBuildTargets.themes),
             tag_final=True,
-            extra_opts=dict(squash=True),
+            extra_options=dict(squash=True),
         )
     else:
         build_image(
             dockerfile_text,
             paths_to_copy,
-            tag=project.themes_image_name,
+            tag=project.get_build_target_image_name(ProjectBuildTargets.themes),
             tag_final=True,
         )
         logger.warning(
