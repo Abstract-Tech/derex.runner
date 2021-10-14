@@ -5,6 +5,7 @@ from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import ProjectBuildTargets
 from derex.runner.constants import SECRETS_CONF_FILENAME
+from derex.runner.docker_utils import image_exists
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.themes import Theme
@@ -168,12 +169,15 @@ class Project:
 
     @property
     def docker_image_name(self) -> str:
-        """The image name of the final image containing everything needed for this project"""
+        """The image name of the image which should be run by ddc-project"""
         final_image_name = self.get_build_target_image_name(ProjectBuildTargets.final)
         if final_image_name:
             if self.docker_registry:
-                return f"{self.docker_registry}/{final_image_name}"
-            return final_image_name
+                registry_image_name = f"{self.docker_registry}/{final_image_name}"
+                if image_exists(registry_image_name):
+                    return registry_image_name
+            if image_exists(final_image_name):
+                return final_image_name
         return self.base_image
 
     @property

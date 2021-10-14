@@ -4,7 +4,9 @@ These wrappers invoke `docker-compose` functions to get their job done.
 They put a `docker.compose.yml` file in place based on user configuration.
 """
 from derex.runner.compose_utils import run_docker_compose
+from derex.runner.constants import ProjectBuildTargets
 from derex.runner.docker_utils import ensure_volumes_present
+from derex.runner.docker_utils import image_exists
 from derex.runner.docker_utils import is_docker_working
 from derex.runner.docker_utils import wait_for_service
 from derex.runner.logging_utils import setup_logging
@@ -21,7 +23,11 @@ from typing import Tuple
 
 import click
 import json
+import logging
 import sys
+
+
+logger = logging.getLogger(__file__)
 
 
 def ddc_parse_args(compose_args: List[str]) -> Tuple[List[str], bool]:
@@ -121,6 +127,13 @@ def run_ddc_project(
 
     Used by ddc-project cli command.
     """
+    project_final_image = project.get_build_target_image_name(ProjectBuildTargets.final)
+    if not image_exists(project_final_image):
+        logger.warning(
+            f"This project will be run with the base Open edX image {project.base_image}. Docker image {project_final_image} not found.\n"
+            "Run `derex build project --help` for more information about how to build it"
+        )
+
     plugins_argv = sort_and_validate_plugins(
         setup_plugin_manager().hook.ddc_project_options(project=project),
     )

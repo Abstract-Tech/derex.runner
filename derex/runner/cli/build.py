@@ -92,7 +92,7 @@ def project(
         return 0
 
     target_enum = ProjectBuildTargets[target]
-    image_tag = tag or project.docker_image_name
+    image_tag = tag or project.get_build_target_image_name(target_enum)
     if only_print_image_name:
         click.echo(image_tag)
         return 0

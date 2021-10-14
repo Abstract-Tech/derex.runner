@@ -12,6 +12,10 @@ steps:
     condition: always()
     displayName: "Show ddc-project config"
 
+  - script: cd ${{ parameters.PROJECT_PATH }} && derex build project
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+    displayName: Build project final image
+
   - script: |
       set -ex
       cd ${{ parameters.PROJECT_PATH }}
@@ -31,9 +35,6 @@ steps:
       derex reset-rabbitmq
     displayName: "Prime Rabbitmq"
 
-  - script: cd ${{ parameters.PROJECT_PATH }} && derex build requirements
-    displayName: "Build requirements image for project ${{ parameters.PROJECT_NAME }}"
-
   - script: echo 127.0.0.1 localhost studio.${{ parameters.PROJECT_NAME }}.localhost ${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
     displayName: Add studio.${{ parameters.PROJECT_NAME }}.localhost and ${{ parameters.PROJECT_NAME }}.localhost to /etc/hosts
 
@@ -44,10 +45,6 @@ steps:
   - script: cd ${{ parameters.PROJECT_PATH }} && derex compile-theme
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: Compile theme
-
-  - script: cd ${{ parameters.PROJECT_PATH }} && derex build project
-    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
-    displayName: Build final image
 
   # XXX: Work to have an efficient docker image and re-enable dive checks
   - script: |

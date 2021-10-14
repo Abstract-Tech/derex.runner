@@ -105,6 +105,7 @@ def test_ddc_project_addition(minimal_project, mocker, capsys):
             fh.write("lms:\n  image: foobar\n")
         project = Project()
         run_ddc_project([], project, dry_run=True)
+
         output = capsys.readouterr().out
         # The last option should be the path of the user docker compose file for this project
         assert output.endswith(f"-f {docker_compose_path}\n")
@@ -116,7 +117,9 @@ def test_docker_compose_addition_per_runmode(minimal_project, mocker, capsys):
         with docker_compose_debug_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
+
         run_ddc_project([], project, dry_run=True)
+
         output = capsys.readouterr().out
         # The last option should be the path of the debug docker compose
         assert output.endswith(f"-f {docker_compose_debug_path}\n")

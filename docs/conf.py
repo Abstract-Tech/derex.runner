@@ -179,6 +179,7 @@ nitpick_ignore = [
     ("py:class", "click.core.Context"),
     ("py:class", "DerexSecrets"),
     ("py:class", "derex.runner.project.Project"),
+    ("py:class", "derex.runner.constants.ProjectBuildTargets"),
     ("py:class", "Optional['derex.runner.project.Project']"),
     ("py:class", "Path"),
     ("py:class", "pathlib.Path"),
