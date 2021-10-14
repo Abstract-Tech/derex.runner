@@ -4,19 +4,22 @@ describe("Theme tests", () => {
   });
 
   it("The header logo should be the theme logo", function () {
-    cy.get(".logo").should(
-      "have.attr",
-      "src",
-      "/static/demo-theme/images/logo.png"
-    );
+    cy.get(".logo")
+      .should("have.attr", "src")
+      .and("match", RegExp("/static/demo-theme/images/logo(.\\w+)?.png"));
   });
 
   it("The footer logo should be the theme logo", function () {
-    cy.get(".wrapper-logo > p > a > img").should(
-      "have.attr",
-      "src",
-      `${Cypress.env("LMS_URL")}/static/demo-theme/images/logo.png`
-    );
+    cy.get(".wrapper-logo > p > a > img")
+      .should("have.attr", "src")
+      .and(
+        "match",
+        RegExp(
+          `${Cypress.env(
+            "LMS_URL"
+          )}/static/demo-theme/images/logo(\.\\w+)?\.png`
+        )
+      );
   });
 
   it("The footer should contain footer navigation links", function () {
