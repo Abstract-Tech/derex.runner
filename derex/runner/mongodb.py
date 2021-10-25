@@ -13,6 +13,8 @@ from typing import Optional
 import logging
 import urllib.parse
 
+import os
+
 
 logger = logging.getLogger(__name__)
 MONGODB_ROOT_PASSWORD = get_secret(DerexSecrets.mongodb)
@@ -135,3 +137,14 @@ def reset_mongodb_password(current_password: str = None):
 
     run_ddc_services(compose_args, exit_afterwards=True)
     return 0
+
+
+@ensure_mongodb
+def dump_database(database_name: str):
+    """Export the database"""
+    logger.info(f'Dumping the database "{database_name}"...')
+    os.system(
+        f'docker exec -i mongodb mongodump --authenticationDatabase=admin -u {MONGODB_ROOT_USER} -p{MONGODB_ROOT_PASSWORD} -d {database_name} -o {database_name} && docker cp mongodb:{database_name} ./backup')
+    logger.info(
+        f"The database {database_name} was successfully dumped on {database_name}"
+    )
