@@ -62,6 +62,7 @@ def drop(context: click.core.Context):
 def show(context: click.core.Context):
     """MySQL SHOW predicate"""
 
+
 @create.command(name="database")
 @click.pass_obj
 @click.argument("db_name", type=str, required=False)

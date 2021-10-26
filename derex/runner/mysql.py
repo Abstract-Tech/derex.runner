@@ -14,8 +14,8 @@ from typing import Optional
 from typing import Tuple
 
 import logging
-import pymysql
 import os
+import pymysql
 
 
 logger = logging.getLogger(__name__)
@@ -189,7 +189,7 @@ def copy_database(source_db_name: str, destination_db_name: str):
 
 
 def dump_database(database_name: str):
-    """"Export the database"""
+    """ "Export the database"""
     logger.info(f'Dumping the database "{database_name}"...')
     # run_ddc_services(
     #     [
@@ -200,17 +200,17 @@ def dump_database(database_name: str):
     #     ]
     # )
     os.system(
-        f'docker exec mysql mysqldump -u {MYSQL_ROOT_USER} -p{MYSQL_ROOT_PASSWORD} {database_name} > {database_name}.sql')
-    logger.info(
-        f"The database {database_name} was successfully dumped"
+        f"docker exec mysql mysqldump -u {MYSQL_ROOT_USER} -p{MYSQL_ROOT_PASSWORD} {database_name} > {database_name}.sql"
     )
+    logger.info(f"The database {database_name} was successfully dumped")
 
 
 def restore_database(database_name: str, dump_file: str):
     """Resore a database from a dump file"""
     logger.info(f'Restoring the database "{database_name}" from {dump_file}')
     os.system(
-        f'docker exec mysql mysqldump -u {MYSQL_ROOT_USER} -p{MYSQL_ROOT_PASSWORD} {database_name} < {dump_file}')
+        f"docker exec mysql mysqldump -u {MYSQL_ROOT_USER} -p{MYSQL_ROOT_PASSWORD} {database_name} < {dump_file}"
+    )
     logger.info(
         f"The database {database_name} was successfully retored from {dump_file}"
     )

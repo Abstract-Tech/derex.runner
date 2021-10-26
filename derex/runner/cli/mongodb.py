@@ -191,10 +191,10 @@ def reset_mongodb_password_cmd(current_password: Optional[str], force: bool):
         reset_mongodb_password(current_password)
     return 0
 
+
 @mongodb.command(name="dump")
 @click.pass_obj
 @click.argument("db_name", type=str)
-
 def dump_database_cmd(project: Optional[Project], db_name: str):
     """Dump a mongodb database"""
 
@@ -202,6 +202,7 @@ def dump_database_cmd(project: Optional[Project], db_name: str):
 
     dump_database(db_name)
     return 0
+
 
 @mongodb.command(name="restore")
 @click.argument("db_name", type=str, nargs=1)
