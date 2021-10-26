@@ -152,7 +152,7 @@ def dump_database(database_name: str):
 
 @ensure_mongodb
 def restore_database(database_name: str, dump_file: str):
-    """Resore a database from a dump directory"""
+    """Resore a database from a dump file"""
     logger.info(
         f'Restoring the database "{database_name}" from the the directory {dump_file}')
     os.system(
