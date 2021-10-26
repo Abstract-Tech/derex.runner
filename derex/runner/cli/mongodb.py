@@ -202,3 +202,14 @@ def dump_database_cmd(project: Optional[Project], db_name: str):
 
     dump_database(db_name)
     return 0
+
+@mongodb.command(name="restore")
+@click.argument("db_name", type=str, nargs=1)
+@click.argument("dump_dir", type=click.Path(exists=True), nargs=1)
+def restore_database_cmd(db_name: str, dump_dir: str):
+    """Restore a mysql database from a file"""
+
+    from derex.runner.mongodb import restore_database
+
+    restore_database(db_name, dump_dir)
+    return 0

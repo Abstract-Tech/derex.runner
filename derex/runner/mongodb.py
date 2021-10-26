@@ -144,7 +144,19 @@ def dump_database(database_name: str):
     """Export the database"""
     logger.info(f'Dumping the database "{database_name}"...')
     os.system(
-        f'docker exec -i mongodb mongodump --authenticationDatabase=admin -u {MONGODB_ROOT_USER} -p{MONGODB_ROOT_PASSWORD} -d {database_name} -o {database_name} && docker cp mongodb:{database_name} ./backup')
+        f'docker exec -i mongodb mongodump --authenticationDatabase=admin -u {MONGODB_ROOT_USER} -p{MONGODB_ROOT_PASSWORD} -d {database_name} --gzip --archive={database_name}.gz && docker cp mongodb:{database_name}.gz . && docker exec mongodb rm {database_name}.gz')
     logger.info(
         f"The database {database_name} was successfully dumped on {database_name}"
+    )
+
+
+@ensure_mongodb
+def restore_database(database_name: str, dump_file: str):
+    """Resore a database from a dump directory"""
+    logger.info(
+        f'Restoring the database "{database_name}" from the the directory {dump_file}')
+    os.system(
+        f'docker cp {dump_file} mongodb:/ && docker exec mongodb mongorestore --authenticationDatabase=admin -u {MONGODB_ROOT_USER} -p{MONGODB_ROOT_PASSWORD} --db {database_name} --drop --gzip --archive={dump_file} && docker exec mongodb rm {dump_file}')
+    logger.info(
+        f"The database {database_name} was successfully retored from {dump_file}"
     )
