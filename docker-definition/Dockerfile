@@ -169,7 +169,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
     pip install transifex-client -c /openedx/requirements/openedx_constraints.txt && \
     export DJANGO_SETTINGS_MODULE="derex_django.settings.build.translations" && \
-    derex_update_translations
+    derex_update_openedx_translations
 
 FROM notranslations as nostatic
 # This image contains the Open edX source code and all necessary python packages installed.
