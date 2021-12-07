@@ -16,6 +16,26 @@ ENV MONGODB_PASSWORD={{ project.secret("mongodb") }}
 ENV DEREX_MINIO_SECRET={{ project.secret("minio") }}
 {% endblock %}
 
+{% block themes %}
+FROM {{ project.base_image }} as themes
+{% if project.themes_dir -%}
+    COPY themes/ /openedx/themes/
+    {% for theme in project.get_themes() -%}
+        {% if theme.is_lms_theme() and theme.has_lms_static() -%}
+            RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
+        {% endif -%}
+        {% if theme.is_cms_theme() and theme.has_cms_static() -%}
+            RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
+        {% endif -%}
+    {% endfor -%}
+    {% if project.config.get("update_assets", None) -%}
+        RUN sh -c 'set -e; rm -rf /openedx/staticfiles; derex_update_assets;'
+    {% elif project.config.get("collect_assets", None) -%}
+        RUN sh -c 'set -e; derex_collect_assets;'
+    {% endif -%}
+{% endif -%}
+{% endblock %}
+
 {% block requirements %}
 FROM base as requirements
 {% if project.requirements_dir -%}
@@ -49,29 +69,11 @@ FROM base as settings
 {% endif -%}
 {% endblock %}
 
-{% block themes %}
-FROM settings as themes
-{% if project.themes_dir -%}
-    COPY themes/ /openedx/themes/
-    {% for theme in project.get_themes() -%}
-        {% if theme.is_lms_theme() and theme.has_lms_static() -%}
-            RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
-        {% elif theme.is_cms_theme() and theme.has_cms_static() -%}
-            RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
-        {% endif -%}
-    {% endfor -%}
-    {% if project.config.get("update_assets", None) -%}
-        RUN sh -c 'set -e; rm -rf /openedx/staticfiles; derex_update_assets;'
-    {% elif project.config.get("collect_assets", None) -%}
-        RUN sh -c 'set -e; derex_collect_assets;'
-    {% endif -%}
-{% endif -%}
-{% endblock %}
-
 {% block translations %}
 FROM settings as translations
 {% if project.translations_dir -%}
     COPY {{ project.translations_dir.name }} /derex/translations
+    # TODO: replace the following commands with a call to derex_update_translations script
     RUN SERVICE_VARIANT=lms python manage.py lms compilemessages
     RUN SERVICE_VARIANT=cms python manage.py cms compilemessages
     RUN SERVICE_VARIANT=lms python manage.py lms compilejsi18n
