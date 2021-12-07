@@ -51,7 +51,6 @@ test-cov.xml
 test-output.xml
 
 # Translations
-*.mo
 *.pot
 
 # Django stuff:
