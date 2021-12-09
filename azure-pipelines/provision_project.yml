@@ -42,6 +42,10 @@ steps:
     condition: always()
     displayName: Show LMS/CMS logs
 
+  - script: cd ${{ parameters.PROJECT_PATH }} && derex settings production
+    condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
+    displayName: Set production settings
+
   - script: cd ${{ parameters.PROJECT_PATH }} && derex compile-theme
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: Compile theme
