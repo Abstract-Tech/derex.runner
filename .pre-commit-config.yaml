@@ -1,4 +1,4 @@
-exclude: derex/runner/compose_files/openedx_customizations/.*
+exclude: docker-definition/openedx_customizations/.*
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
@@ -20,8 +20,7 @@ repos:
       - id: flake8
         args:
           - "--per-file-ignores=\
-            docker-definition/derex_django/derex_django/settings/default/*.py,\
-            derex/runner/compose_files/openedx_customizations/*\
+            docker-definition/derex_django/derex_django/settings/default/*.py\
             :F821,F405,F403,E266"
 
   - repo: https://github.com/pre-commit/mirrors-mypy

@@ -1,9 +1,13 @@
 from .utils import ensure_project
 from derex.runner import __version__
+from derex.runner.build import build_project_image
+from derex.runner.cli.utils import red
+from derex.runner.constants import ProjectBuildTargets
 from derex.runner.project import OpenEdXVersions
 from derex.runner.project import Project
 from derex.runner.utils import abspath_from_egg
 from distutils.spawn import find_executable
+from typing import Optional
 
 import click
 import os
@@ -18,12 +22,122 @@ def build():
 @build.command()
 @click.pass_obj
 @ensure_project
+@click.option(
+    "-T",
+    "--target",
+    type=click.Choice(ProjectBuildTargets.__members__),
+    default="final",
+    help="Target to build",
+)
+@click.option(
+    "-o",
+    "--output",
+    type=click.Choice(["docker", "registry"]),
+    default="docker",
+    help="Where to push the resulting image",
+)
+@click.option("-r", "--registry", type=str)
+@click.option("-t", "--tag", type=str)
+@click.option("--latest", "tag_latest", is_flag=True, default=False)
+@click.option(
+    "--only-print-image-name",
+    is_flag=True,
+    default=False,
+    help="Only print the name which will be assigned to the image",
+)
+@click.option(
+    "--pull",
+    is_flag=True,
+    default=False,
+    help="Always try to pull the newer version of the image",
+)
+@click.option("--no-cache", is_flag=True, default=False)
+@click.option("--cache-from", is_flag=True, default=False)
+@click.option("--cache-to", is_flag=True, default=False)
+def project(
+    project: Project,
+    target: str,
+    output: str,
+    registry: Optional[str],
+    tag: Optional[str],
+    tag_latest: bool,
+    only_print_image_name: bool,
+    pull: bool,
+    no_cache: bool,
+    cache_from: bool,
+    cache_to: bool,
+):
+    """
+    Build the project specific openedx image.
+
+    Images will be built using Buildkit (https://docs.docker.com/develop/develop-images/build_enhancements/).
+
+    A target image can be specified.
+    Available targets for openedx include:
+
+        * requirements: include all project requirements (system dependencies, python packages)\n
+        * openedx_customizations: include all project customizations to the openedx source code\n
+        * scripts: include bash and python scripts\n
+        * settings: include Django settings\n
+        * translations: include project specific compiled translations\n
+        * themes: include the project compiled themes and staticfiles\n
+        * final: include everything needed for this project\n
+
+    The image tag, if not specified, will be derived from the project `image_prefix`,
+    the target image computed tag and the registry (from option or from project
+    config).
+    """
+    if not project.get_project_hash():
+        click.echo("No customizations found for this project, nothing to build.")
+        return 0
+
+    target_enum = ProjectBuildTargets[target]
+    image_tag = tag or project.get_build_target_image_name(target_enum)
+    if only_print_image_name:
+        click.echo(image_tag)
+        return 0
+
+    if cache_from or cache_to or output == "registry":
+        if not registry:
+            if project.docker_registry:
+                registry = project.docker_registry
+            else:
+                raise click.exceptions.MissingParameter(
+                    param_hint="registry",
+                    param_type="str",
+                    message="You need to define a registry to push or import/export the cache",
+                )
+
+    click.echo(
+        f'Building docker image {image_tag} ("{project.name}" {target_enum.name})'
+    )
+    try:
+        build_project_image(
+            project,
+            target=target_enum,
+            output=output,
+            registry=registry,
+            tag=image_tag,
+            tag_latest=tag_latest,
+            pull=pull,
+            no_cache=no_cache,
+            cache_from=cache_from,
+            cache_to=cache_to,
+        )
+    except Exception as e:
+        click.echo(red(e))
+        return 1
+
+
+@build.command()
+@click.pass_obj
+@ensure_project
 def requirements(project):
     """Build the image that contains python requirements"""
     from derex.runner.build import build_requirements_image
 
     click.echo(
-        f'Building docker image {project.requirements_image_name} ("{project.name}" requirements)'
+        f'Building docker image {project.get_build_target_image_name(ProjectBuildTargets.requirements)} ("{project.name}" requirements)'
     )
     build_requirements_image(project)
 
@@ -38,10 +152,12 @@ def themes(ctx, project: Project):
 
     ctx.forward(requirements)
     click.echo(
-        f'Building docker image {project.themes_image_name} with "{project.name}" themes'
+        f'Building docker image {project.get_build_target_image_name(ProjectBuildTargets.themes)} with "{project.name}" themes'
     )
     build_themes_image(project)
-    click.echo(f"Built image {project.themes_image_name}")
+    click.echo(
+        f"Built image {project.get_build_target_image_name(ProjectBuildTargets.themes)}"
+    )
 
 
 @build.command()
@@ -62,7 +178,7 @@ def final_refresh(ctx, project: Project):
     """Also pull base docker image before starting building"""
     from derex.runner.docker_utils import pull_images
 
-    pull_images([project.base_image, project.final_base_image])
+    pull_images([project.base_image, project.nostatic_base_image])
     ctx.forward(final)
 
 
@@ -85,6 +201,7 @@ def final_refresh(ctx, project: Project):
             "base",
             "sourceonly",
             "wheels",
+            "notranslations",
             "translations",
             "nodump",
         ]

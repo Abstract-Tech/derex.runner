@@ -20,11 +20,11 @@ describe("Login tests", () => {
     cy.get(".action").click();
     cy.get(".message-copy > :nth-child(1)").should(
       "have.text",
-      "Please enter your Email."
+      "Pléäsé éntér ýöür Émäïl Ⱡ'σяєм ιρѕ#. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢#"
     );
     cy.get(".message-copy > :nth-child(2)").should(
       "have.text",
-      "Please enter your Password."
+      "Pléäsé éntér ýöür Pässwörd Ⱡ'σяєм ιρѕυм ∂#. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢#"
     );
   });
 
@@ -34,7 +34,7 @@ describe("Login tests", () => {
     cy.get(".action").click();
     cy.get(".message-copy > :nth-child(1)").should(
       "have.text",
-      "Email or password is incorrect."
+      "Émäïl ör pässwörd ïs ïnçörréçt. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢т#"
     );
   });
 
@@ -53,7 +53,10 @@ describe("Login tests", () => {
     cy.get("#login-help > .field-link").click();
     cy.get("#password-reset-email").type(Cypress.env("learner_user").email);
     cy.get("#password-reset > .action").click();
-    cy.get(".js-password-reset-success").should("contain", "Check Your Email");
+    cy.get(".js-password-reset-success").should(
+      "contain",
+      "Çhéçk Ýöür Émäïl Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αм#"
+    );
     cy.get(".js-password-reset-success").should(
       "contain",
       Cypress.env("learner_user").email
@@ -90,6 +93,10 @@ describe("Registration tests", () => {
 
   it("A unauthenticated user can register by filling the registration form", () => {
     cy.get("#register-name").type(`${randomString(10)} ${randomString(10)}`);
+    // The following click is needed to avoid the error
+    // "element <input id="register-username" ...> is being covered by another element
+    // `<label for="register-username" ...>`"
+    cy.get(".text-username > .focus-out").click();
     cy.get("#register-username").type(randomString(10));
     cy.get("#register-email").type(`${randomString(10)}@example.com`);
     cy.get("#register-password").type("secret");

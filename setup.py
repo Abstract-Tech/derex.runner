@@ -25,6 +25,7 @@ requirements = [
     "PyYAML>=5.4",
     "py>=1.10.0",
     "urllib3>=1.26.5",
+    "python-on-whales",
 ]
 
 setup_requirements = ["setuptools"]
@@ -68,6 +69,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.3.2",
+    version="0.3.2.dev2",
     zip_safe=False,
 )

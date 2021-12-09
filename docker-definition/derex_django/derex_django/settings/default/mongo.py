@@ -33,4 +33,5 @@ MONGODB_LOG = {
     "db": "{}_xlog".format(MONGODB_DB_NAME),
     "user": DOC_STORE_CONFIG["user"],
     "password": DOC_STORE_CONFIG["password"],
+    "authsource": "admin",
 }

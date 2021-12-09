@@ -17,7 +17,6 @@ from derex.runner.constants import DEREX_ETC_PATH
 from derex.runner.constants import MAILSLURPER_JSON_TEMPLATE
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import WSGI_PY_PATH
-from derex.runner.docker_utils import image_exists
 from derex.runner.local_appdir import DEREX_DIR
 from derex.runner.local_appdir import ensure_dir
 from derex.runner.project import Project
@@ -122,24 +121,11 @@ def generate_ddc_project_compose(project: Project) -> Path:
     """
     project_compose_path = project.private_filepath("docker-compose.yml")
     template_path = DDC_PROJECT_TEMPLATE_PATH
-    final_image = None
-    if image_exists(project.image_name):
-        final_image = project.image_name
-    if not image_exists(project.requirements_image_name):
-        logger.warning(
-            f"Image {project.requirements_image_name} not found\n"
-            "Run\nderex build requirements\n to build it"
-        )
-
-    openedx_customizations = project.get_openedx_customizations()
-
     tmpl = Template(template_path.read_text())
     text = tmpl.render(
         project=project,
-        final_image=final_image,
         wsgi_py_path=WSGI_PY_PATH,
         derex_django_path=DEREX_DJANGO_PATH,
-        openedx_customizations=openedx_customizations,
     )
     project_compose_path.write_text(text)
     return project_compose_path

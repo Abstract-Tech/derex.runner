@@ -1,6 +1,6 @@
 project_name: juniper-complete
 openedx_version: juniper
-update_assets: true
+collect_assets: true
 materialize_derex_settings: false
 variables:
   lms_test_dict:

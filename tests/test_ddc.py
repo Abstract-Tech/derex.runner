@@ -37,7 +37,6 @@ def test_ddc_services(sys_argv, capsys, monkeypatch, complete_project):
 
 def test_ddc_project_minimal(sys_argv, mocker, minimal_project, capsys):
     from derex.runner.ddc import ddc_project
-    from derex.runner.project import Project
 
     """Test the open edx ironwood docker compose shortcut."""
     # It should check for services to be up before trying to do anything
@@ -65,14 +64,6 @@ def test_ddc_project_minimal(sys_argv, mocker, minimal_project, capsys):
             ddc_project()
         assert "worker" in capsys.readouterr().out
 
-        if Project().openedx_version.name == "juniper":
-            with sys_argv(["ddc-project", "config"]):
-                ddc_project()
-            assert (
-                "/derex/runner/compose_files/openedx_customizations/juniper/"
-                in capsys.readouterr().out
-            )
-
 
 def test_ddc_project_complete(sys_argv, complete_project, capsys):
     from derex.runner.ddc import ddc_project
@@ -80,10 +71,12 @@ def test_ddc_project_complete(sys_argv, complete_project, capsys):
     with complete_project:
         with sys_argv(["ddc-project", "config"]):
             ddc_project()
-    assert (
-        ":/openedx/edx-platform/test_openedx_customization.py"
-        in capsys.readouterr().out
-    )
+            output = capsys.readouterr().out
+            assert ":/openedx/edx-platform/test_openedx_customization.py" in output
+            assert (
+                ":/openedx/edx-platform/subfolder/test_openedx_customization.py"
+                in output
+            )
 
 
 def test_ddc_project_symlink_mounting(sys_argv, mocker, complete_project, capsys):

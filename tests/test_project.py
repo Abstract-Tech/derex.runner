@@ -1,4 +1,5 @@
 from derex.runner.constants import CONF_FILENAME
+from derex.runner.constants import ProjectBuildTargets
 from derex.runner.constants import SECRETS_CONF_FILENAME
 from derex.runner.ddc import run_ddc_project
 from derex.runner.project import Project
@@ -21,23 +22,34 @@ def test_complete_project(workdir, complete_project):
         with workdir(project_path / "themes"):
             project = Project()
 
-    assert project.root == project_loaded_with_path.root
-    assert type(project.config) == dict
-    assert project.requirements_dir == project_path / "requirements"
-    assert project.themes_dir == project_path / "themes"
-    assert project.e2e_dir == project_path / "e2e"
-    assert project.name == f"{project.openedx_version.name}-complete"
+            assert project.root == project_loaded_with_path.root
+            assert type(project.config) == dict
+            assert project.requirements_dir == project_path / "requirements"
+            assert project.themes_dir == project_path / "themes"
+            assert project.e2e_dir == project_path / "e2e"
+            assert project.name == f"{project.openedx_version.name}-complete"
 
-    if project.openedx_version.name == "ironwood":
-        assert (
-            project.requirements_image_name
-            == f"{project.name}/openedx-requirements:6c92de"
-        )
-    elif project.openedx_version.name == "juniper":
-        assert (
-            project.requirements_image_name
-            == f"{project.name}/openedx-requirements:27703b"
-        )
+            if project.openedx_version.name == "ironwood":
+                assert (
+                    project.get_build_target_image_name(
+                        ProjectBuildTargets.requirements
+                    )
+                    == f"{project.name}/openedx-requirements:8d516f"
+                )
+            if project.openedx_version.name == "juniper":
+                assert (
+                    project.get_build_target_image_name(
+                        ProjectBuildTargets.requirements
+                    )
+                    == f"{project.name}/openedx-requirements:8b9fb6"
+                )
+            if project.openedx_version.name == "koa":
+                assert (
+                    project.get_build_target_image_name(
+                        ProjectBuildTargets.requirements
+                    )
+                    == f"{project.name}/openedx-requirements:fd9fc2"
+                )
 
 
 def test_minimal_project(minimal_project):
@@ -49,9 +61,9 @@ def test_minimal_project(minimal_project):
     assert project.themes_dir is None
     assert project.e2e_dir is None
     assert project.name == f"{project.openedx_version.name}-minimal"
-    assert project.requirements_image_name == project.image_name
-    assert project.themes_image_name == project.image_name
-    assert project.themes_image_name == project.base_image
+    assert project.get_build_target_image_name(ProjectBuildTargets.requirements) is None
+    assert project.get_build_target_image_name(ProjectBuildTargets.themes) is None
+    assert project.docker_image_name == project.base_image
 
 
 def test_runmode(minimal_project):
@@ -93,6 +105,7 @@ def test_ddc_project_addition(minimal_project, mocker, capsys):
             fh.write("lms:\n  image: foobar\n")
         project = Project()
         run_ddc_project([], project, dry_run=True)
+
         output = capsys.readouterr().out
         # The last option should be the path of the user docker compose file for this project
         assert output.endswith(f"-f {docker_compose_path}\n")
@@ -104,7 +117,9 @@ def test_docker_compose_addition_per_runmode(minimal_project, mocker, capsys):
         with docker_compose_debug_path.open("w") as fh:
             fh.write("lms:\n  image: foobar\n")
         project = Project()
+
         run_ddc_project([], project, dry_run=True)
+
         output = capsys.readouterr().out
         # The last option should be the path of the debug docker compose
         assert output.endswith(f"-f {docker_compose_debug_path}\n")
@@ -146,7 +161,9 @@ def test_image_prefix(minimal_project):
         (Project().root / "requirements").mkdir()
         project = Project()
         assert project.image_prefix == config["image_prefix"]
-        assert project.themes_image_name.startswith(project.image_prefix)
+        assert project.get_build_target_image_name(
+            ProjectBuildTargets.requirements
+        ).startswith(project.image_prefix)
 
 
 def test_materialize_settings(minimal_project):
@@ -283,3 +300,12 @@ def create_settings_file(project_root: Path, filename: str):
         settings_dir.mkdir()
         (settings_dir / "__init__.py").write_text("")
     (settings_dir / f"{filename}.py").write_text("# Empty file")
+
+
+def test_get_openedx_requirements_paths(complete_project):
+    with complete_project:
+        project = Project()
+        requirements_paths = project.get_openedx_requirements_files()
+        assert len(requirements_paths) == 2
+        assert "testplugin.txt" in requirements_paths
+        assert "xblocks.txt" in requirements_paths

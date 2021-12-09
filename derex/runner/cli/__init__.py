@@ -4,6 +4,7 @@ from .build import build
 from .mongodb import mongodb
 from .mysql import mysql
 from .test import test
+from .translations import translations
 from .utils import ensure_project
 from .utils import red
 from click_plugins import with_plugins
@@ -29,7 +30,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-@with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))
+@with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))  # type: ignore
 @click.group(invoke_without_command=True)
 @click.version_option()
 @click.pass_context
@@ -334,6 +335,7 @@ derex.add_command(mysql)
 derex.add_command(mongodb)
 derex.add_command(build)
 derex.add_command(test)
+derex.add_command(translations)
 
 
 __all__ = ["derex"]

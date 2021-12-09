@@ -33,6 +33,9 @@ describe("Account settings tests", () => {
   afterEach(() => {
     // We click somewhere else to trigger the save action
     cy.get("#u-field-value-username").click();
-    cy.get("body").should("contain", "Your changes have been saved");
+    cy.get("body").should(
+      "contain",
+      "Süççéss Ⱡ'σяєм ιρѕυм #Ýöür çhängés hävé ßéén sävéd. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢#"
+    );
   });
 });
