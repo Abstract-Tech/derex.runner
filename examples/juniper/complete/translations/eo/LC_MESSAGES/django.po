@@ -1,0 +1,2 @@
+msgid "It works! Powered by Open edX{registered_trademark}"
+msgstr "A test translation"

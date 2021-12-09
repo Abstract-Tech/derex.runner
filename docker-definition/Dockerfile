@@ -61,10 +61,11 @@ ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
 
 RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ /openedx/requirements/ && \
     git clone ${EDX_PLATFORM_REPOSITORY} --branch ${EDX_PLATFORM_VERSION} --depth 1 /openedx/edx-platform
+# Copy derex overrides to edx-platform source code
+COPY openedx_customizations/${EDX_PLATFORM_RELEASE} /openedx/edx-platform
 
 WORKDIR /openedx/edx-platform
-COPY requirements/${EDX_PLATFORM_RELEASE}/derex.txt /openedx/requirements/derex.txt
-COPY requirements/${EDX_PLATFORM_RELEASE}/overrides.txt /openedx/requirements/overrides.txt
+COPY requirements/${EDX_PLATFORM_RELEASE}/* /openedx/requirements/
 # The following layer is going to produce 3 requirements file:
 # * edx base requirements with some fixes which will be installed (openedx_base_fixed.txt)
 # * edx base requirements with relative paths converted to absolute paths which will be
@@ -167,7 +168,8 @@ FROM notranslations as translations
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
     pip install transifex-client -c /openedx/requirements/openedx_constraints.txt && \
-    derex_update_translations
+    export DJANGO_SETTINGS_MODULE="derex_django.settings.build.translations" && \
+    derex_update_openedx_translations
 
 FROM notranslations as nostatic
 # This image contains the Open edX source code and all necessary python packages installed.
@@ -216,4 +218,4 @@ RUN --mount=type=tmpfs,target=/mysql/var/lib/mysql \
 
 ENV DJANGO_SETTINGS_MODULE=derex_django.settings.default
 ENV SERVICE_VARIANT=lms
-ENV DEREX_VERSION=0.3.2
+ENV DEREX_VERSION=0.3.3

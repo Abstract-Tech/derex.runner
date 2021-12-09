@@ -10,7 +10,6 @@ __pycache__/
 .Python
 env/
 build/
-!docker-definition/derex_django/derex_django/settings/build
 develop-eggs/
 dist/
 downloads/
@@ -52,7 +51,6 @@ test-cov.xml
 test-output.xml
 
 # Translations
-*.mo
 *.pot
 
 # Django stuff:
@@ -117,4 +115,5 @@ ENV/
 examples/tests/ironwood.2.tar.gz
 examples/tests/edx-demo-course-*
 
-!derex/runner/compose_files/openedx_customizations/**
+!docker-definition/derex_django/derex_django/settings/build
+!docker-definition/openedx_customizations/**/common/lib

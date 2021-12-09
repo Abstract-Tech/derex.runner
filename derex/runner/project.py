@@ -1,17 +1,20 @@
 from derex.runner import __version__
 from derex.runner.constants import CONF_FILENAME
 from derex.runner.constants import DEREX_DJANGO_SETTINGS_PATH
-from derex.runner.constants import DEREX_OPENEDX_CUSTOMIZATIONS_PATH
 from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
+from derex.runner.constants import ProjectBuildTargets
 from derex.runner.constants import SECRETS_CONF_FILENAME
+from derex.runner.docker_utils import image_exists
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
+from derex.runner.themes import Theme
 from derex.runner.utils import get_dir_hash
 from enum import Enum
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -50,9 +53,9 @@ class OpenEdXVersions(Enum):
         "edx_platform_version": "open-release/juniper.master",
         "edx_platform_release": "juniper",
         "docker_image_prefix": "derex/openedx-juniper",
-        "alpine_version": "alpine3.11",
+        "alpine_version": "alpine3.12",
         "python_version": "3.6",
-        "pip_version": "21.0.1",
+        "pip_version": "21.2.4",
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.6.36",
         "mongodb_image": "mongo:3.6.23",
@@ -68,7 +71,7 @@ class OpenEdXVersions(Enum):
         # See more at https://gcc.gnu.org/gcc-10/porting_to.html
         "alpine_version": "alpine3.12",
         "python_version": "3.8",
-        "pip_version": "21.0.1",
+        "pip_version": "21.2.4",
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.7.34",
         "mongodb_image": "mongo:3.6.23",
@@ -99,8 +102,8 @@ class Project:
     #: The name of the base image with dev goodies and precompiled assets
     base_image: str
 
-    # Tne image name of the base image for the final production project build
-    final_base_image: str
+    # Tne image name of the base image, without staticfiles, node packages and mysql dump
+    nostatic_base_image: str
 
     # The named version of Open edX to use
     openedx_version: OpenEdXVersions
@@ -108,14 +111,23 @@ class Project:
     #: The directory containing requirements, if defined
     requirements_dir: Optional[Path] = None
 
-    #: The directory containing themes, if defined
-    themes_dir: Optional[Path] = None
+    # The directory containing project scripts
+    scripts_dir: Optional[Path] = None
 
     # The directory containing project settings (that feed django.conf.settings)
     settings_dir: Optional[Path] = None
 
     # The directory containing project database fixtures (used on --reset-mysql)
     fixtures_dir: Optional[Path] = None
+
+    # The directory containing project custom translations
+    translations_dir: Optional[Path] = None
+
+    #: The directory containing themes, if defined
+    themes_dir: Optional[Path] = None
+
+    # The directory containing project custom Dockerfile
+    final_dir: Optional[Path] = None
 
     # The directory where plugins can store their custom requirements, settings,
     # fixtures and themes.
@@ -127,14 +139,14 @@ class Project:
     # The directory containing cypress tests
     e2e_dir: Optional[Path] = None
 
+    # The docker registry to use with this project
+    docker_registry: Optional[str]
+
     # The image name of the image that includes requirements
     requirements_image_name: str
 
     # The image name of the image that includes requirements and themes
     themes_image_name: str
-
-    # The image name of the final image containing everything needed for this project
-    image_name: str
 
     # Image prefix to construct the above image names if they're not specified.
     # Can include a private docker name, like registry.example.com/onlinecourses/edx-ironwood
@@ -154,6 +166,19 @@ class Project:
 
     # Enum containing possible settings modules
     _available_settings = None
+
+    @property
+    def docker_image_name(self) -> str:
+        """The image name of the image which should be run by ddc-project"""
+        final_image_name = self.get_build_target_image_name(ProjectBuildTargets.final)
+        if final_image_name:
+            if self.docker_registry:
+                registry_image_name = f"{self.docker_registry}/{final_image_name}"
+                if image_exists(registry_image_name):
+                    return registry_image_name
+            if image_exists(final_image_name):
+                return final_image_name
+        return self.base_image
 
     @property
     def mysql_db_name(self) -> str:
@@ -262,6 +287,38 @@ class Project:
         if not (self.root / DEREX_RUNNER_PROJECT_DIR).exists():
             (self.root / DEREX_RUNNER_PROJECT_DIR).mkdir()
 
+    def get_project_hash(self) -> Optional[str]:
+        """An hash representing the current project state which will be used
+        as a tag to the project docker images.
+        """
+        should_hash = False
+        hasher = hashlib.sha256()
+        for build_target in ProjectBuildTargets.__members__:
+            build_directory = getattr(self, f"{build_target}_dir", None)
+            if build_directory and build_directory.is_dir():
+                should_hash = True
+                directory_hash = get_dir_hash(build_directory)
+                hasher.update(directory_hash.encode())
+        if should_hash:
+            return hasher.hexdigest()[:6]
+        return None
+
+    def _load_build_targets_directories(self):
+        """Set all directories paths which are part of the build context on the Project object
+        if they exists.
+        Build directories are expected to be found in the project root directory and named
+        after the build target name.
+        """
+        for build_target in ProjectBuildTargets.__members__:
+            build_target_dir_path = self.root / build_target
+            if build_target_dir_path.is_dir():
+                setattr(self, f"{build_target}_dir", build_target_dir_path)
+
+    def get_build_target_image_name(self, target: ProjectBuildTargets):
+        if self.get_project_hash():
+            return f"{self.image_prefix}-{target.name}:{self.get_project_hash()}"
+        return None
+
     def _load(self, path: Union[Path, str] = None):
         """Load project configuraton from the given directory."""
         if not path:
@@ -279,12 +336,13 @@ class Project:
         self.openedx_version = OpenEdXVersions[
             self.config.get("openedx_version", "koa")
         ]
+        self.docker_registry = self.config.get("docker_registry", None)
         source_image_prefix = self.openedx_version.value["docker_image_prefix"]
         self.base_image = self.config.get(
             "base_image", f"{source_image_prefix}-dev:{__version__}"
         )
-        self.final_base_image = self.config.get(
-            "final_base_image", f"{source_image_prefix}-nostatic:{__version__}"
+        self.nostatic_base_image = self.config.get(
+            "nostatic_base_image", f"{source_image_prefix}-nostatic:{__version__}"
         )
         if "project_name" not in self.config:
             raise ValueError(f"A project_name was not specified in {config_path}")
@@ -298,43 +356,18 @@ class Project:
         if local_compose.is_file():
             self.local_compose = local_compose
 
-        requirements_dir = self.root / "requirements"
-        if requirements_dir.is_dir():
-            self.requirements_dir = requirements_dir
-            # We only hash text files inside the requirements image:
-            # this way changes to code can be made effective by
-            # mounting the requirements directory
-            img_hash = get_requirements_hash(self.requirements_dir)
-            self.requirements_image_name = (
-                f"{self.image_prefix}-requirements:{img_hash[:6]}"
-            )
-            requirements_volumes: Dict[str, str] = {}
+        self._load_build_targets_directories()
+
+        if self.requirements_dir and self.requirements_dir.is_dir():
             # If the requirements directory contains any symlink we mount
             # their targets individually instead of the whole requirements directory
+            requirements_volumes: Dict[str, str] = {}
             for el in self.requirements_dir.iterdir():
                 if el.is_symlink():
                     self.requirements_volumes = requirements_volumes
                 requirements_volumes[str(el.resolve())] = (
                     "/openedx/derex.requirements/" + el.name
                 )
-        else:
-            self.requirements_image_name = self.base_image
-
-        themes_dir = self.root / "themes"
-        if themes_dir.is_dir():
-            self.themes_dir = themes_dir
-            img_hash = get_dir_hash(
-                self.themes_dir
-            )  # XXX some files are generated. We should ignore them when we hash the directory
-            self.themes_image_name = f"{self.image_prefix}-themes:{img_hash[:6]}"
-        else:
-            self.themes_image_name = self.requirements_image_name
-
-        settings_dir = self.root / "settings"
-        if settings_dir.is_dir():
-            self.settings_dir = settings_dir
-            # TODO: run some sanity checks on the settings dir and raise an
-            # exception if they fail
 
         fixtures_dir = self.root / "fixtures"
         if fixtures_dir.is_dir():
@@ -344,15 +377,10 @@ class Project:
         if plugins_dir.is_dir():
             self.plugins_dir = plugins_dir
 
-        openedx_customizations_dir = self.root / "openedx_customizations"
-        if openedx_customizations_dir.is_dir():
-            self.openedx_customizations_dir = openedx_customizations_dir
-
         e2e_dir = self.root / "e2e"
         if e2e_dir.is_dir():
             self.e2e_dir = e2e_dir
 
-        self.image_name = self.themes_image_name
         self.materialize_derex_settings = self.config.get(
             "materialize_derex_settings", True
         )
@@ -469,37 +497,34 @@ class Project:
     def secret(self, name: str) -> str:
         return get_secret(DerexSecrets[name])
 
-    def get_openedx_customizations(self) -> dict:
-        """Return a mapping of customized files to be mounted in
+    def get_openedx_requirements_files(self) -> List[str]:
+        requirements_files = []
+        if self.requirements_dir:
+            for requirement_file in self.requirements_dir.glob("*.txt"):
+                if requirement_file.is_file():
+                    requirements_files.append(requirement_file.name)
+        return requirements_files
+
+    def get_openedx_customizations(self) -> List[Path]:
+        """Return a list of customized files to be mounted in
         the container in order to replace default edx-platform modules.
         """
-        openedx_customizations = {}
-        for openedx_customizations_dir in [
-            DEREX_OPENEDX_CUSTOMIZATIONS_PATH / self.openedx_version.name,
-            self.openedx_customizations_dir,
-        ]:
-            if openedx_customizations_dir and openedx_customizations_dir.exists():
-                for file_path in openedx_customizations_dir.rglob("*"):
-                    if file_path.is_file():
-                        source = str(file_path)
-                        destination = str(file_path).replace(
-                            str(openedx_customizations_dir), "/openedx/edx-platform"
-                        )
-                        openedx_customizations[destination] = source
+        openedx_customizations: List[Path] = []
+        if self.openedx_customizations_dir and self.openedx_customizations_dir.exists():
+            for file_path in self.openedx_customizations_dir.rglob("*"):
+                if file_path.is_file() and not file_path.name.endswith(".pyc"):
+                    openedx_customizations.append(
+                        file_path.relative_to(self.openedx_customizations_dir)
+                    )
         return openedx_customizations
 
-
-def get_requirements_hash(path: Path) -> str:
-    """Given a directory, return a hash of the contents of the text files it contains."""
-    hasher = hashlib.sha256()
-    logger.debug(
-        f"Calculating hash for requirements dir {path}; initial (empty) hash is {hasher.hexdigest()}"
-    )
-    for file in sorted(path.iterdir()):
-        if file.is_file():
-            hasher.update(file.read_bytes())
-        logger.debug(f"Examined contents of {file}; hash so far: {hasher.hexdigest()}")
-    return hasher.hexdigest()
+    def get_themes(self) -> List:
+        themes = []
+        if self.themes_dir:
+            for theme_folder in self.themes_dir.iterdir():
+                if theme_folder.is_dir():
+                    themes.append(Theme(theme_folder))
+        return themes
 
 
 def find_project_root(path: Path) -> Path:
