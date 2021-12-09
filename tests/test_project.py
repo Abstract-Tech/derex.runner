@@ -34,21 +34,21 @@ def test_complete_project(workdir, complete_project):
                     project.get_build_target_image_name(
                         ProjectBuildTargets.requirements
                     )
-                    == f"{project.name}/openedx-requirements:859e8a"
+                    == f"{project.name}/openedx-requirements:8d516f"
                 )
             if project.openedx_version.name == "juniper":
                 assert (
                     project.get_build_target_image_name(
                         ProjectBuildTargets.requirements
                     )
-                    == f"{project.name}/openedx-requirements:d3922b"
+                    == f"{project.name}/openedx-requirements:8b9fb6"
                 )
             if project.openedx_version.name == "koa":
                 assert (
                     project.get_build_target_image_name(
                         ProjectBuildTargets.requirements
                     )
-                    == f"{project.name}/openedx-requirements:fb1c1f"
+                    == f"{project.name}/openedx-requirements:fd9fc2"
                 )
 
 
