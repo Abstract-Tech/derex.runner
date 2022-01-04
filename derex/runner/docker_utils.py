@@ -201,6 +201,7 @@ def buildx_image(
     cache_from: bool,
     cache_to: bool,
     cache_tag: bool,
+    build_args: Dict = {},
 ):
     tempdir = Path(mkdtemp(prefix="derex-build-"))
     try:
@@ -217,7 +218,6 @@ def buildx_image(
 
         cache_from_arg: Optional[Dict] = None
         cache_to_arg: Optional[Dict] = None
-        build_args: Dict = {}
         if cache_from and cache_tag:
             cache_from_arg = {"type": "registry", "src": cache_tag}
         if cache_to and cache_tag:
