@@ -22,6 +22,3 @@ if SERVICE_VARIANT == "cms":
 
 WIKI_ENABLED = True
 ENABLE_COMPREHENSIVE_THEMING = True
-
-LOGO_URL = "{}/static/logo.png".format(LMS_ROOT_URL)
-LOGO_URL_PNG = LOGO_URL

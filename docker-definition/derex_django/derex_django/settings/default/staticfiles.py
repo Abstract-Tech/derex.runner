@@ -3,6 +3,9 @@ from path import Path
 import sys
 
 
+LOGO_URL = "{}/static/images/logo.png".format(LMS_ROOT_URL)
+LOGO_URL_PNG = LOGO_URL
+
 STATIC_ROOT_BASE = "/openedx/staticfiles"
 STATIC_ROOT = {
     "lms": Path(STATIC_ROOT_BASE),
