@@ -295,12 +295,13 @@ def test_secret_variables(complete_project):
         conf_file.write_text(yaml.dump(config))
         create_settings_file(Project().root, "production")
         project = Project()
+        project.settings = project.get_available_settings().default
         env = project.get_container_env()
         assert "DEREX_ALL_MYSQL_ROOT_PASSWORD" in env
         expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["default"]
         assert expected == env["DEREX_ALL_MYSQL_ROOT_PASSWORD"]
 
-        project.settings = project._available_settings.production
+        project.settings = project.get_available_settings().production
         env = project.get_container_env()
         assert "DEREX_ALL_MYSQL_ROOT_PASSWORD" in env
         expected = config["variables"]["ALL_MYSQL_ROOT_PASSWORD"]["production"]
