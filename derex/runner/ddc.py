@@ -5,7 +5,6 @@ They put a `docker.compose.yml` file in place based on user configuration.
 """
 from derex.runner.compose_utils import run_docker_compose
 from derex.runner.docker_utils import ensure_volumes_present
-from derex.runner.docker_utils import image_exists
 from derex.runner.docker_utils import is_docker_working
 from derex.runner.docker_utils import wait_for_service
 from derex.runner.logging_utils import setup_logging
@@ -126,12 +125,6 @@ def run_ddc_project(
 
     Used by ddc-project cli command.
     """
-    if not image_exists(project.docker_image_name):
-        logger.warning(
-            f"This project will be run with the base Open edX image {project.base_image}. Docker image {project.docker_image_name} not found.\n"
-            "Run `derex build project --help` for more information about how to build it"
-        )
-
     plugins_argv = sort_and_validate_plugins(
         setup_plugin_manager().hook.ddc_project_options(project=project),
     )

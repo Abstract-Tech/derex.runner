@@ -173,10 +173,25 @@ class Project:
         final_image_name = self.get_build_target_image_name(ProjectBuildTargets.final)
         if final_image_name:
             if self.docker_registry:
-                registry_image_name = f"{self.docker_registry}/{final_image_name}"
-                if image_exists(registry_image_name):
-                    return registry_image_name
-            if image_exists(final_image_name):
+                # TODO: Check if the image really exists on the registry
+                registry_docker_image = f"{self.docker_registry}/{final_image_name}"
+                logger.warning(
+                    "This project will be run with a Docker image from "
+                    f"a remote registry ({registry_docker_image}).\n"
+                    "Make sure the image already exists on the "
+                    "remote registry, or remove the `registry` option "
+                    "in the project `derex.config.yaml` file."
+                )
+                return f"{self.docker_registry}/{final_image_name}"
+            if not image_exists(final_image_name):
+                logger.warning(
+                    f"Docker image {final_image_name} not found.\n"
+                    "This project will be run with the base Open "
+                    f"edX image {self.base_image}.\n"
+                    "Run `derex build project --help` for more information "
+                    "about how to build it"
+                )
+            else:
                 return final_image_name
         return self.base_image
 

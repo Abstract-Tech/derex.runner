@@ -15,7 +15,13 @@ import pytest
 import yaml
 
 
-def test_complete_project(workdir, complete_project):
+# We pin here versions hashes for example projects.
+# If the example projects are changes those
+# hashes will need to be updated.
+PROJECT_VERSIONS_HASHES = {"ironwood": "8d516f", "juniper": "8b9fb6", "koa": "fd9fc2"}
+
+
+def test_complete_project(workdir, mocker, complete_project):
     with complete_project:
         project_path = Project().root
         project_loaded_with_path = Project(project_path)
@@ -29,27 +35,35 @@ def test_complete_project(workdir, complete_project):
             assert project.e2e_dir == project_path / "e2e"
             assert project.name == f"{project.openedx_version.name}-complete"
 
-            if project.openedx_version.name == "ironwood":
-                assert (
-                    project.get_build_target_image_name(
-                        ProjectBuildTargets.requirements
+            for version in PROJECT_VERSIONS_HASHES.keys():
+                if project.openedx_version.name == version:
+                    # Check the requirements image name
+                    assert (
+                        project.get_build_target_image_name(
+                            ProjectBuildTargets.requirements
+                        )
+                        == f"{project.name}/openedx-requirements:{PROJECT_VERSIONS_HASHES[version]}"
                     )
-                    == f"{project.name}/openedx-requirements:8d516f"
-                )
-            if project.openedx_version.name == "juniper":
-                assert (
-                    project.get_build_target_image_name(
-                        ProjectBuildTargets.requirements
-                    )
-                    == f"{project.name}/openedx-requirements:8b9fb6"
-                )
-            if project.openedx_version.name == "koa":
-                assert (
-                    project.get_build_target_image_name(
-                        ProjectBuildTargets.requirements
-                    )
-                    == f"{project.name}/openedx-requirements:fd9fc2"
-                )
+                    # Check the project docker_image_name attribute returns
+                    # the final image tag that we expect
+                    with mocker.patch(
+                        "derex.runner.project.image_exists", return_value=True
+                    ):
+                        assert (
+                            project.docker_image_name
+                            == f"{project.name}/openedx-final:{PROJECT_VERSIONS_HASHES[version]}"
+                        )
+
+                    # Ensure that if a registry is specified it will be used regardless
+                    # if the resulting image tag exists locally
+                    with mocker.patch(
+                        "derex.runner.project.image_exists", return_value=False
+                    ):
+                        project.docker_registry = "registry.derex.test"
+                        assert (
+                            project.docker_image_name
+                            == f"registry.derex.test/{project.name}/openedx-final:{PROJECT_VERSIONS_HASHES[version]}"
+                        )
 
 
 def test_minimal_project(minimal_project):
