@@ -63,7 +63,7 @@ FROM base as scripts
 {% endblock %}
 
 {% block settings %}
-FROM base as settings
+FROM openedx_customizations as settings
 {% if project.settings_dir -%}
     COPY {{ project.settings_dir.name }} /openedx/edx-platform/derex_settings
 {% endif -%}
