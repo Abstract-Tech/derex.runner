@@ -166,10 +166,8 @@ def build_project_image(
     cache: bool = False if no_cache else True
     cache_tag: Optional[str] = None
     if cache:
-        if registry:
-            cache_tag = f"{registry}/{image_name}:cache"
-        else:
-            cache_tag = f"{image_name}:cache"
+        cache_tag = f"{image_name}:cache"
+        tags.append(cache_tag)
 
     paths_to_copy: List[Path] = []
     for build_target in ProjectBuildTargets.__members__:
