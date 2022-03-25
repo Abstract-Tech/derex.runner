@@ -12,7 +12,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: "{{ MONGODB_ROOT_USERNAME }}"
       MONGO_INITDB_ROOT_PASSWORD: "{{ MONGODB_ROOT_PASSWORD }}"
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
@@ -30,7 +30,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
     healthcheck:
-      test: mysqladmin ping
+      test: mysqladmin ping -h 127.0.0.1 -u root -p"{{ MYSQL_ROOT_PASSWORD }}" || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
@@ -78,7 +78,7 @@ services:
     hostname: rabbitmq
     container_name: rabbitmq
     healthcheck:
-      test: rabbitmqctl node_health_check | grep "Health check passed" -q
+      test: rabbitmqctl node_health_check | grep "Health check passed" -q || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
@@ -108,7 +108,7 @@ services:
     restart: unless-stopped
     container_name: memcached
     healthcheck:
-      test: nc -z 127.0.0.1 11211
+      test: nc -z 127.0.0.1 11211 || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
@@ -127,7 +127,7 @@ services:
       MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"
     command: server --address :80 /data
     healthcheck:
-      test: curl --silent --fail http://localhost:80/minio/health/live
+      test: curl --silent --fail http://localhost:80/minio/health/live || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
@@ -148,7 +148,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
     healthcheck:
-      test: wget -q -O - http://localhost:8080
+      test: wget -q -O - http://localhost:8080 || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
