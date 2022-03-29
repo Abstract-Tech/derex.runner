@@ -14,6 +14,9 @@ ENV MONGODB_DB_NAME={{ project.mongodb_db_name }}
 ENV MONGODB_USER={{ project.mongodb_user }}
 ENV MONGODB_PASSWORD={{ project.secret("mongodb") }}
 ENV DEREX_MINIO_SECRET={{ project.secret("minio") }}
+{%- for key, value in project.get_container_env().items() %}
+ENV {{ key }}={{ value | tojson }}
+{%- endfor %}
 {% endblock %}
 
 {% block themes %}
