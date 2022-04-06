@@ -25,7 +25,6 @@ stages:
             value: koa
         steps:
           - template: build_single_version.yml
-            -
       - job: lilac
         timeoutInMinutes: 180
         pool:
