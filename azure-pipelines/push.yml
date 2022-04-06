@@ -5,15 +5,6 @@ stages:
     variables:
       - group: Docker credentials
     jobs:
-      - job: ironwood
-        pool:
-          vmImage: $(UBUNTU_VERSION)
-        variables:
-          - name: DOCKER_IMAGES_SLUG
-            value: ironwood
-        steps:
-          - template: push_single_version.yml
-
       - job: juniper
         pool:
           vmImage: $(UBUNTU_VERSION)
@@ -29,5 +20,14 @@ stages:
         variables:
           - name: DOCKER_IMAGES_SLUG
             value: koa
+        steps:
+          - template: push_single_version.yml
+
+      - job: lilac
+        pool:
+          vmImage: $(UBUNTU_VERSION)
+        variables:
+          - name: DOCKER_IMAGES_SLUG
+            value: lilac
         steps:
           - template: push_single_version.yml
