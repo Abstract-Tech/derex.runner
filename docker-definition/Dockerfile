@@ -50,7 +50,7 @@ ARG EDX_PLATFORM_REPOSITORY=https://github.com/edx/edx-platform.git
 RUN mkdir -p /openedx/themes /openedx/locale /openedx/bin/ /openedx/requirements/ && \
     git clone ${EDX_PLATFORM_REPOSITORY} --branch ${EDX_PLATFORM_VERSION} --depth 1 /openedx/edx-platform
 # Copy derex overrides to edx-platform source code
-COPY openedx_customizations/${EDX_PLATFORM_RELEASE} /openedx/edx-platform
+# COPY openedx_customizations/${EDX_PLATFORM_RELEASE} /openedx/edx-platform
 
 WORKDIR /openedx/edx-platform
 COPY requirements/${EDX_PLATFORM_RELEASE}/* /openedx/requirements/
