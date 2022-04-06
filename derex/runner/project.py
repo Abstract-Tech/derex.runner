@@ -5,6 +5,7 @@ from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import ProjectBuildTargets
 from derex.runner.constants import SECRETS_CONF_FILENAME
+from derex.runner.microfrontends import get_microfrontend_environment
 from derex.runner.docker_utils import image_exists
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
@@ -34,20 +35,6 @@ DEREX_RUNNER_PROJECT_DIR = ".derex"
 class OpenEdXVersions(Enum):
     # Values will be passed as uppercased named arguments to the docker build
     # e.g. --build-arg EDX_PLATFORM_RELEASE=koa
-    ironwood = {
-        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
-        "edx_platform_version": "open-release/ironwood.master",
-        "edx_platform_release": "ironwood",
-        "docker_image_prefix": "derex/openedx-ironwood",
-        "alpine_version": "alpine3.11",
-        "python_version": "2.7",
-        "pip_version": "20.3.4",
-        # The latest node release does not work on ironwood
-        # (node-sass version fails to compile)
-        "node_version": "v10.22.1",
-        "mysql_image": "mysql:5.6.36",
-        "mongodb_image": "mongo:3.2.21",
-    }
     juniper = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
         "edx_platform_version": "open-release/juniper.master",
@@ -59,6 +46,8 @@ class OpenEdXVersions(Enum):
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.6.36",
         "mongodb_image": "mongo:3.6.23",
+        "elasticsearch_image": "elasticsearch:1.5.2",
+        "microfrontends": {},
     }
     koa = {
         "edx_platform_repository": "https://github.com/edx/edx-platform.git",
@@ -75,8 +64,44 @@ class OpenEdXVersions(Enum):
         "node_version": "v12.19.0",
         "mysql_image": "mysql:5.7.34",
         "mongodb_image": "mongo:3.6.23",
+        "elasticsearch_image": "elasticsearch:1.5.2",
+        "microfrontends": {},
     }
-
+    lilac = {
+        "edx_platform_repository": "https://github.com/edx/edx-platform.git",
+        "edx_platform_version": "open-release/lilac.master",
+        "edx_platform_release": "lilac",
+        "docker_image_prefix": "derex/openedx-lilac",
+        "alpine_version": "alpine3.14",
+        "python_version": "3.8",
+        "pip_version": "21.1.3",
+        "node_version": "v12.19.0",
+        "mysql_image": "mysql:5.7.34",
+        "mongodb_image": "mongo:4.4.6",
+        "elasticsearch_image": "elasticsearch:7.8.1",
+        "microfrontends": {
+            "account": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-account.git",
+                "environment": get_microfrontend_environment(),
+            },
+            "profile": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-profile.git",
+                "environment": get_microfrontend_environment(),
+            },
+            "learning": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-learning.git",
+                "environment": get_microfrontend_environment(),
+            },
+            "gradebook": {
+                "node_version": "node:12-alpine",
+                "repository": "https://github.com/edx/frontend-app-gradebook.git",
+                "environment": get_microfrontend_environment(),
+            },
+        },
+    }
 
 class ProjectRunMode(Enum):
     debug = "debug"  # The first is the default

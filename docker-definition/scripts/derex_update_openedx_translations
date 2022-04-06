@@ -31,11 +31,11 @@ SERVICE_VARIANT=lms i18n_tool transifex pull
 SERVICE_VARIANT=lms i18n_tool extract
 SERVICE_VARIANT=lms i18n_tool generate
 
-SERVICE_VARIANT=lms python manage.py lms compilemessages -v2
-SERVICE_VARIANT=cms python manage.py cms compilemessages -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py lms compilemessages -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py cms compilemessages -v2
 
-SERVICE_VARIANT=lms python manage.py lms compilejsi18n -v2
-SERVICE_VARIANT=cms python manage.py cms compilejsi18n -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py lms compilejsi18n -v2
+DJANGO_SETTINGS_MODULE=derex_django.settings.build.assets python manage.py cms compilejsi18n -v2
 
 # This check is currently done in the azure pipeline.
 # i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)

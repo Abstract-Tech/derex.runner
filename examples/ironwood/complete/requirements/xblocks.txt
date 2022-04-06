@@ -1,1 +1,0 @@
-xblock-image-modal

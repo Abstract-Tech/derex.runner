@@ -31,8 +31,11 @@ client = docker.from_env()
 logger = logging.getLogger(__name__)
 VOLUMES = {
     "derex_elasticsearch",
+    "derex_elasticsearch7",
     "derex_mongodb",
+    "derex_mongodb4",
     "derex_mysql",
+    "derex_mysql57",
     "derex_rabbitmq",
     "derex_portainer_data",
     "derex_minio",

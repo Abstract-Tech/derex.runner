@@ -1,0 +1,3 @@
+project_name: lilac-minimal
+openedx_version: lilac
+materialize_derex_settings: false
