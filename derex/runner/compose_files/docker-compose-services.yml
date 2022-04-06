@@ -12,9 +12,9 @@ services:
       MONGO_INITDB_ROOT_USERNAME: "{{ MONGODB_ROOT_USERNAME }}"
       MONGO_INITDB_ROOT_PASSWORD: "{{ MONGODB_ROOT_PASSWORD }}"
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo --quiet
-      interval: 30s
-      timeout: 30s
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet || exit 1
+      interval: 10s
+      timeout: 10s
       retries: 3
       start_period: 10s
     volumes:
@@ -51,9 +51,9 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
     healthcheck:
-      test: mysqladmin ping
-      interval: 30s
-      timeout: 30s
+      test: mysqladmin ping -h 127.0.0.1 -u root -p"{{ MYSQL_ROOT_PASSWORD }}" || exit 1
+      interval: 10s
+      timeout: 10s
       retries: 3
       start_period: 10s
     volumes:
@@ -95,8 +95,8 @@ services:
       - "bootstrap.memory_lock=true"
     healthcheck:
       test: curl --silent --fail localhost:9200/_cluster/health || exit 1
-      interval: 30s
-      timeout: 30s
+      interval: 10s
+      timeout: 10s
       retries: 3
       start_period: 10s
     ulimits:
@@ -150,9 +150,9 @@ services:
     hostname: rabbitmq
     container_name: rabbitmq
     healthcheck:
-      test: rabbitmqctl node_health_check | grep "Health check passed" -q
-      interval: 30s
-      timeout: 30s
+      test: rabbitmqctl node_health_check | grep "Health check passed" -q || exit 1
+      interval: 10s
+      timeout: 10s
       retries: 3
       start_period: 10s
     volumes:
@@ -180,9 +180,9 @@ services:
     restart: unless-stopped
     container_name: memcached
     healthcheck:
-      test: nc -z 127.0.0.1 11211
-      interval: 30s
-      timeout: 30s
+      test: nc -z 127.0.0.1 11211 || exit 1
+      interval: 10s
+      timeout: 10s
       retries: 3
       start_period: 10s
     networks:
@@ -199,9 +199,9 @@ services:
       MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"
     command: server --address :80 /data
     healthcheck:
-      test: curl --silent --fail http://localhost:80/minio/health/live
-      interval: 30s
-      timeout: 20s
+      test: curl --silent --fail http://localhost:80/minio/health/live || exit 1
+      interval: 10s
+      timeout: 10s
       retries: 3
     networks:
       derex:
@@ -220,9 +220,9 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
     healthcheck:
-      test: wget -q -O - http://localhost:8080
-      interval: 30s
-      timeout: 20s
+      test: wget -q -O - http://localhost:8080 || exit 1
+      interval: 10s
+      timeout: 10s
       retries: 3
     networks:
       - derex

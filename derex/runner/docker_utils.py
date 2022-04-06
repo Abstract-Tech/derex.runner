@@ -225,7 +225,7 @@ def buildx_image(
             cache_from_arg = {"type": "registry", "src": cache_tag}
         if cache_to and cache_tag:
             cache_to_arg = {"type": "registry", "dest": cache_tag, "mode": "max"}
-        if cache and not cache_to:
+        if cache:
             build_args.update({"BUILDKIT_INLINE_CACHE": "1"})
 
         pow_docker.buildx.build(
