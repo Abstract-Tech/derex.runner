@@ -29,7 +29,7 @@ bcrypt==3.2.0
     #   -c requirements.txt
     #   -r requirements.txt
     #   paramiko
-black==21.9b0
+black==22.1.0
     # via
     #   -r requirements_dev.in
     #   pytest-black
