@@ -1,6 +1,6 @@
 PLATFORM_NAME = "TestEdX"
 
-LMS_BASE = DEREX_PROJECT + ".localhost"
+LMS_BASE = DEREX_PROJECT + ".localhost.derex"
 CMS_BASE = "studio." + LMS_BASE
 
 LMS_ROOT_URL = "//{}".format(LMS_BASE)

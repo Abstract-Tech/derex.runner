@@ -1,12 +1,12 @@
 if sys.version_info[0] < 3:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto.S3BotoStorage"
     AWS_S3_CALLING_FORMAT = "boto.s3.connection.OrdinaryCallingFormat"
-    AWS_S3_HOST = "minio.localhost"
+    AWS_S3_HOST = "minio.localhost.derex"
     AWS_S3_PORT = 80
     S3_USE_SIGV4 = True
 else:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    AWS_S3_ENDPOINT_URL = "http://minio.localhost"
+    AWS_S3_ENDPOINT_URL = "http://minio.localhost.derex"
 
 AWS_S3_CUSTOM_DOMAIN = None
 AWS_ACCESS_KEY_ID = "minio_derex"
@@ -47,7 +47,7 @@ GIT_REPO_DIR = os.path.join(MEDIA_ROOT, "course_repos")
 
 # Media
 
-MEDIA_ROOT = "http://minio.localhost/{}/openedx/media".format(AWS_STORAGE_BUCKET_NAME)
+MEDIA_ROOT = "http://minio.localhost.derex/{}/openedx/media".format(AWS_STORAGE_BUCKET_NAME)
 VIDEO_TRANSCRIPTS_SETTINGS.update(
     {
         "STORAGE_CLASS": DEFAULT_FILE_STORAGE,

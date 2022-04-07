@@ -12,7 +12,7 @@ with open("HISTORY.rst") as history_file:
 
 requirements = [
     "appdirs",
-    "Click>=6.0",
+    "Click=8.1.0",
     "click_plugins",
     "docker-compose>=1.25.4",
     "importlib_metadata",

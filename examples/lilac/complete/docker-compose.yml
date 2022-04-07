@@ -10,7 +10,7 @@ services:
       derex:
         aliases:
           - account.lilac-minimal.localhost.derex
-          - account.lilac-minimal.localhost
+          - account.lilac-minimal.localhost.derex
 
   frontend-app-profile:
     container_name: frontend-app-profile
@@ -19,7 +19,7 @@ services:
       derex:
         aliases:
           - profile.lilac-minimal.localhost.derex
-          - profile.lilac-minimal.localhost
+          - profile.lilac-minimal.localhost.derex
 
   frontend-app-gradebook:
     container_name: frontend-app-gradebook
@@ -28,7 +28,7 @@ services:
       derex:
         aliases:
           - gradebook.lilac-minimal.localhost.derex
-          - gradebook.lilac-minimal.localhost
+          - gradebook.lilac-minimal.localhost.derex
 
   frontend-app-learning:
     container_name: frontend-app-learning
@@ -37,4 +37,4 @@ services:
       derex:
         aliases:
           - learning.lilac-minimal.localhost.derex
-          - learning.lilac-minimal.localhost
+          - learning.lilac-minimal.localhost.derex

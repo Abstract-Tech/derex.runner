@@ -33,14 +33,14 @@ steps:
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Test ${{ parameters.PROJECT_NAME }} project fixtures"
 
-  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex
     displayName: Curl the LMS (debug runmode)
 
-  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex/example_view
     displayName: Curl the LMS example plugin view (debug runmode)
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
 
-  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost
+  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost.derex
     displayName: Curl the CMS (debug runmode)
 
   - script: |
@@ -59,31 +59,31 @@ steps:
     displayName: "Show logs (production runmode)"
 
   - script: |
-      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/)
+      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex/ || (sleep 10; $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex/)
     displayName: "Curl the LMS (production runmode)"
 
   - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/example_view
     displayName: "Curl the LMS example plugin view (production runmode)"
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
 
-  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/ || (sleep 10; $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost/)
+  - script: $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost.derex/ || (sleep 10; $(CURL) http://studio.${{ parameters.PROJECT_NAME }}.localhost.derex/)
     displayName: "Curl the CMS (production runmode)"
 
   - script: |
       set -ex
-      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/|grep static/demo-theme/css/lms-main-v1.css
-      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex/|grep static/demo-theme/css/lms-main-v1.css
+      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Curl the LMS CSS and make sure our theme CSS is in"
 
   - script: |
       set -x
       cd ${{ parameters.PROJECT_PATH }}
-      echo 127.0.0.1 localhost flower.${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
+      echo 127.0.0.1 localhost flower.${{ parameters.PROJECT_NAME }}.localhost.derex | sudo tee -a /etc/hosts
       while ! (ddc-project logs cms_worker|grep ready); do sleep 1; done
       while ! (ddc-project logs lms_worker|grep ready); do sleep 1; done
-      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost/dashboard?json=1|grep celery@openedx.lms
-      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost/dashboard?json=1|grep celery@openedx.cms
+      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost.derex/dashboard?json=1|grep celery@openedx.lms
+      curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.${{ parameters.PROJECT_NAME }}.localhost.derex/dashboard?json=1|grep celery@openedx.cms
     displayName: "Check flower"
 
   - script: |

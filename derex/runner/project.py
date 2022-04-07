@@ -5,8 +5,8 @@ from derex.runner.constants import MONGODB_ROOT_USER
 from derex.runner.constants import MYSQL_ROOT_USER
 from derex.runner.constants import ProjectBuildTargets
 from derex.runner.constants import SECRETS_CONF_FILENAME
-from derex.runner.microfrontends import get_microfrontend_environment
 from derex.runner.docker_utils import image_exists
+from derex.runner.microfrontends import get_microfrontend_environment
 from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.themes import Theme
@@ -102,6 +102,7 @@ class OpenEdXVersions(Enum):
             },
         },
     }
+
 
 class ProjectRunMode(Enum):
     debug = "debug"  # The first is the default

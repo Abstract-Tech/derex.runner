@@ -214,24 +214,6 @@ stages:
               OPENEDX_RELEASE: lilac
               PROJECT_TYPE: minimal
 
-      - job: TestLilacCompleteProject
-        timeoutInMinutes: 60
-        pool:
-          vmImage: $(UBUNTU_VERSION)
-        variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
-        steps:
-          - template: prepare.yml
-            parameters:
-              AS_PYTHON_PACKAGE: True
-          - template: load_images.yml
-            parameters:
-              DOCKER_IMAGES_SLUG: lilac
-          - template: test_project.yml
-            parameters:
-              OPENEDX_RELEASE: lilac
-              PROJECT_TYPE: complete
-
       - job: CheckDocs
         timeoutInMinutes: 5
         pool:

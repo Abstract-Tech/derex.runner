@@ -207,7 +207,7 @@ services:
       derex:
         aliases:
           - minio.localhost.derex
-          - minio.localhost
+          - minio.localhost.derex
 
   httpserver:
     image: caddy:2.0.0
