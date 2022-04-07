@@ -19,7 +19,7 @@ cffi==1.15.0
     #   pynacl
 charset-normalizer==2.0.7
     # via requests
-click==8.1.2
+click==8.1.0
     # via
     #   click-plugins
     #   derex.runner (setup.py)
