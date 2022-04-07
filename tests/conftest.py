@@ -55,7 +55,7 @@ def workdir_copy():
     return workdir_decorator
 
 
-@pytest.fixture(params=["ironwood", "juniper", "koa"])
+@pytest.fixture(params=["juniper", "koa", "lilac"])
 def minimal_project(request, workdir_copy):
     """Return a context manager that can be used to work inside
     a minimal project.
@@ -65,7 +65,7 @@ def minimal_project(request, workdir_copy):
     )
 
 
-@pytest.fixture(params=["ironwood", "juniper", "koa"])
+@pytest.fixture(params=["juniper", "koa", "lilac"])
 def complete_project(request, workdir_copy):
     """Return a context manager that can be used to work inside
     a complete project.
