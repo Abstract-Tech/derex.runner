@@ -35,8 +35,8 @@ steps:
       derex reset-rabbitmq
     displayName: "Prime Rabbitmq"
 
-  - script: echo 127.0.0.1 localhost studio.${{ parameters.PROJECT_NAME }}.localhost.derex ${{ parameters.PROJECT_NAME }}.localhost.derex | sudo tee -a /etc/hosts
-    displayName: Add studio.${{ parameters.PROJECT_NAME }}.localhost.derex and ${{ parameters.PROJECT_NAME }}.localhost.derex to /etc/hosts
+  - script: echo 127.0.0.1 localhost studio.${{ parameters.PROJECT_NAME }}.localhost ${{ parameters.PROJECT_NAME }}.localhost | sudo tee -a /etc/hosts
+    displayName: Add studio.${{ parameters.PROJECT_NAME }}.localhost and ${{ parameters.PROJECT_NAME }}.localhost to /etc/hosts
 
   - script: cd ${{ parameters.PROJECT_PATH }}; ddc-project logs lms cms
     condition: always()

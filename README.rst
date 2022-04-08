@@ -69,13 +69,13 @@ Run derex to see running services:
 
     derex
     ...
-    http://studio.minimal.localhost.derex
-    http://mailslurper.localhost.derex  # (debug emails sent by the platform)
-    http://minio.localhost.derex
-    http://adminer.localhost.derex  # (mysql administration tool)
-    http://flower.minimal.localhost.derex  # (monitor celery workers)
-    http://portainer.localhost.derex  # (mysql administration tool)
-    http://minimal.localhost.derex
+    http://studio.minimal.localhost
+    http://mailslurper.localhost  # (debug emails sent by the platform)
+    http://minio.localhost
+    http://adminer.localhost  # (mysql administration tool)
+    http://flower.minimal.localhost  # (monitor celery workers)
+    http://portainer.localhost  # (mysql administration tool)
+    http://minimal.localhost
 
 
 You can login to the CMS and LMS using one of these users (the password is

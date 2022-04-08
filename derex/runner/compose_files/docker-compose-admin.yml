@@ -10,7 +10,7 @@ services:
     networks:
       derex:
         aliases:
-          - adminer.localhost.derex
+          - adminer.localhost
 
   portainer:
     image: portainer/portainer:1.21.0
@@ -22,7 +22,7 @@ services:
     networks:
       derex:
         aliases:
-          - portainer.localhost.derex
+          - portainer.localhost
 
 volumes:
   derex_portainer_data:

@@ -173,7 +173,7 @@ services:
     networks:
       derex:
         aliases:
-          - mailslurper.localhost.derex
+          - mailslurper.localhost
 
   memcached:
     image: memcached:1.6.3-alpine
@@ -206,7 +206,7 @@ services:
     networks:
       derex:
         aliases:
-          - minio.localhost.derex
+          - minio.localhost
           - minio.localhost
 
   httpserver:
