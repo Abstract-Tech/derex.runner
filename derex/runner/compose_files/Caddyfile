@@ -1,19 +1,19 @@
 :80 {
-    reverse_proxy {http.request.host}.derex:80
+    reverse_proxy {http.request.host}:80
 }
 
 :81 {
-    reverse_proxy {http.request.host}.derex:81
+    reverse_proxy {http.request.host}:81
 }
 
 # Mailsluprer needs an extra port and thus special treatment
 http://mailslurper.localhost.derex:4301 {
-    reverse_proxy mailslurper.localhost.derex.derex:4301
+    reverse_proxy mailslurper.localhost.derex:4301
 }
 
 # It's harder than ideal to set Portainer and adminer ports to 80, so here it is:
 http://portainer.localhost.derex:80 {
-    reverse_proxy portainer.localhost.derex.derex:9000
+    reverse_proxy portainer.localhost.derex:9000
 }
 
 http://adminer.localhost.derex:80 {
