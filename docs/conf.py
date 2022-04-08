@@ -37,9 +37,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"derex.runner"
-copyright = u"2020, Abstract-Technology GmbH"
-author = u"Abstract-Technology GmbH"
+project = "derex.runner"
+copyright = "2020, Abstract-Technology GmbH"
+author = "Abstract-Technology GmbH"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -126,8 +126,8 @@ latex_documents = [
     (
         master_doc,
         "derex.runner.tex",
-        u"derex.runner Documentation",
-        u"Abstract-Technology GmbH",
+        "derex.runner Documentation",
+        "Abstract-Technology GmbH",
         "manual",
     )
 ]
@@ -137,7 +137,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "derex.runner", u"derex.runner Documentation", [author], 1)]
+man_pages = [(master_doc, "derex.runner", "derex.runner Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------
@@ -149,7 +149,7 @@ texinfo_documents = [
     (
         master_doc,
         "derex.runner",
-        u"derex.runner Documentation",
+        "derex.runner Documentation",
         author,
         "derex.runner",
         "One line description of project.",

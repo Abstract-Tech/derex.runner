@@ -175,7 +175,7 @@ def build_image(
         fileobj=context, custom_context=True, encoding="gzip", tag=tag, **extra_options
     )
     for lines in output:
-        for line in re.split(br"\r\n|\n", lines):
+        for line in re.split(rb"\r\n|\n", lines):
             if not line:  # Split empty lines
                 continue
             line_decoded = json.loads(line)

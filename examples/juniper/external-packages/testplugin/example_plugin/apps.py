@@ -4,13 +4,13 @@ from openedx.core.djangoapps.plugins.constants import ProjectType
 
 
 class ExampleConfig(AppConfig):
-    name = u"example_plugin"
+    name = "example_plugin"
     plugin_app = {
         PluginURLs.CONFIG: {
             ProjectType.LMS: {
-                PluginURLs.NAMESPACE: u"example_plugin",
-                PluginURLs.REGEX: u"^",
-                PluginURLs.RELATIVE_PATH: u"urls",
+                PluginURLs.NAMESPACE: "example_plugin",
+                PluginURLs.REGEX: "^",
+                PluginURLs.RELATIVE_PATH: "urls",
             }
         }
     }
