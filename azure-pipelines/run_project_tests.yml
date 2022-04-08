@@ -35,6 +35,8 @@ steps:
 
   - script: |
       cat /etc/hosts
+      cat /home/vsts/.local/share/derex/services/Caddyfile
+      echo ${{ parameters.PROJECT_NAME }}
       $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex
     displayName: Curl the LMS (debug runmode)
 
