@@ -33,11 +33,7 @@ steps:
     condition: eq('${{ parameters.PROJECT_TYPE }}', 'complete')
     displayName: "Test ${{ parameters.PROJECT_NAME }} project fixtures"
 
-  - script: |
-      cat /etc/hosts
-      cat /home/vsts/.local/share/derex/services/Caddyfile
-      echo ${{ parameters.PROJECT_NAME }}
-      $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex
+  - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex
     displayName: Curl the LMS (debug runmode)
 
   - script: $(CURL) http://${{ parameters.PROJECT_NAME }}.localhost.derex/example_view
