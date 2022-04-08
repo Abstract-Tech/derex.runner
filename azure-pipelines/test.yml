@@ -23,7 +23,7 @@ stages:
 
       - job: PyInstallerBuildMacOs
         pool:
-          vmImage: "macOS-10.14"
+          vmImage: "macOS-10.15"
         steps:
           - template: prepare.yml
           - template: test_pyinstaller.yml
