@@ -47,9 +47,7 @@ GIT_REPO_DIR = os.path.join(MEDIA_ROOT, "course_repos")
 
 # Media
 
-MEDIA_ROOT = "http://minio.localhost/{}/openedx/media".format(
-    AWS_STORAGE_BUCKET_NAME
-)
+MEDIA_ROOT = "http://minio.localhost/{}/openedx/media".format(AWS_STORAGE_BUCKET_NAME)
 VIDEO_TRANSCRIPTS_SETTINGS.update(
     {
         "STORAGE_CLASS": DEFAULT_FILE_STORAGE,
