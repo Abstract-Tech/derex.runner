@@ -87,7 +87,7 @@ def test_get_exposed_container_names(monkeypatch):
             "NetworkSettings": {
                 "Networks": {
                     "derex": {
-                        "Aliases": ["minio.localhost"],
+                        "Aliases": ["minio.localhost.derex"],
                         "IPAddress": "172.11.0.12",
                     }
                 }
@@ -97,7 +97,7 @@ def test_get_exposed_container_names(monkeypatch):
             "NetworkSettings": {
                 "Networks": {
                     "derex": {
-                        "Aliases": ["studio.derex-themes.localhost"],
+                        "Aliases": ["studio.derex-themes.localhost.derex"],
                         "IPAddress": "172.11.0.12",
                     }
                 }

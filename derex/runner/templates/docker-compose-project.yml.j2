@@ -75,7 +75,7 @@ services:
     networks:
         derex:
           aliases:
-            - flower.{{ project.name }}.localhost
+            - flower.{{ project.name }}.localhost.derex
 
   lms:
     <<: *common-conf
@@ -102,8 +102,8 @@ services:
     networks:
         derex:
           aliases:
-            - {{ project.name }}.localhost
-            - preview.{{ project.name }}.localhost
+            - {{ project.name }}.localhost.derex
+            - preview.{{ project.name }}.localhost.derex
 
   cms:
     <<: *common-conf
@@ -133,7 +133,7 @@ services:
     networks:
         derex:
           aliases:
-            - studio.{{ project.name }}.localhost
+            - studio.{{ project.name }}.localhost.derex
 
   lms_worker:
     <<: *common-conf
