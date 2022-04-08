@@ -129,7 +129,7 @@ stages:
         pool:
           vmImage: $(UBUNTU_VERSION)
         variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 15 --retry-delay 5 -f
         steps:
           - template: prepare.yml
             parameters:
@@ -147,7 +147,7 @@ stages:
         pool:
           vmImage: $(UBUNTU_VERSION)
         variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 15 --retry-delay 5 -f
         steps:
           - template: prepare.yml
             parameters:
@@ -165,7 +165,7 @@ stages:
         pool:
           vmImage: $(UBUNTU_VERSION)
         variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 15 --retry-delay 5 -f
         steps:
           - template: prepare.yml
             parameters:
@@ -183,7 +183,7 @@ stages:
         pool:
           vmImage: $(UBUNTU_VERSION)
         variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 15 --retry-delay 5 -f
         steps:
           - template: prepare.yml
             parameters:
@@ -201,7 +201,7 @@ stages:
         pool:
           vmImage: $(UBUNTU_VERSION)
         variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 15 --retry-delay 5 -f
         steps:
           - template: prepare.yml
             parameters:
