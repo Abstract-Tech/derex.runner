@@ -196,7 +196,7 @@ class Project:
     @property
     def docker_image_name(self) -> str:
         """The image name of the image which should be run by ddc-project"""
-        final_image_name = self.get_build_target_image_name(ProjectBuildTargets.final)
+        final_image_name = self.get_build_target_image_tag(ProjectBuildTargets.final)
         if final_image_name:
             if self.docker_registry:
                 # TODO: Check if the image really exists on the registry
@@ -355,10 +355,13 @@ class Project:
             if build_target_dir_path.is_dir():
                 setattr(self, f"{build_target}_dir", build_target_dir_path)
 
-    def get_build_target_image_name(self, target: ProjectBuildTargets):
+    def get_build_target_image_tag(self, target: ProjectBuildTargets):
         if self.get_project_hash():
             return f"{self.image_prefix}-{target.name}:{self.get_project_hash()}"
         return None
+
+    def get_build_target_cache_image_tag(self, target: ProjectBuildTargets):
+        return f"{self.image_prefix}-{target.name}:cache"
 
     def _load(self, path: Union[Path, str] = None):
         """Load project configuraton from the given directory."""
