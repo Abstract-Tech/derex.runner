@@ -75,7 +75,7 @@ def test_derex_mysql(start_mysql):
 
 @pytest.mark.slowtest
 def test_derex_mysql_reset(start_mysql, mocker, minimal_project):
-    """Test the open edx ironwood docker compose shortcut."""
+    """Test the open edx docker compose shortcut."""
     from derex.runner.cli.mysql import reset_mysql_cmd
 
     mocker.patch("derex.runner.ddc.wait_for_service", return_value=0)

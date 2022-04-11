@@ -175,7 +175,6 @@ class Project:
     themes_image_name: str
 
     # Image prefix to construct the above image names if they're not specified.
-    # Can include a private docker name, like registry.example.com/onlinecourses/edx-ironwood
     image_prefix: str
 
     # Path to a local docker-compose.yml file, if present

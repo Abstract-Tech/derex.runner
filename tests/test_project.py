@@ -16,9 +16,9 @@ import yaml
 
 
 # We pin here versions hashes for example projects.
-# If the example projects are changes those
+# If the example projects are changed those
 # hashes will need to be updated.
-PROJECT_VERSIONS_HASHES = {"ironwood": "8d516f", "juniper": "8b9fb6", "koa": "fd9fc2"}
+PROJECT_VERSIONS_HASHES = {"juniper": "8b9fb6", "koa": "fd9fc2", "lilac": "fc90a4"}
 
 
 def test_complete_project(workdir, mocker, complete_project):
@@ -167,7 +167,7 @@ def test_image_prefix(minimal_project):
         conf_file = Project().root / CONF_FILENAME
         config = {
             "project_name": "minimal",
-            "image_prefix": "registry.example.com/onlinecourses/edx-ironwood",
+            "image_prefix": "derex/openedx-juniper",
         }
         conf_file.write_text(yaml.dump(config))
         # Create a requirements directory to signal derex
