@@ -16,9 +16,9 @@ import yaml
 
 
 # We pin here versions hashes for example projects.
-# If the example projects are changes those
+# If the example projects are changed those
 # hashes will need to be updated.
-PROJECT_VERSIONS_HASHES = {"ironwood": "8d516f", "juniper": "8b9fb6", "koa": "fd9fc2"}
+PROJECT_VERSIONS_HASHES = {"juniper": "8b9fb6", "koa": "fd9fc2", "lilac": "fc90a4"}
 
 
 def test_complete_project(workdir, mocker, complete_project):
@@ -39,7 +39,7 @@ def test_complete_project(workdir, mocker, complete_project):
                 if project.openedx_version.name == version:
                     # Check the requirements image name
                     assert (
-                        project.get_build_target_image_name(
+                        project.get_build_target_image_tag(
                             ProjectBuildTargets.requirements
                         )
                         == f"{project.name}/openedx-requirements:{PROJECT_VERSIONS_HASHES[version]}"
@@ -75,8 +75,8 @@ def test_minimal_project(minimal_project):
     assert project.themes_dir is None
     assert project.e2e_dir is None
     assert project.name == f"{project.openedx_version.name}-minimal"
-    assert project.get_build_target_image_name(ProjectBuildTargets.requirements) is None
-    assert project.get_build_target_image_name(ProjectBuildTargets.themes) is None
+    assert project.get_build_target_image_tag(ProjectBuildTargets.requirements) is None
+    assert project.get_build_target_image_tag(ProjectBuildTargets.themes) is None
     assert project.docker_image_name == project.base_image
 
 
@@ -167,7 +167,7 @@ def test_image_prefix(minimal_project):
         conf_file = Project().root / CONF_FILENAME
         config = {
             "project_name": "minimal",
-            "image_prefix": "registry.example.com/onlinecourses/edx-ironwood",
+            "image_prefix": "derex/openedx-juniper",
         }
         conf_file.write_text(yaml.dump(config))
         # Create a requirements directory to signal derex
@@ -175,7 +175,7 @@ def test_image_prefix(minimal_project):
         (Project().root / "requirements").mkdir()
         project = Project()
         assert project.image_prefix == config["image_prefix"]
-        assert project.get_build_target_image_name(
+        assert project.get_build_target_image_tag(
             ProjectBuildTargets.requirements
         ).startswith(project.image_prefix)
 

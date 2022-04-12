@@ -27,7 +27,10 @@ def test_build_project_image_requirements(complete_project, mocker):
     with complete_project:
         project = Project()
         target = ProjectBuildTargets.requirements
-        tag = project.get_build_target_image_name(ProjectBuildTargets.requirements)
+        tag = project.get_build_target_image_tag(ProjectBuildTargets.requirements)
+        cache_tag = project.get_build_target_cache_image_tag(
+            ProjectBuildTargets.requirements
+        )
 
         buildx_mock = mocker.patch("derex.runner.build.buildx_image")
 
@@ -49,9 +52,10 @@ def test_build_project_image_requirements(complete_project, mocker):
 
         assert buildx_mock.call_args.args[1] == [project.requirements_dir]
         assert buildx_mock.call_args.args[2] == target.name
-        assert buildx_mock.call_args.args[4] == [tag]
+        assert buildx_mock.call_args.args[4] == [tag, cache_tag]
 
-        tag = "my-tag"
+        tag = "custom-image:custom-tag"
+        cache_tag = "custom-image:cache"
 
         build_project_image(
             project,
@@ -67,6 +71,22 @@ def test_build_project_image_requirements(complete_project, mocker):
         )
 
         assert buildx_mock.call_count == 2
+        assert buildx_mock.call_args.args[4] == [tag, cache_tag]
+
+        # Try a build without caching enabled
+        build_project_image(
+            project,
+            target,
+            output="docker",
+            registry=None,
+            tag=tag,
+            tag_latest=False,
+            pull=False,
+            no_cache=True,
+            cache_from=False,
+            cache_to=False,
+        )
+        assert buildx_mock.call_count == 3
         assert buildx_mock.call_args.args[4] == [tag]
 
 
@@ -74,7 +94,7 @@ def test_build_project_image_openedx_customizations(complete_project, mocker):
     with complete_project:
         project = Project()
         target = ProjectBuildTargets.openedx_customizations
-        tag = project.get_build_target_image_name(
+        tag = project.get_build_target_image_tag(
             ProjectBuildTargets.openedx_customizations
         )
         buildx_mock = mocker.patch("derex.runner.build.buildx_image")
@@ -100,4 +120,3 @@ def test_build_project_image_openedx_customizations(complete_project, mocker):
         assert project.requirements_dir in buildx_mock.call_args.args[1]
         assert project.openedx_customizations_dir in buildx_mock.call_args.args[1]
         assert buildx_mock.call_args.args[2] == target.name
-        assert buildx_mock.call_args.args[4] == [tag]

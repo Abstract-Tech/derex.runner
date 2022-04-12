@@ -38,7 +38,7 @@ def test_ddc_services(sys_argv, capsys, monkeypatch, complete_project):
 def test_ddc_project_minimal(sys_argv, mocker, minimal_project, capsys):
     from derex.runner.ddc import ddc_project
 
-    """Test the open edx ironwood docker compose shortcut."""
+    """Test the open edx docker compose shortcut."""
     # It should check for services to be up before trying to do anything
     wait_for_service = mocker.patch("derex.runner.ddc.wait_for_service")
 
