@@ -92,7 +92,7 @@ def project(
         return 0
 
     target_enum = ProjectBuildTargets[target]
-    image_tag = tag or project.get_build_target_image_name(target_enum)
+    image_tag = tag or project.get_build_target_image_tag(target_enum)
     if only_print_image_name:
         click.echo(image_tag)
         return 0
@@ -137,7 +137,7 @@ def requirements(project):
     from derex.runner.build import build_requirements_image
 
     click.echo(
-        f'Building docker image {project.get_build_target_image_name(ProjectBuildTargets.requirements)} ("{project.name}" requirements)'
+        f'Building docker image {project.get_build_target_image_tag(ProjectBuildTargets.requirements)} ("{project.name}" requirements)'
     )
     build_requirements_image(project)
 
@@ -152,11 +152,11 @@ def themes(ctx, project: Project):
 
     ctx.forward(requirements)
     click.echo(
-        f'Building docker image {project.get_build_target_image_name(ProjectBuildTargets.themes)} with "{project.name}" themes'
+        f'Building docker image {project.get_build_target_image_tag(ProjectBuildTargets.themes)} with "{project.name}" themes'
     )
     build_themes_image(project)
     click.echo(
-        f"Built image {project.get_build_target_image_name(ProjectBuildTargets.themes)}"
+        f"Built image {project.get_build_target_image_tag(ProjectBuildTargets.themes)}"
     )
 
 

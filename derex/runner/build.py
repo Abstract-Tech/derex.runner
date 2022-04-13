@@ -71,13 +71,13 @@ def build_requirements_image(project: Project):
     build_image(
         dockerfile_text,
         paths_to_copy,
-        tag=project.get_build_target_image_name(ProjectBuildTargets.requirements),
+        tag=project.get_build_target_image_tag(ProjectBuildTargets.requirements),
     )
 
 
 def generate_legacy_themes_dockerfile(project):
     dockerfile_contents = [
-        f"FROM {project.get_build_target_image_name(ProjectBuildTargets.requirements)} as static",
+        f"FROM {project.get_build_target_image_tag(ProjectBuildTargets.requirements)} as static",
         f"FROM {project.nostatic_base_image}",
         "COPY --from=static /openedx/staticfiles /openedx/staticfiles",
         "COPY themes/ /openedx/themes/",
@@ -124,7 +124,7 @@ def build_themes_image(project: Project):
         build_image(
             dockerfile_text,
             paths_to_copy,
-            tag=project.get_build_target_image_name(ProjectBuildTargets.themes),
+            tag=project.get_build_target_image_tag(ProjectBuildTargets.themes),
             tag_final=True,
             extra_options=dict(squash=True),
         )
@@ -132,7 +132,7 @@ def build_themes_image(project: Project):
         build_image(
             dockerfile_text,
             paths_to_copy,
-            tag=project.get_build_target_image_name(ProjectBuildTargets.themes),
+            tag=project.get_build_target_image_tag(ProjectBuildTargets.themes),
             tag_final=True,
         )
         logger.warning(
