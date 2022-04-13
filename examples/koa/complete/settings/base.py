@@ -5,3 +5,7 @@ from derex_django.settings.default import *  # noqa: F401, F403
 SITE_ID = 1
 LOGO_URL = "{}/static/demo-theme/images/logo.png".format(LMS_ROOT_URL)  # noqa: F405
 LOGO_URL_PNG = LOGO_URL
+
+FOOTER_OPENEDX_LOGO_IMAGE = (
+    "https://files.edx.org/openedx-logos/edx-openedx-logo-tag.png"
+)
