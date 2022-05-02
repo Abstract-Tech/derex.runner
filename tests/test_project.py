@@ -18,7 +18,7 @@ import yaml
 # We pin here versions hashes for example projects.
 # If the example projects are changed those
 # hashes will need to be updated.
-PROJECT_VERSIONS_HASHES = {"juniper": "8b9fb6", "koa": "fd9fc2", "lilac": "fc90a4"}
+PROJECT_VERSIONS_HASHES = {"juniper": "ef5747", "koa": "b70fa3", "lilac": "06e4fe"}
 
 
 def test_complete_project(workdir, mocker, complete_project):
