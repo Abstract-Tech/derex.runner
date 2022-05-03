@@ -28,11 +28,4 @@ describe("Theme tests", () => {
     cy.get("#contact").should("have.attr", "href", "/support/contact_us");
     cy.get("#donate").should("have.attr", "href", "/donate");
   });
-
-  it("The footer Open edX logo should be visible", function () {
-    cy.get(".footer-about-openedx > p > a > img").compareSnapshot(
-      "openedx-footer-logo",
-      0.2
-    );
-  });
 });
