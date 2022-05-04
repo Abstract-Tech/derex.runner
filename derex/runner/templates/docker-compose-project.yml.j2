@@ -53,6 +53,7 @@ x-common:
     MONGODB_DB_NAME: {{ project.mongodb_db_name }}
     MONGODB_USER: {{ project.mongodb_user }}
     MONGODB_PASSWORD: {{ project.secret("mongodb") }}
+    ELASTICSEARCH_PREFIX: {{ project.elasticsearch_prefix }}
     DEREX_MINIO_SECRET: {{ project.secret("minio") }}
     {%- for key, value in project.get_container_env().items() %}
     {{ key }}: {{ value | tojson }}
