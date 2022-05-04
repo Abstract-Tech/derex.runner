@@ -1,6 +1,7 @@
 """ Code to allow module store to interface with courseware index """
 
 import logging
+import os
 import re
 from abc import ABCMeta, abstractmethod
 from datetime import timedelta
