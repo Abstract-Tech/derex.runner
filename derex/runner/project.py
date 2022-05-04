@@ -237,6 +237,10 @@ class Project:
         return self.config.get("mongodb_user", MONGODB_ROOT_USER)
 
     @property
+    def elasticsearch_prefix(self) -> str:
+        return self.config.get("elasticsearch_prefix", f"{self.name}")
+
+    @property
     def runmode(self) -> ProjectRunMode:
         """The run mode of this project, either debug or production.
         In debug mode django's runserver is used. Templates are reloaded
