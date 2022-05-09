@@ -52,7 +52,7 @@ jsonschema==3.2.0
     # via docker-compose
 markupsafe==2.0.1
     # via jinja2
-paramiko==2.8.0
+paramiko==2.10.1
     # via docker
 pluggy==1.0.0
     # via derex.runner (setup.py)
