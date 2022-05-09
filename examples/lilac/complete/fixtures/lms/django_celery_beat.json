@@ -1,0 +1,20 @@
+[
+  {
+    "model": "django_celery_beat.intervalschedule",
+    "fields": {
+      "every": 1,
+      "period": "seconds"
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "fields": {
+      "name": "debug",
+      "task": "openedx.core.djangoapps.service_status.tasks.delayed_ping",
+      "interval": 1,
+      "args": "[\"ping\", 1]",
+      "enabled": true,
+      "date_changed": "2021-01-28T15:56:44.857Z"
+    }
+  }
+]

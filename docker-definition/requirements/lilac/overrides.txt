@@ -1,0 +1,4 @@
+# Those requirements will be installed last and won't be constrained
+# by openedx base requirements. Watch out!
+
+gunicorn

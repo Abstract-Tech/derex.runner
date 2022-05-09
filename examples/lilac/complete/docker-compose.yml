@@ -1,0 +1,36 @@
+# This file contains configuration common too all microfrontends
+
+version: "3.5"
+
+services:
+  frontend-app-account:
+    container_name: frontend-app-account
+    image: frontend-app-account-lilac:0.3.1
+    networks:
+      derex:
+        aliases:
+          - account.lilac-minimal.localhost
+
+  frontend-app-profile:
+    container_name: frontend-app-profile
+    image: frontend-app-profile-lilac:0.3.1
+    networks:
+      derex:
+        aliases:
+          - profile.lilac-minimal.localhost
+
+  frontend-app-gradebook:
+    container_name: frontend-app-gradebook
+    image: frontend-app-gradebook-lilac:0.3.1
+    networks:
+      derex:
+        aliases:
+          - gradebook.lilac-minimal.localhost
+
+  frontend-app-learning:
+    container_name: frontend-app-learning
+    image: frontend-app-learning-lilac:0.3.1
+    networks:
+      derex:
+        aliases:
+          - learning.lilac-minimal.localhost

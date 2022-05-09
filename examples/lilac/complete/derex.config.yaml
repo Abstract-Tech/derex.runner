@@ -1,0 +1,8 @@
+project_name: lilac-complete
+openedx_version: lilac
+collect_assets: true
+materialize_derex_settings: false
+variables:
+  lms_test_dict:
+    default: { "foo": "bar" }
+    production: { "foo": "baz" }

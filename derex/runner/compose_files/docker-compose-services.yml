@@ -22,6 +22,27 @@ services:
     networks:
       - derex
 
+  mongodb4:
+    image: mongo:4.4.6
+    restart: unless-stopped
+    container_name: mongodb4
+    command: mongod --nojournal
+      --storageEngine wiredTiger
+      --wiredTigerEngineConfigString="cache_size=${MONGO_CACHE_MB:-200}M"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "{{ MONGODB_ROOT_USERNAME }}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{ MONGODB_ROOT_PASSWORD }}"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - derex_mongodb4:/data/db
+    networks:
+      - derex
+
   mysql:
     image: mysql:5.6.36
     restart: unless-stopped
@@ -37,6 +58,24 @@ services:
       start_period: 10s
     volumes:
       - derex_mysql:/var/lib/mysql
+    networks:
+      - derex
+
+  mysql57:
+    image: mysql:5.7.34
+    restart: unless-stopped
+    container_name: mysql57
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
+    healthcheck:
+      test: mysqladmin ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - derex_mysql57:/var/lib/mysql
     networks:
       - derex
 
@@ -69,6 +108,39 @@ services:
         hard: 65536
     volumes:
       - derex_elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - derex
+
+  elasticsearch7:
+    image: elasticsearch:7.8.1
+    restart: unless-stopped
+    container_name: elasticsearch7
+    environment:
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "cluster.name=openedx"
+      # For the memory lock to work, the container should be started with
+      # sufficient high a value for "Max locked memory".
+      # For docker on a systemctl distro (like Ubuntu) this can be achieved with
+      # echo -e "[Service]\nLimitMEMLOCK=infinity" | SYSTEMD_EDITOR=tee sudo -E systemctl edit docker.service
+      # sudo systemctl daemon-reload
+      # sudo systemctl restart docker
+      - "bootstrap.memory_lock=true"
+      - discovery.type=single-node
+    healthcheck:
+      test: curl --silent --fail localhost:9200/_cluster/health || exit 1
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - derex_elasticsearch7:/usr/share/elasticsearch/data
     networks:
       - derex
 
@@ -158,9 +230,15 @@ services:
 volumes:
   derex_mongodb:
     external: true
+  derex_mongodb4:
+    external: true
   derex_mysql:
     external: true
+  derex_mysql57:
+    external: true
   derex_elasticsearch:
+    external: true
+  derex_elasticsearch7:
     external: true
   derex_rabbitmq:
     external: true

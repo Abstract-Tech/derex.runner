@@ -11,33 +11,33 @@ stages:
           - template: test_pyinstaller.yml
             parameters:
               OS: ubuntu
-              OPENEDX_RELEASE: ironwood
-          - template: test_pyinstaller.yml
-            parameters:
-              OS: ubuntu
               OPENEDX_RELEASE: juniper
           - template: test_pyinstaller.yml
             parameters:
               OS: ubuntu
               OPENEDX_RELEASE: koa
+          - template: test_pyinstaller.yml
+            parameters:
+              OS: ubuntu
+              OPENEDX_RELEASE: lilac
 
       - job: PyInstallerBuildMacOs
         pool:
-          vmImage: "macOS-10.14"
+          vmImage: "macOS-10.15"
         steps:
           - template: prepare.yml
           - template: test_pyinstaller.yml
             parameters:
               OS: macos
-              OPENEDX_RELEASE: ironwood
-          - template: test_pyinstaller.yml
-            parameters:
-              OS: macos
               OPENEDX_RELEASE: juniper
           - template: test_pyinstaller.yml
             parameters:
               OS: macos
               OPENEDX_RELEASE: koa
+          - template: test_pyinstaller.yml
+            parameters:
+              OS: macos
+              OPENEDX_RELEASE: lilac
 
       - job: RunPytests
         timeoutInMinutes: 40
@@ -65,13 +65,13 @@ stages:
           - template: prepare.yml
           - template: load_images.yml
             parameters:
-              DOCKER_IMAGES_SLUG: ironwood
-          - template: load_images.yml
-            parameters:
               DOCKER_IMAGES_SLUG: juniper
           - template: load_images.yml
             parameters:
               DOCKER_IMAGES_SLUG: koa
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: lilac
           - template: provision_services.yml
 
           - script: |
@@ -123,42 +123,6 @@ stages:
               echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;]"
             displayName: Fix coverage result and publish it
             condition: succeededOrFailed()
-
-      - job: TestIronwoodMinimalProject
-        timeoutInMinutes: 40
-        pool:
-          vmImage: $(UBUNTU_VERSION)
-        variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
-        steps:
-          - template: prepare.yml
-            parameters:
-              AS_PYTHON_PACKAGE: True
-          - template: load_images.yml
-            parameters:
-              DOCKER_IMAGES_SLUG: ironwood
-          - template: test_project.yml
-            parameters:
-              OPENEDX_RELEASE: ironwood
-              PROJECT_TYPE: minimal
-
-      - job: TestIronwoodCompleteProject
-        timeoutInMinutes: 60
-        pool:
-          vmImage: $(UBUNTU_VERSION)
-        variables:
-          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
-        steps:
-          - template: prepare.yml
-            parameters:
-              AS_PYTHON_PACKAGE: True
-          - template: load_images.yml
-            parameters:
-              DOCKER_IMAGES_SLUG: ironwood
-          - template: test_project.yml
-            parameters:
-              OPENEDX_RELEASE: ironwood
-              PROJECT_TYPE: complete
 
       - job: TestJuniperMinimalProject
         timeoutInMinutes: 40
@@ -231,6 +195,24 @@ stages:
             parameters:
               OPENEDX_RELEASE: koa
               PROJECT_TYPE: complete
+
+      - job: TestLilacMinimalProject
+        timeoutInMinutes: 40
+        pool:
+          vmImage: $(UBUNTU_VERSION)
+        variables:
+          CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+        steps:
+          - template: prepare.yml
+            parameters:
+              AS_PYTHON_PACKAGE: True
+          - template: load_images.yml
+            parameters:
+              DOCKER_IMAGES_SLUG: lilac
+          - template: test_project.yml
+            parameters:
+              OPENEDX_RELEASE: lilac
+              PROJECT_TYPE: minimal
 
       - job: CheckDocs
         timeoutInMinutes: 5

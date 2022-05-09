@@ -61,6 +61,7 @@ _settings_modules = [
     "container_env",
     "plugins",
     "auth",
+    "cors",
 ]
 
 for setting_module in _settings_modules:

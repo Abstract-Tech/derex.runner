@@ -31,8 +31,11 @@ client = docker.from_env()
 logger = logging.getLogger(__name__)
 VOLUMES = {
     "derex_elasticsearch",
+    "derex_elasticsearch7",
     "derex_mongodb",
+    "derex_mongodb4",
     "derex_mysql",
+    "derex_mysql57",
     "derex_rabbitmq",
     "derex_portainer_data",
     "derex_minio",
@@ -172,7 +175,7 @@ def build_image(
         fileobj=context, custom_context=True, encoding="gzip", tag=tag, **extra_options
     )
     for lines in output:
-        for line in re.split(br"\r\n|\n", lines):
+        for line in re.split(rb"\r\n|\n", lines):
             if not line:  # Split empty lines
                 continue
             line_decoded = json.loads(line)

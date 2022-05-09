@@ -103,7 +103,7 @@ DOCKER_DAEMON_IMAGES_RESPONSE = [
         "Labels": None,
         "ParentId": "",
         "RepoDigests": [
-            "derex/openedx-ironwood@sha256:ced32894ea157b1fad9d894343059666492a928714d769ae3dd4eab09de99e59"
+            "derex/openedx-juniper@sha256:ced32894ea157b1fad9d894343059666492a928714d769ae3dd4eab09de99e59"
         ],
         "RepoTags": None,
         "SharedSize": -1,

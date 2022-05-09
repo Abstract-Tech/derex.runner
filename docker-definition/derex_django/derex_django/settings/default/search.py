@@ -5,6 +5,10 @@ ELASTIC_SEARCH_CONFIG = [
         "use_ssl": False,
     }  # noqa: E231
 ]
+
+if DEREX_OPENEDX_VERSION == "lilac":
+    ELASTIC_SEARCH_CONFIG[0]["host"] = "elasticsearch7"
+
 SEARCH_ENGINE = "search.elastic.ElasticSearchEngine"
 SEARCH_INITIALIZER = (
     "lms.lib.courseware_search.lms_search_initializer.LmsSearchInitializer"

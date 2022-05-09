@@ -1,8 +1,0 @@
-# Those requirements will be installed last and won't be constrained
-# by openedx base requirements. Watch out!
-
-# sympy versions prior to 1.5.1 have a bug (https://nedbatchelder.com/blog/201302/hunting_a_random_bug.html)
-sympy==1.5.1
-# We install a newer version of gunicorn to take advantage of the --max-requests-jitter option
-# It's not very clear why it was pinned in the first place
-gunicorn

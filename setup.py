@@ -12,7 +12,7 @@ with open("HISTORY.rst") as history_file:
 
 requirements = [
     "appdirs",
-    "Click>=6.0",
+    "Click==8.1.0",
     "click_plugins",
     "docker-compose>=1.25.4",
     "importlib_metadata",
@@ -69,6 +69,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.3.3.dev6",
+    version="0.3.4",
     zip_safe=False,
 )
