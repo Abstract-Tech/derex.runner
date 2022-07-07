@@ -60,7 +60,8 @@ _settings_modules = [
     "search",
     "auth",
     "cors",
-    "plugins" "container_env",
+    "plugins",
+    "container_env",
 ]
 
 for setting_module in _settings_modules:
