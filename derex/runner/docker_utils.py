@@ -5,9 +5,12 @@ from derex.runner.secrets import DerexSecrets
 from derex.runner.secrets import get_secret
 from derex.runner.utils import abspath_from_egg
 from derex.runner.utils import copydir
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
 from pathlib import Path
 from python_on_whales import docker as pow_docker
 from requests.exceptions import RequestException
+from shutil import copyfile
 from shutil import copytree
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -206,6 +209,9 @@ def buildx_image(
     cache_tag: bool,
     build_args: Dict = {},
 ):
+    # This gets imported here to avoid a circular import
+    from derex.runner.project import Project
+
     tempdir = Path(mkdtemp(prefix="derex-build-"))
     try:
         _, dockerfile_str_path = mkstemp(prefix="Dockerfile-", dir=tempdir)
@@ -214,10 +220,28 @@ def buildx_image(
 
         for path in paths:
             destination_tmp_dir_path = Path(tempdir / path.name)
-            try:
-                copytree(path, destination_tmp_dir_path)
-            except FileExistsError:
-                copydir(str(path), str(destination_tmp_dir_path))
+            if path.is_dir():
+                try:
+                    copytree(path, destination_tmp_dir_path)
+                except FileExistsError:
+                    copydir(str(path), str(destination_tmp_dir_path))
+            if path.is_file():
+                copyfile(path, destination_tmp_dir_path)
+
+                if path.name.endswith(".j2"):
+                    jinja_environment = Environment(
+                        loader=FileSystemLoader(destination_tmp_dir_path.parent)
+                    )
+                    template = jinja_environment.get_template(
+                        destination_tmp_dir_path.name
+                    )
+                    rendered_template = template.render(
+                        project=Project(),
+                    )
+                    Path(
+                        destination_tmp_dir_path.parent
+                        / destination_tmp_dir_path.name.replace(".j2", "")
+                    ).write_text(rendered_template)
 
         cache_from_arg: Optional[Dict] = None
         cache_to_arg: Optional[Dict] = None

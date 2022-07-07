@@ -7,6 +7,7 @@ from derex.runner.project import Project
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from pathlib import Path
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -195,6 +196,55 @@ def build_project_image(
         cache_from,
         cache_to,
         cache_tag,
+    )
+
+
+def build_microfrontend_image(
+    project: Project,
+    target: str,
+    paths_to_copy: List[Path],
+    output: str,
+    registry: Optional[str],
+    tag: str,
+    tag_latest: bool,
+    pull: bool,
+    no_cache: bool,
+    cache_from: bool,
+    cache_to: bool,
+    dockerfile_path: Path,
+    build_args: Dict = {},
+):
+    """Compile a Dockerfile, create the build context and build a docker image for a microfrontend"""
+    if not registry and project.docker_registry:
+        registry = project.docker_registry
+    if registry:
+        tag = f"{registry}/{tag}"
+    tags: List[str] = [tag]
+    image_name: str = tag.split(":")[0]
+    if tag_latest:
+        latest_tag = f"{image_name}:latest"
+        tags.append(latest_tag)
+
+    cache: bool = False if no_cache else True
+    cache_tag: Optional[str] = None
+    if cache:
+        cache_tag = f"{image_name}:cache"
+        tags.append(cache_tag)
+
+    dockerfile_text = dockerfile_path.read_text()
+
+    buildx_image(
+        dockerfile_text,
+        paths_to_copy,
+        target,
+        output,
+        tags,
+        pull,
+        cache,
+        cache_from,
+        cache_to,
+        cache_tag,
+        build_args=build_args,
     )
 
 

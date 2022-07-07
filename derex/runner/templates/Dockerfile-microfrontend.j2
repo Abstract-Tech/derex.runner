@@ -1,4 +1,4 @@
-FROM node:12-alpine AS base
+FROM node:${NODE_VERSION} AS base
 
 RUN apk add --no-cache \
     git \
@@ -13,13 +13,13 @@ WORKDIR /openedx/microfrontend
 ENV PATH ./node_modules/.bin:${PATH}
 
 FROM base AS sourceonly
-RUN git clone {{ MFE_REPOSITORY }} \
-    --branch {{ MFE_BRANCH }} --depth 1 /openedx/microfrontend
+RUN git clone ${MFE_REPOSITORY} \
+    --branch ${MFE_BRANCH} --depth 1 /openedx/microfrontend
 RUN npm install
 COPY .env.derex .env
 RUN npm run build
 
-FROM docker.io/caddy:2.3.0-alpine
+FROM docker.io/caddy:2.3.0-alpine AS final
 
 RUN mkdir -p /openedx/dist
 COPY --from=sourceonly \
