@@ -51,7 +51,7 @@ stages:
               set -o pipefail
               pip3 --cache-dir $(Pipeline.Workspace)/.cache/pip install scrypt
               cd tests
-              pytest -m "not slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+              pytest -m "not slowtest" | grep -v codecoveragetool=Cobertura
             displayName: "Run python tests"
 
           - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
@@ -78,7 +78,7 @@ stages:
               set -ex
               set -o pipefail
               cd tests
-              pytest -m "slowtest" --ignore-docstrings |grep -v codecoveragetool=Cobertura
+              pytest -m "slowtest" | grep -v codecoveragetool=Cobertura
             displayName: "Run python tests"
 
           - publish: $(System.DefaultWorkingDirectory)/tests/.coverage
