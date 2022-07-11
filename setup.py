@@ -18,7 +18,7 @@ requirements = [
     "importlib_metadata",
     "jinja2",
     "pluggy",
-    "pymongo",
+    "pymongo<4",
     "pymysql",
     "rich",
     # Package constrained due to dependabot alerts
