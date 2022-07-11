@@ -18,7 +18,7 @@ requirements = [
     "importlib_metadata",
     "jinja2",
     "pluggy",
-    "pymongo",
+    "pymongo<4",
     "pymysql",
     "rich",
     # Package constrained due to dependabot alerts
@@ -69,6 +69,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.3.4",
+    version="0.3.4.dev2",
     zip_safe=False,
 )

@@ -58,10 +58,10 @@ _settings_modules = [
     "features",
     "openedx_platform",
     "search",
-    "container_env",
-    "plugins",
     "auth",
     "cors",
+    "plugins",
+    "container_env",
 ]
 
 for setting_module in _settings_modules:

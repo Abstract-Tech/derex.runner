@@ -1,9 +1,8 @@
-from rich.console import Console
+from derex.runner.utils import get_rich_console
 from rich.logging import RichHandler
 
 import logging
 import os
-import sys
 
 
 def setup_logging():
@@ -20,7 +19,9 @@ def setup_logging():
         level=loglevel,
         format="%(message)s",
         datefmt="[%X] ",
-        handlers=[RichHandler(console=Console(file=sys.stderr))],
+        handlers=[
+            RichHandler(console=get_rich_console(stderr=True), rich_tracebacks=True)
+        ],
     )
 
 
