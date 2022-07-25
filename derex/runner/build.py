@@ -211,7 +211,7 @@ def build_microfrontend_image(
     no_cache: bool,
     cache_from: bool,
     cache_to: bool,
-    dockerfile_path: Path,
+    dockerfile_template_path: Path,
     build_args: Dict = {},
 ):
     """Compile a Dockerfile, create the build context and build a docker image for a microfrontend"""
@@ -231,7 +231,13 @@ def build_microfrontend_image(
         cache_tag = f"{image_name}:cache"
         tags.append(cache_tag)
 
-    dockerfile_text = dockerfile_path.read_text()
+    jinja_environment = Environment(
+        loader=FileSystemLoader(dockerfile_template_path.parent)
+    )
+    dockerfile_template = jinja_environment.get_template(dockerfile_template_path.name)
+    dockerfile_text = dockerfile_template.render(
+        project=project, mfe_repository=Path(build_args["MFE_REPOSITORY"])
+    )
 
     buildx_image(
         dockerfile_text,

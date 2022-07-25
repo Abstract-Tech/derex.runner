@@ -228,7 +228,7 @@ def buildx_image(
             if path.is_file():
                 copyfile(path, destination_tmp_dir_path)
 
-                if path.name.endswith(".j2"):
+                if path.name.endswith(".j2") and not path.name == "Dockerfile.j2":
                     jinja_environment = Environment(
                         loader=FileSystemLoader(destination_tmp_dir_path.parent)
                     )
