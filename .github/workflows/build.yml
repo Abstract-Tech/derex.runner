@@ -3,27 +3,32 @@ on: [push]
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
-#  CACHE_KEY_FILES: ${{ System.DefaultWorkingDirectory }}/docker-definition/**/*
-#  CACHE_KEY_IMAGES: BASE_SEED=${{ CACHE_KEY_BASE }} | ${{ CACHE_KEY_FILES }}
-#  IMAGE_CACHE_PATH: ${{ Pipeline.Workspace }}/image_cache
-#  SENTINEL_CACHE_PATH: ${{ Pipeline.Workspace }}/sentinel_cache
+  CACHE_KEY_FILES: ${{ GITHUB_WORKSPACE }}/docker-definition/**/*
+  CACHE_KEY_IMAGES: BASE_SEED=${{ CACHE_KEY_BASE }} | ${{ CACHE_KEY_FILES }}
+  IMAGE_CACHE_PATH: ${{ GITHUB_WORKSPACE }}/image_cache
+  SENTINEL_CACHE_PATH: ${{ GITHUB_WORKSPACE }}/sentinel_cache
 
 jobs:
-  Juniper:
+  juniper:
     runs-on: ubuntu-latest
     timeout-minutes: 180
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: pwd
-
-  Koa:
-    runs-on: ubuntu-latest
-    timeout-minutes: 180
+    env:
+      DOCKER_IMAGES_SLUG: juniper
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
-  Lilac:
+  koa:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    env:
+      DOCKER_IMAGES_SLUG: koa
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+
+  lilac:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      DOCKER_IMAGES_SLUG: lilac
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
