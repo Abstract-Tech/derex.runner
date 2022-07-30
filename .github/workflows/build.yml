@@ -15,6 +15,8 @@ jobs:
     env:
       DOCKER_IMAGES_SLUG: juniper
     steps:
+      - uses: actions/checkout@v3
+
       - name: Resolve Sentinel cache
         id: cache-juniper
         uses: action/cache@v3
@@ -28,6 +30,8 @@ jobs:
     env:
       DOCKER_IMAGES_SLUG: koa
     steps:
+      - uses: actions/checkout@v3
+
       - name: Resolve Sentinel cache
         id: cache-koa
         uses: action/cache@v3
@@ -40,6 +44,8 @@ jobs:
     env:
       DOCKER_IMAGES_SLUG: lilac
     steps:
+      - uses: actions/checkout@v3
+
       - name: Resolve Sentinel cache
         id: cache-lilac
         uses: action/cache@v3
