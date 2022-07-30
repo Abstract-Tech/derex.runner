@@ -28,17 +28,17 @@ jobs:
         if: steps.cache-juniper.outputs.cache-hit != 'true'
         uses: actions/cache@v3
         with:
-          path: $(IMAGE_CACHE_PATH)
+          path: $IMAGE_CACHE_PATH
           key: BASE_SEED=$(CACHE_KEY_BASE) | juniper | $(CACHE_KEY_IMAGES)
           restore-keys: BASE_SEED=$(CACHE_KEY_BASE) | juniper
 
       - name: Load juniper images
         if: steps.cache-juniper.outputs.cache-hit != 'true'
         run: |
-          ls -l $(IMAGE_CACHE_PATH)
+          ls -l $IMAGE_CACHE_PATH
           docker images
           set -euxo pipefail
-          cat $(IMAGE_CACHE_PATH)/edx-juniper.tar.xz | unxz | docker load
+          cat $IMAGE_CACHE_PATH/edx-juniper.tar.xz | unxz | docker load
           docker images
 
   koa:
