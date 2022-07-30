@@ -34,7 +34,6 @@ jobs:
       - name: Load juniper images
         if: steps.cache-juniper.outputs.cache-hit == 'true'
         run: |
-#          if [ $(IMAGE_CACHE_PATH) == "" ] || exit 0
           ls -l $(IMAGE_CACHE_PATH)
           docker images
           set -euxo pipefail
@@ -65,7 +64,6 @@ jobs:
       - name: Load koa images
         if: steps.cache-koa.outputs.cache-hit == 'true'
         run: |
-#           if [ $(IMAGE_CACHE_PATH) == "" ] || exit 0
            ls -l $(IMAGE_CACHE_PATH)
            docker images
            set -euxo pipefail
@@ -96,7 +94,6 @@ jobs:
       - name: Load lilac images
         if: steps.cache-lilac.outputs.cache-hit == 'true'
         run: |
-#           if [ $(IMAGE_CACHE_PATH) == "" ] || exit 0
            ls -l $(IMAGE_CACHE_PATH)
            docker images
            set -euxo pipefail
