@@ -32,7 +32,7 @@ jobs:
           key: BASE_SEED=$(CACHE_KEY_BASE) | $DOCKER_IMAGES_SLUG | $(CACHE_KEY_IMAGES)
           restore-keys: BASE_SEED=$(CACHE_KEY_BASE) | $DOCKER_IMAGES_SLUG
 
-      - name: Load $DOCKER_IMAGES_SLUG images
+      - name: Load images
         if: steps.cache-sentinel.outputs.cache-hit != 'true'
         run: |
           [ -d $IMAGE_CACHE_PATH ] || exit 0
@@ -50,8 +50,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Resolve Sentinel cache
-        id: cache-koa
+      - name: Docker images sentinel cache
+        id: cache-sentinel
         uses: actions/cache@v3
         with:
           path: $(SENTINEL_CACHE_PATH)
@@ -65,8 +65,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Resolve Sentinel cache
-        id: cache-lilac
+      - name: Docker images sentinel cache
+        id: cache-sentinel
         uses: actions/cache@v3
         with:
           path: $(SENTINEL_CACHE_PATH)
