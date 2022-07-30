@@ -35,6 +35,7 @@ jobs:
       - name: Load juniper images
         if: steps.cache-juniper.outputs.cache-hit != 'true'
         run: |
+          [ -d $IMAGE_CACHE_PATH ] || exit 0
           ls -l $IMAGE_CACHE_PATH
           docker images
           set -euxo pipefail
