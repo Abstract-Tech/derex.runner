@@ -3,29 +3,29 @@ on: [push]
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
-  CACHE_KEY_FILES: $(System.DefaultWorkingDirectory)/docker-definition/**/*
-  CACHE_KEY_IMAGES: BASE_SEED=$(CACHE_KEY_BASE) | $(CACHE_KEY_FILES)
-  IMAGE_CACHE_PATH: $(Pipeline.Workspace)/image_cache
-  SENTINEL_CACHE_PATH: $(Pipeline.Workspace)/sentinel_cache
+  CACHE_KEY_FILES: ${{ System.DefaultWorkingDirectory }}/docker-definition/**/*
+  CACHE_KEY_IMAGES: BASE_SEED=${{ CACHE_KEY_BASE }} | ${{ CACHE_KEY_FILES }}
+  IMAGE_CACHE_PATH: ${{ Pipeline.Workspace }}/image_cache
+  SENTINEL_CACHE_PATH: ${{ Pipeline.Workspace }}/sentinel_cache
   UBUNTU_VERSION: ubuntu-latest
   PIPELINE_TIMEOUT: 180
 
 jobs:
   Juniper:
-    runs-on: $UBUNTU_VERSION
-    timeout-minutes: $PIPELINE_TIMEOUT
+    runs-on: ${{ UBUNTU_VERSION }}
+    timeout-minutes: ${{ PIPELINE_TIMEOUT }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: pwd
 
   Koa:
-    runs-on: $UBUNTU_VERSION
-    timeout-minutes: $PIPELINE_TIMEOUT
+    runs-on: ${{ UBUNTU_VERSION }}
+    timeout-minutes: ${{ PIPELINE_TIMEOUT }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
   Lilac:
-    runs-on: $UBUNTU_VERSION
-    timeout-minutes: $PIPELINE_TIMEOUT
+    runs-on: ${{ UBUNTU_VERSION }}
+    timeout-minutes: ${{ PIPELINE_TIMEOUT }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
