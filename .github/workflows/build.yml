@@ -24,6 +24,21 @@ jobs:
           path: $(SENTINEL_CACHE_PATH)
           key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
 
+      - name: Docker images cache
+        if: steps.cache-juniper.outputs.cache-hit == 'true'
+        uses: actions/cache@v3
+        with:
+          path: $(SENTINEL_CACHE_PATH)
+          key: BASE_SEED=$(CACHE_KEY_BASE) | juniper
+
+      - name: Load juniper images
+        run: |
+          [ -d $(IMAGE_CACHE_PATH) ] || exit 0
+          ls -l $(IMAGE_CACHE_PATH)
+          docker images
+          set -euxo pipefail
+          cat $(IMAGE_CACHE_PATH)/edx-juniper.tar.xz | unxz | docker load
+          docker images
   koa:
     runs-on: ubuntu-latest
     timeout-minutes: 180
