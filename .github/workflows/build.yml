@@ -7,24 +7,23 @@ env:
 #  CACHE_KEY_IMAGES: BASE_SEED=${{ CACHE_KEY_BASE }} | ${{ CACHE_KEY_FILES }}
 #  IMAGE_CACHE_PATH: ${{ Pipeline.Workspace }}/image_cache
 #  SENTINEL_CACHE_PATH: ${{ Pipeline.Workspace }}/sentinel_cache
-  PIPELINE_TIMEOUT: 180
 
 jobs:
   Juniper:
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ PIPELINE_TIMEOUT }}
+    timeout-minutes: 180
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: pwd
 
   Koa:
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ PIPELINE_TIMEOUT }}
+    timeout-minutes: 180
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
   Lilac:
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ PIPELINE_TIMEOUT }}
+    timeout-minutes: 180
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
