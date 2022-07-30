@@ -15,7 +15,12 @@ jobs:
     env:
       DOCKER_IMAGES_SLUG: juniper
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - name: Resolve Sentinel cache
+        id: cache-juniper
+        uses: action/cache@v3
+        with:
+          path: $(SENTINEL_CACHE_PATH)
+          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
 
   koa:
     runs-on: ubuntu-latest
@@ -23,12 +28,21 @@ jobs:
     env:
       DOCKER_IMAGES_SLUG: koa
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-
+      - name: Resolve Sentinel cache
+        id: cache-koa
+        uses: action/cache@v3
+        with:
+          path: $(SENTINEL_CACHE_PATH)
+          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
   lilac:
     runs-on: ubuntu-latest
     timeout-minutes: 180
     env:
       DOCKER_IMAGES_SLUG: lilac
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - name: Resolve Sentinel cache
+        id: cache-lilac
+        uses: action/cache@v3
+        with:
+          path: $(SENTINEL_CACHE_PATH)
+          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
