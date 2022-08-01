@@ -48,11 +48,11 @@ jobs:
         run: echo "NEEDS_BUILD=true" >> $GITHUB_ENV
 
       - name: Remove Haskell compiler and cached apt archives to save disk space
-        if: $env.NEEDS_BUILD != 'false' && success()
+        if: env.NEEDS_BUILD != 'false' && success()
         run: df -h; time sudo rm -rf /var/cache/apt/archives /opt/ghc; df -h
 
       - name: Prepare Transifex credentials
-        if: $env.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false'
         run: |
           if [ "$TRANSIFEX_USERNAME" == '$(TRANSIFEX_USERNAME)' ] || [ "$TRANSIFEX_PASSWORD" == '$(TRANSIFEX_PASSWORD)' ]; then
                     echo "Transifex credentials unset. Building without translations."
