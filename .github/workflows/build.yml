@@ -78,7 +78,8 @@ jobs:
           fi
           echo "CACHE_FROM_OPTS=$CACHE_FROM_OPTS" >> $GITHUB_ENV
           mkdir $SENTINEL_CACHE_PATH
-          cp -fr $CACHE_KEY_FILES $SENTINEL_CACHE_PATH
+          rm -r $SENTINEL_CACHE_PATH
+          cp -r $CACHE_KEY_FILES $SENTINEL_CACHE_PATH
           # We save the sha of the repo that built this image, so that we can push
           # it only in a build of the same commit, after tests are passed
           git rev-parse --verify HEAD > $SENTINEL_CACHE_PATH/built_version
