@@ -7,7 +7,7 @@ env:
   CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
   IMAGE_CACHE_PATH: $GITHUB_WORKSPACE/image_cache
   SENTINEL_CACHE_PATH: $GITHUB_WORKSPACE/sentinel_cache
-
+  NEEDS_BUILD: false
 jobs:
   juniper:
     runs-on: ubuntu-latest
@@ -47,10 +47,11 @@ jobs:
         run: echo "NEEDS_BUILD=true" >> $GITHUB_ENV
 
       - name: Remove Haskell compiler and cached apt archives to save disk space
-        if: NEEDS_BUILD != 'true' && success()
+        if: NEEDS_BUILD != 'false' && success()
         run: df -h; time sudo rm -rf /var/cache/apt/archives /opt/ghc; df -h
 
       - name: Prepare Transifex credentials
+        if: NEEDS_BUILD != 'false'
         run: |
           if [ "$TRANSIFEX_USERNAME" == '$(TRANSIFEX_USERNAME)' ] || [ "$TRANSIFEX_PASSWORD" == '$(TRANSIFEX_PASSWORD)' ]; then
                     echo "Transifex credentials unset. Building without translations."
