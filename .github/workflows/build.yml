@@ -5,6 +5,9 @@ on:
       DOCKER_IMAGES_SLUG:
         required: true
         type: string
+      WORKSPACE:
+        required: true
+        type: string
       CACHE_KEY_BASE:
         required: true
         type: string
