@@ -5,9 +5,6 @@ on:
       DOCKER_IMAGES_SLUG:
         required: true
         type: string
-      WORKSPACE:
-        required: true
-        type: string
       CACHE_KEY_BASE:
         required: true
         type: string
@@ -74,8 +71,8 @@ jobs:
                     echo "Transifex credentials unset. Building without translations."
                     exit 0
           fi
-          printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > ${{ inputs.WORKSPACE }}/.transifexrc
-          ls -l ${{ inputs.WORKSPACE }}/.transifexrc
+          printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $GITHUB_WORKSPACE/.transifexrc
+          ls -l $GITHUB_WORKSPACE/.transifexrc
 
       - name: Setup docker images cache
         if: inputs.NEEDS_BUILD != 'false'
@@ -111,24 +108,28 @@ jobs:
           docker images
           sudo apt-get install pixz -y
 
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
       - name: Cache pip packages
         uses: actions/cache@v3
         with:
-          path: ${{ inputs.WORKSPACE }}/.cache/pip
+          path: $GITHUB_WORKSPACE/.cache/pip
           key: pipcache | requirements_dev.txt
           restore-keys: pipcache
 
       - name: Install derex.runner
         if: inputs.AS_PYTHON_PACKAGE == 'false' && inputs.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir ${{ inputs.WORKSPACE }}/.cache/pip -U pip setuptools
-          pip3 install --cache-dir ${{ inputs.WORKSPACE }}/.cache/pip -r requirements_dev.txt -e .
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
 
       - name: Install derex.runner as python package
         if: inputs.AS_PYTHON_PACKAGE != 'false' && inputs.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir ${{ inputs.WORKSPACE }}/.cache/pip -U pip setuptools
-          pip3 install --cache-dir ${{ inputs.WORKSPACE }}/.cache/pip .
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
 
       - name: Build nostatic image
         if: inputs.NEEDS_BUILD != 'false'
