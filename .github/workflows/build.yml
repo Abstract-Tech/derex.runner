@@ -83,6 +83,18 @@ jobs:
           # it only in a build of the same commit, after tests are passed
           git rev-parse --verify HEAD > $SENTINEL_CACHE_PATH/built_version
 
+      - name: Replace Microsoft docker with upsream docker and create build context
+        if: env.NEEDS_BUILD != 'false' && success()
+        run: |
+          set -ex
+          sudo apt-get remove moby-cli -y
+          curl -fsSL https://get.docker.com |sudo bash
+          sudo mv /etc/docker/daemon.json /etc/docker/daemon.json.orig
+          sudo cat /etc/docker/daemon.json.orig|jq '. + {experimental: true}' |sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker.service
+          docker version
+          docker buildx create --use
+          docker images
   koa:
     runs-on: ubuntu-latest
     timeout-minutes: 180
