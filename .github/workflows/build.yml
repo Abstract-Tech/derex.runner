@@ -104,7 +104,7 @@ jobs:
           sudo cat /etc/docker/daemon.json.orig|jq '. + {experimental: true}' |sudo tee /etc/docker/daemon.json
           sudo systemctl restart docker.service
           docker version
-          docker buildx create --use
+          docker buildx create --use /home/runner/work/derex.runner/derex.runner/docker-definition
           docker images
           sudo apt-get install pixz -y
 
@@ -130,10 +130,6 @@ jobs:
         run: |
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
-
-      - uses: docker/build-push-action@v2
-        with:
-          context: /home/runner/work/derex.runner/derex.runner/docker-definition
 
       - name: Build nostatic image
         if: inputs.NEEDS_BUILD != 'false'
