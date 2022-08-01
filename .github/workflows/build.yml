@@ -146,15 +146,11 @@ jobs:
 
       - name: Build nostatic image
         if: inputs.NEEDS_BUILD != 'false'
-        run: |
-          cd ${{ inputs.WORKSPACE }}
-          derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=nostatic ${{ inputs.DOCKER_IMAGES_SLUG }}
+        run: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=nostatic $DOCKER_IMAGES_SLUG
 
       - name: Build dev image
         if: inputs.NEEDS_BUILD != 'false'
-        run: |
-          cd ${{ inputs.WORKSPACE }}
-          derex build openedx --docker-opts "--cache-to=type=inline -o type=docker" --target=dev ${{ inputs.DOCKER_IMAGES_SLUG }}
+        run: derex build openedx --docker-opts "--cache-to=type=inline -o type=docker" --target=dev $DOCKER_IMAGES_SLUG
 
       - name: Check translations
         if: inputs.NEEDS_BUILD != 'false'
