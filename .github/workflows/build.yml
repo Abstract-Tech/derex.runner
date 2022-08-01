@@ -28,14 +28,14 @@ on:
         type: boolean
 
 env:
-  WORKSPACE: ${{ inputs.WORKSPACE }}
-  DOCKER_IMAGES_SLUG: ${{ inputs.DOCKER_IMAGES_SLUG }}
-  CACHE_KEY_BASE: ${{ inputs.CACHE_KEY_BASE }}
-  CACHE_KEY_FILES: ${{ inputs.CACHE_KEY_FILES }}
-  CACHE_KEY_IMAGES: ${{ inputs.CACHE_KEY_IMAGES }}
-  IMAGE_CACHE_PATH: ${{ inputs.IMAGE_CACHE_PATH }}
-  SENTINEL_CACHE_PATH: ${{ inputs.SENTINEL_CACHE_PATH }}
-  AS_PYTHON_PACKAGE: ${{ inputs.AS_PYTHON_PACKAGE }}
+  WORKSPACE: /home/runner/work/derex.runner/derex.runner
+  DOCKER_IMAGES_SLUG: juniper
+  CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
+  CACHE_KEY_FILES: /home/runner/work/derex.runner/derex.runner/docker-definition
+  CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
+  IMAGE_CACHE_PATH: /home/runner/work/derex.runner/derex.runner/image_cache
+  SENTINEL_CACHE_PATH: /home/runner/work/derex.runner/derex.runner/sentinel_cache
+  AS_PYTHON_PACKAGE: false
 
 jobs:
   Build:
