@@ -3,7 +3,7 @@ on: [push]
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
-  CACHE_KEY_FILES: ${{ github.workspace }}/docker-definition/**/*
+  CACHE_KEY_FILES: ${{ github.workspace }}/docker-definition/
   CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
   IMAGE_CACHE_PATH: ${{ github.workspace }}/image_cache
   SENTINEL_CACHE_PATH: ${{ github.workspace }}/sentinel_cache
@@ -77,7 +77,7 @@ jobs:
             mkdir $IMAGE_CACHE_PATH
           fi
           echo "CACHE_FROM_OPTS=$CACHE_FROM_OPTS" >> $GITHUB_ENV
-          if [ -d $SENTINEL_CACHE_PATH ]; then rm -r $SENTINEL_CACHE_PATH; else mkdir $SENTINEL_CACHE_PATH; fi
+          mkdir $SENTINEL_CACHE_PATH
           cp -r $CACHE_KEY_FILES $SENTINEL_CACHE_PATH
           # We save the sha of the repo that built this image, so that we can push
           # it only in a build of the same commit, after tests are passed
