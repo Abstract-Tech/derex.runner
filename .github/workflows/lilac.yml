@@ -1,11 +1,11 @@
-name: Build Lilac
+name: Lilac
 on:
   pull_request:
     types:
       - opened
 
 jobs:
-  Build_Lilac:
+  Lilac:
     uses: ./.github/workflows/build.yml
     with:
       DOCKER_IMAGES_SLUG: lilac

@@ -1,11 +1,11 @@
-name: Build Koa
+name: Koa
 on:
   pull_request:
     types:
       - opened
 
 jobs:
-  Build_Koa:
+  Koa:
     uses: ./.github/workflows/build.yml
     with:
       DOCKER_IMAGES_SLUG: koa
