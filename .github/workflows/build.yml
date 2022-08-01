@@ -42,6 +42,27 @@ jobs:
           cat $IMAGE_CACHE_PATH/edx-$DOCKER_IMAGES_SLUG.tar.xz | unxz | docker load
           docker images
 
+      - name: Set needs_build pipeline variable
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        run: echo "NEEDS_BUILD=true" >> $GITHUB_ENV
+
+      - name: Remove Haskell compiler and cached apt archives to save disk space
+        if: NEEDS_BUILD != 'true' && success()
+        run: df -h; time sudo rm -rf /var/cache/apt/archives /opt/ghc; df -h
+
+      - name: Prepare Transifex credentials
+        run: |
+          if [ "$TRANSIFEX_USERNAME" == '$(TRANSIFEX_USERNAME)' ] || [ "$TRANSIFEX_PASSWORD" == '$(TRANSIFEX_PASSWORD)' ]; then
+                    echo "Transifex credentials unset. Building without translations."
+                    exit 0
+          fi
+          printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $HOME/.transifexrc
+          ls -l $HOME/.transifexrc
+        env:
+          TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
+          TRANSIFEX_PASSWORD: $(TRANSIFEX_PASSWORD)
+
+      - name:
   koa:
     runs-on: ubuntu-latest
     timeout-minutes: 180
