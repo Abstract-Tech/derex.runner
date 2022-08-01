@@ -22,16 +22,16 @@ jobs:
         id: cache-sentinel
         uses: actions/cache@v3
         with:
-          path: $(SENTINEL_CACHE_PATH)
-          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
+          path: $SENTINEL_CACHE_PATH
+          key: SENTINEL=1 | $DOCKER_IMAGES_SLUG | $CACHE_KEY_IMAGES
 
       - name: Docker images cache
         if: steps.cache-sentinel.outputs.cache-hit != 'true'
         uses: actions/cache@v3
         with:
           path: $IMAGE_CACHE_PATH
-          key: BASE_SEED=$(CACHE_KEY_BASE) | $DOCKER_IMAGES_SLUG | $(CACHE_KEY_IMAGES)
-          restore-keys: BASE_SEED=$(CACHE_KEY_BASE) | $DOCKER_IMAGES_SLUG
+          key: BASE_SEED=$CACHE_KEY_BASE | $DOCKER_IMAGES_SLUG | $CACHE_KEY_IMAGES
+          restore-keys: BASE_SEED=$CACHE_KEY_BASE | $DOCKER_IMAGES_SLUG
 
       - name: Load images
         if: steps.cache-sentinel.outputs.cache-hit != 'true'
@@ -111,13 +111,13 @@ jobs:
           restore-keys: pipcache
 
       - name: Install derex.runner
-        if: AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        if: $AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
         run: |
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
 
       - name: Install derex.runner as python package
-        if: AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
+        if: $AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
         run: |
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
