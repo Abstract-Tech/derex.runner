@@ -71,7 +71,7 @@ jobs:
                     echo "Transifex credentials unset. Building without translations."
                     exit 0
           fi
-          printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $HOME/.transifexrc
+          printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > ${{ github.workspace }}/.transifexrc
           ls -l ${{ github.workspace }}/.transifexrc
 
       - name: Setup docker images cache
