@@ -1,33 +1,19 @@
 name: Build
-on:
-  workflow_call:
-    inputs:
-      DOCKER_IMAGES_SLUG:
-        required: true
-        type: string
-      CACHE_KEY_BASE:
-        required: true
-        type: string
-      CACHE_KEY_FILES:
-        required: true
-        type: string
-      CACHE_KEY_IMAGES:
-        required: true
-        type: string
-      IMAGE_CACHE_PATH:
-        required: true
-        type: string
-      SENTINEL_CACHE_PATH:
-        required: true
-        type: string
-      AS_PYTHON_PACKAGE:
-        required: true
-        type: boolean
+on: [push]
+
+env:
+  CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
+  CACHE_KEY_FILES: ${{ github.workspace }}/docker-definition
+  CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
+  IMAGE_CACHE_PATH: ${{ github.workspace }}/image_cache
+  SENTINEL_CACHE_PATH: ${{ github.workspace }}/sentinel_cache
 
 jobs:
-  Build:
+  juniper:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    env:
+      DOCKER_IMAGES_SLUG: juniper
     steps:
       - uses: actions/checkout@v3
 
@@ -35,25 +21,25 @@ jobs:
         id: cache-sentinel
         uses: actions/cache@v3
         with:
-          path: ${{ inputs.SENTINEL_CACHE_PATH }}
-          key: SENTINEL=1 | ${{ inputs.DOCKER_IMAGES_SLUG }} | ${{ inputs.CACHE_KEY_IMAGES }}
+          path: $(SENTINEL_CACHE_PATH)
+          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
 
       - name: Docker images cache
         if: steps.cache-sentinel.outputs.cache-hit != 'true'
         uses: actions/cache@v3
         with:
-          path: ${{ inputs.IMAGE_CACHE_PATH }}
-          key: BASE_SEED=${{ inputs.CACHE_KEY_BASE }} | ${{ inputs.DOCKER_IMAGES_SLUG }} | ${{ inputs.CACHE_KEY_IMAGES }}
-          restore-keys: BASE_SEED=${{ inputs.CACHE_KEY_BASE }} | ${{ inputs.DOCKER_IMAGES_SLUG }}
+          path: $IMAGE_CACHE_PATH
+          key: BASE_SEED=$(CACHE_KEY_BASE) | $DOCKER_IMAGES_SLUG | $(CACHE_KEY_IMAGES)
+          restore-keys: BASE_SEED=$(CACHE_KEY_BASE) | $DOCKER_IMAGES_SLUG
 
       - name: Load images
         if: steps.cache-sentinel.outputs.cache-hit != 'true'
         run: |
-          [ -d ${{ inputs.IMAGE_CACHE_PATH }} ] || exit 0
-          ls -l ${{ inputs.IMAGE_CACHE_PATH }}
+          [ -d $IMAGE_CACHE_PATH ] || exit 0
+          ls -l $IMAGE_CACHE_PATH
           docker images
           set -euxo pipefail
-          cat ${{ inputs.IMAGE_CACHE_PATH }}/edx-${{ inputs.DOCKER_IMAGES_SLUG }}.tar.xz | unxz | docker load
+          cat $IMAGE_CACHE_PATH/edx-$DOCKER_IMAGES_SLUG.tar.xz | unxz | docker load
           docker images
 
       - name: Set needs_build pipeline variable
@@ -61,41 +47,44 @@ jobs:
         run: echo "NEEDS_BUILD=true" >> $GITHUB_ENV
 
       - name: Remove Haskell compiler and cached apt archives to save disk space
-        if: inputs.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false' && success()
         run: df -h; time sudo rm -rf /var/cache/apt/archives /opt/ghc; df -h
 
       - name: Prepare Transifex credentials
-        if: inputs.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false'
         run: |
           if [ "$TRANSIFEX_USERNAME" == '$(TRANSIFEX_USERNAME)' ] || [ "$TRANSIFEX_PASSWORD" == '$(TRANSIFEX_PASSWORD)' ]; then
                     echo "Transifex credentials unset. Building without translations."
                     exit 0
           fi
-          printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $GITHUB_WORKSPACE/.transifexrc
+          printf '[https://www.transifex.com]\nhostname=https://www.transifex.com\nusername=%s\npassword=%s\n' "${TRANSIFEX_USERNAME}" "${TRANSIFEX_PASSWORD}" > $HOME/.transifexrc
           ls -l $GITHUB_WORKSPACE/.transifexrc
+        env:
+          TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
+          TRANSIFEX_PASSWORD: $(TRANSIFEX_PASSWORD)
 
       - name: Setup docker images cache
-        if: inputs.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false' && success()
         run: |
           images=$(docker images|grep -v '<none>'|grep derex|awk '{print $1 ":" $2}')
           CACHE_FROM_OPTS=""
-          if [ -d ${{ inputs.IMAGE_CACHE_PATH }} ]; then
+          if [ -d $IMAGE_CACHE_PATH ]; then
             echo "Will use cached layers from images $images"
             for image in $images; do
             CACHE_FROM_OPTS="${CACHE_FROM_OPTS} --cache-from=$image"
             done
           else
-            mkdir ${{ inputs.IMAGE_CACHE_PATH }}
+            mkdir $IMAGE_CACHE_PATH
           fi
           echo "CACHE_FROM_OPTS=$CACHE_FROM_OPTS" >> $GITHUB_ENV
-          mkdir ${{ inputs.SENTINEL_CACHE_PATH }}
-          cp -r ${{ inputs.CACHE_KEY_FILES }} ${{ inputs.SENTINEL_CACHE_PATH }}
+          mkdir $SENTINEL_CACHE_PATH
+          cp -r $CACHE_KEY_FILES $SENTINEL_CACHE_PATH
           # We save the sha of the repo that built this image, so that we can push
           # it only in a build of the same commit, after tests are passed
-          git rev-parse --verify HEAD > ${{ inputs.SENTINEL_CACHE_PATH }}/built_version
+          git rev-parse --verify HEAD > $SENTINEL_CACHE_PATH/built_version
 
-      - name: Replace default docker with upsream docker and create build context
-        if: inputs.NEEDS_BUILD != 'false'
+      - name: Replace Microsoft docker with upsream docker and create build context
+        if: env.NEEDS_BUILD != 'false' && success()
         run: |
           set -ex
           sudo apt-get remove moby-cli -y
@@ -104,54 +93,34 @@ jobs:
           sudo cat /etc/docker/daemon.json.orig|jq '. + {experimental: true}' |sudo tee /etc/docker/daemon.json
           sudo systemctl restart docker.service
           docker version
-          docker buildx create --use /home/runner/work/derex.runner/derex.runner/docker-definition
+          docker buildx create --use
           docker images
-          sudo apt-get install pixz -y
+  koa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      DOCKER_IMAGES_SLUG: koa
+    steps:
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
-
-      - name: Cache pip packages
+      - name: Docker images sentinel cache
+        id: cache-sentinel
         uses: actions/cache@v3
         with:
-          path: $GITHUB_WORKSPACE/.cache/pip
-          key: pipcache | requirements_dev.txt
-          restore-keys: pipcache
+          path: $(SENTINEL_CACHE_PATH)
+          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
 
-      - name: Install derex.runner
-        if: inputs.AS_PYTHON_PACKAGE == 'false' && inputs.NEEDS_BUILD != 'false'
-        run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
+  lilac:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      DOCKER_IMAGES_SLUG: lilac
+    steps:
+      - uses: actions/checkout@v3
 
-      - name: Install derex.runner as python package
-        if: inputs.AS_PYTHON_PACKAGE != 'false' && inputs.NEEDS_BUILD != 'false'
-        run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
-
-      - name: Build nostatic image
-        if: inputs.NEEDS_BUILD != 'false'
-        run: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=nostatic ${{ inputs.DOCKER_IMAGES_SLUG }}
-
-      - name: Build dev image
-        if: inputs.NEEDS_BUILD != 'false'
-        run: derex build openedx --docker-opts "--cache-to=type=inline -o type=docker" --target=dev ${{ inputs.DOCKER_IMAGES_SLUG }}
-
-      - name: Check translations
-        if: inputs.NEEDS_BUILD != 'false'
-        run: |
-          docker images
-          derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target}" --target=translations ${{ inputs.DOCKER_IMAGES_SLUG }}
-          docker images
-          docker run --rm derex/openedx-${{ inputs.DOCKER_IMAGES_SLUG }}-translations:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)" || echo "Problems with translations found"
-
-      - name: Save images
-        if: inputs.NEEDS_BUILD != 'false'
-        run: |
-          set -euxo pipefail;
-          docker save \
-          $(derex build openedx --only-print-image-name -t nostatic ${{ inputs.DOCKER_IMAGES_SLUG }}) \
-          $(derex build openedx --only-print-image-name -t dev ${{ inputs.DOCKER_IMAGES_SLUG }}) \
-          | pixz -0 > ${{ inputs.IMAGE_CACHE_PATH }}/edx-${{ inputs.DOCKER_IMAGES_SLUG }}.tar.xz
+      - name: Docker images sentinel cache
+        id: cache-sentinel
+        uses: actions/cache@v3
+        with:
+          path: $(SENTINEL_CACHE_PATH)
+          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
