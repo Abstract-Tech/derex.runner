@@ -24,6 +24,9 @@ on:
         required: true
         type: boolean
 
+env:
+  CACHE_KEY_FILES: /home/runner/work/derex.runner/derex.runner/docker-definition
+
 jobs:
   Build:
     runs-on: ubuntu-latest
@@ -94,10 +97,6 @@ jobs:
           # it only in a build of the same commit, after tests are passed
           git rev-parse --verify HEAD > ${{ inputs.SENTINEL_CACHE_PATH }}/built_version
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
-
       - name: Replace default docker with upsream docker and create build context
         if: inputs.NEEDS_BUILD != 'false'
         run: |
@@ -111,6 +110,10 @@ jobs:
           docker buildx create --use
           docker images
           sudo apt-get install pixz -y
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
 
       - name: Cache pip packages
         uses: actions/cache@v3
