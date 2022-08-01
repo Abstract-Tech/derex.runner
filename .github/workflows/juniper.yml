@@ -6,10 +6,11 @@ jobs:
   Juniper:
     uses: ./.github/workflows/build.yml
     with:
+      WORKSPACE: /home/runner/work/derex.runner/derex.runner
       DOCKER_IMAGES_SLUG: juniper
       CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
-      CACHE_KEY_FILES: $GITHUB_WORKSPACE/docker-definition
+      CACHE_KEY_FILES: $WORKSPACE/docker-definition
       CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
-      IMAGE_CACHE_PATH: $GITHUB_WORKSPACE/image_cache
-      SENTINEL_CACHE_PATH: $GITHUB_WORKSPACE/sentinel_cache
+      IMAGE_CACHE_PATH: $WORKSPACE/image_cache
+      SENTINEL_CACHE_PATH: $WORKSPACE/sentinel_cache
       AS_PYTHON_PACKAGE: false
