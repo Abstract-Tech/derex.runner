@@ -69,16 +69,15 @@ jobs:
           images=$(docker images|grep -v '<none>'|grep derex|awk '{print $1 ":" $2}')
           CACHE_FROM_OPTS=""
           if [ -d $IMAGE_CACHE_PATH ]; then
-          echo "Will use cached layers from images $images"
-          for image in $images; do
-          CACHE_FROM_OPTS="${CACHE_FROM_OPTS} --cache-from=$image"
-          done
+            echo "Will use cached layers from images $images"
+            for image in $images; do
+            CACHE_FROM_OPTS="${CACHE_FROM_OPTS} --cache-from=$image"
+            done
           else
-          mkdir $IMAGE_CACHE_PATH
+            mkdir $IMAGE_CACHE_PATH
           fi
           echo "CACHE_FROM_OPTS=$CACHE_FROM_OPTS" >> $GITHUB_ENV
-          mkdir $SENTINEL_CACHE_PATH
-          rm -r $SENTINEL_CACHE_PATH
+          [ -d $SENTINEL_CACHE_PATH ]; rm -r $SENTINEL_CACHE_PATH || mkdir $SENTINEL_CACHE_PATH
           cp -r $CACHE_KEY_FILES $SENTINEL_CACHE_PATH
           # We save the sha of the repo that built this image, so that we can push
           # it only in a build of the same commit, after tests are passed
