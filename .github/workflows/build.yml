@@ -81,7 +81,7 @@ jobs:
           cp -r $CACHE_KEY_FILES $SENTINEL_CACHE_PATH
           # We save the sha of the repo that built this image, so that we can push
           # it only in a build of the same commit, after tests are passed
-          git rev-parse --verify HEAD
+          git rev-parse --verify HEAD:${{ github.workspace }}
 
   koa:
     runs-on: ubuntu-latest
