@@ -62,7 +62,6 @@ jobs:
           TRANSIFEX_USERNAME: $(TRANSIFEX_USERNAME)
           TRANSIFEX_PASSWORD: $(TRANSIFEX_PASSWORD)
 
-      - name:
   koa:
     runs-on: ubuntu-latest
     timeout-minutes: 180
