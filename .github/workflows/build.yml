@@ -83,8 +83,9 @@ jobs:
           # it only in a build of the same commit, after tests are passed
           git rev-parse --verify HEAD > $SENTINEL_CACHE_PATH/built_version
 
-      - name: Replace Microsoft docker with upsream docker and create build context
-        if: env.NEEDS_BUILD != 'false' && success()
+
+      - name: Replace default docker with upsream docker and create build context
+        if: inputs.NEEDS_BUILD != 'false'
         run: |
           set -ex
           sudo apt-get remove moby-cli -y
@@ -95,6 +96,52 @@ jobs:
           docker version
           docker buildx create --use
           docker images
+          sudo apt-get install pixz -y
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: $GITHUB_WORKSPACE/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: inputs.AS_PYTHON_PACKAGE == 'false' && inputs.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
+      - name: Install derex.runner as python package
+        if: inputs.AS_PYTHON_PACKAGE != 'false' && inputs.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
+      - name: Build nostatic image
+        if: inputs.NEEDS_BUILD != 'false'
+        run: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker" --target=nostatic ${{ inputs.DOCKER_IMAGES_SLUG }}
+
+      - name: Build dev image
+        if: inputs.NEEDS_BUILD != 'false'
+        run: derex build openedx --docker-opts "--cache-to=type=inline -o type=docker" --target=dev ${{ inputs.DOCKER_IMAGES_SLUG }}
+
+      - name: Check translations
+        if: inputs.NEEDS_BUILD != 'false'
+        run: |
+          docker images
+          derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target}" --target=translations ${{ inputs.DOCKER_IMAGES_SLUG }}
+          docker images
+          docker run --rm derex/openedx-${{ inputs.DOCKER_IMAGES_SLUG }}-translations:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)" || echo "Problems with translations found"
+      - name: Save images
+        if: inputs.NEEDS_BUILD != 'false'
+        run: |
+          set -euxo pipefail;
+          docker save \
+          $(derex build openedx --only-print-image-name -t nostatic ${{ inputs.DOCKER_IMAGES_SLUG }}) \
+          $(derex build openedx --only-print-image-name -t dev ${{ inputs.DOCKER_IMAGES_SLUG }}) \
+          | pixz -0 > ${{ inputs.IMAGE_CACHE_PATH }}/edx-${{ inputs.DOCKER_IMAGES_SLUG }}.tar.xz
+
   koa:
     runs-on: ubuntu-latest
     timeout-minutes: 180
