@@ -1,0 +1,15 @@
+name: Build Juniper
+on:
+  push
+
+jobs:
+  Build_Juniper:
+    uses: ./.github/workflows/build.yml
+    with:
+      DOCKER_IMAGES_SLUG: juniper
+      CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
+      CACHE_KEY_FILES: ${{ github.workspace }}/docker-definition
+      CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
+      IMAGE_CACHE_PATH: ${{ github.workspace }}/image_cache
+      SENTINEL_CACHE_PATH: ${{ github.workspace }}/sentinel_cache
+      AS_PYTHON_PACKAGE: false

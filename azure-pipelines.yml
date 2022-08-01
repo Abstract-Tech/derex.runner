@@ -7,7 +7,7 @@ schedules:
     always: true
 
 stages:
-  - template: azure-pipelines/build.yml
+  - template: azure-pipelines/juniper.yml
   - template: azure-pipelines/test.yml
   - template: azure-pipelines/push.yml
 
