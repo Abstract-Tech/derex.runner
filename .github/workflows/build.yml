@@ -27,16 +27,6 @@ on:
         required: true
         type: boolean
 
-env:
-  WORKSPACE: /home/runner/work/derex.runner/derex.runner
-  DOCKER_IMAGES_SLUG: juniper
-  CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
-  CACHE_KEY_FILES: /home/runner/work/derex.runner/derex.runner/docker-definition
-  CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
-  IMAGE_CACHE_PATH: /home/runner/work/derex.runner/derex.runner/image_cache
-  SENTINEL_CACHE_PATH: /home/runner/work/derex.runner/derex.runner/sentinel_cache
-  AS_PYTHON_PACKAGE: false
-
 jobs:
   Build:
     runs-on: ubuntu-latest
@@ -120,10 +110,6 @@ jobs:
           docker buildx create --use
           docker images
           sudo apt-get install pixz -y
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
 
       - name: Cache pip packages
         uses: actions/cache@v3
