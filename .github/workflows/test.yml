@@ -47,7 +47,7 @@ jobs:
         run: make docs
 
       - name: Check pre-commit hooks
-        run: pre-commit -a
+        run: pre-commit run -a
 
   RunPytests:
     runs-on: ubuntu-latest
