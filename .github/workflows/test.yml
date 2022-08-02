@@ -30,21 +30,21 @@ jobs:
       - name: Cache pip packages
         uses: actions/cache@v3
         with:
-          path: $GITHUB_WORKSPACE/.cache/pip
+          path: ${{ github.workspace }}/.cache/pip
           key: pipcache | requirements_dev.txt
           restore-keys: pipcache
 
       - name: Install derex.runner
         if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
 
       - name: Install derex.runner as python package
         if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - name: Build linux binary with pyinstaller
         run: |
@@ -89,14 +89,14 @@ jobs:
         run: |
           set -ex
           set -o pipefail
-          pip3 --cache-dir $GITHUB_WORKSPACE/.cache/pip install scrypt
+          pip3 --cache-dir ${{ github.workspace }}/.cache/pip install scrypt
           cd tests
           pytest -m "not slowtest" | grep -v codecoveragetool=Cobertura
           
       - uses: actions/upload-artifact@v2.2.4
         with:
           name: fasttests_coverage
-          path: $GITHUB_WORKSPACE/tests/.coverage
+          path: ${{ github.workspace }}/tests/.coverage
 
   RunSlowPytests:
     runs-on: ubuntu-latest
@@ -116,21 +116,21 @@ jobs:
       - name: Cache pip packages
         uses: actions/cache@v3
         with:
-          path: $GITHUB_WORKSPACE/.cache/pip
+          path: ${{ github.workspace }}/.cache/pip
           key: pipcache | requirements_dev.txt
           restore-keys: pipcache
 
       - name: Install derex.runner
         if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
 
       - name: Install derex.runner as python package
         if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - name: Docker images cache
         if: steps.cache-sentinel.outputs.cache-hit != 'true'
@@ -170,7 +170,7 @@ jobs:
       - uses: actions/upload-artifact@v2.2.4
         with:
           name: slowtests_coverage
-          path: $GITHUB_WORKSPACE/tests/.coverage
+          path: ${{ github.workspace }}/tests/.coverage
 
   CombineCoverage:
     runs-on: ubuntu-latest
@@ -187,18 +187,20 @@ jobs:
       - name: Cache pip packages
         uses: actions/cache@v3
         with:
-          path: $GITHUB_WORKSPACE/.cache/pip
+          path: ${{ github.workspace }}/.cache/pip
           key: pipcache | requirements_dev.txt
           restore-keys: pipcache
 
       - name: Install derex.runner
         if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
 
       - name: Install derex.runner as python package
         if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
         run: |
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
-          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
+
+      - uses: actions/download-artifact@v3
