@@ -1,6 +1,5 @@
 name: Build
-on:
-  public
+on: public
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
@@ -85,7 +84,6 @@ jobs:
           # it only in a build of the same commit, after tests are passed
           git rev-parse --verify HEAD > $SENTINEL_CACHE_PATH/built_version
 
-
       - name: Replace default docker with upsream docker and create build context
         if: env.NEEDS_BUILD != 'false'
         run: |
@@ -102,7 +100,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Cache pip packages
         uses: actions/cache@v3

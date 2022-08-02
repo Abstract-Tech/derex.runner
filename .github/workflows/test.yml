@@ -1,6 +1,5 @@
 name: Build
-on:
-  push
+on: push
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
@@ -10,7 +9,6 @@ env:
   SENTINEL_CACHE_PATH: ${{ github.workspace }}/sentinel_cache
   AS_PYTHON_PACKAGE: false
   PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black
-
 
 jobs:
   CheckDocsAndPreCommit:
@@ -22,7 +20,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Cache pip packages
         uses: actions/cache@v3
@@ -52,18 +50,18 @@ jobs:
   RunPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    needs: [ CheckDocsAndPreCommit ]
+    needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
       matrix:
-        OPENEDX_RELEASE: [ juniper,koa,lilac ]
+        OPENEDX_RELEASE: [juniper, koa, lilac]
 
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Cache pip packages
         uses: actions/cache@v3
@@ -132,7 +130,7 @@ jobs:
           pip3 --cache-dir ${{ github.workspace }}/.cache/pip install scrypt
           cd tests
           pytest -m "not slowtest" | grep -v codecoveragetool=Cobertura
-          
+
       - uses: actions/upload-artifact@v2.2.4
         with:
           name: fasttests_coverage
@@ -142,18 +140,18 @@ jobs:
   RunSlowPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    needs: [ CheckDocsAndPreCommit ]
+    needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
       matrix:
-        OPENEDX_RELEASE: [ juniper,koa,lilac ]
+        OPENEDX_RELEASE: [juniper, koa, lilac]
 
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Cache pip packages
         uses: actions/cache@v3
@@ -218,14 +216,14 @@ jobs:
   CombineCoverage:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [RunPytests,RunSlowPytests]
+    needs: [RunPytests, RunSlowPytests]
 
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Cache pip packages
         uses: actions/cache@v3
