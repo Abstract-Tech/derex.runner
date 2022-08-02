@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        release: [ juniper,koa,lilac ]
+        OPENEDX_RELEASE: [ juniper,koa,lilac ]
 
     steps:
       - uses: actions/setup-python@v4
@@ -47,7 +47,7 @@ jobs:
           set -ex
           ./bundle/dist/derex
           ./bundle/dist/ddc-services ps
-          cd examples/${{ parameters.OPENEDX_RELEASE }}/minimal
+          cd examples/${{ matrix.OPENEDX_RELEASE }}/minimal
           ../../../bundle/dist/ddc-project config
 
       - uses: actions/upload-artifact@v3
@@ -68,7 +68,7 @@ jobs:
           set -ex
           ./bundle/dist/derex --help
           ./bundle/dist/ddc-services --help
-          cd examples/${{ parameters.OPENEDX_RELEASE }}/minimal
+          cd examples/${{ matrix.OPENEDX_RELEASE }}/minimal
           ../../../bundle/dist/ddc-project config
 
       - uses: actions/upload-artifact@v3
