@@ -65,6 +65,7 @@ jobs:
           path: ./bundle/dist/
 
       - name: Build macOS binary with pyinstaller
+        if: always()
         run: |
           pip install pyinstaller scrypt
           # The Openssl version on MacOS 10.14 does not support scrypt
@@ -73,6 +74,7 @@ jobs:
           make executable
 
       - name: Test pyinstaller created macOS binary
+        if: always()
         run: |
           set -ex
           ./bundle/dist/derex --help
@@ -81,11 +83,13 @@ jobs:
           ../../../bundle/dist/ddc-project config
 
       - uses: actions/upload-artifact@v2.2.4
+        if: always()
         with:
           name: MacOSBinary
           path: ./bundle/dist/
 
       - name: Run python tests
+        if: always()
         run: |
           set -ex
           set -o pipefail
@@ -94,6 +98,7 @@ jobs:
           pytest -m "not slowtest" | grep -v codecoveragetool=Cobertura
           
       - uses: actions/upload-artifact@v2.2.4
+        if: always()
         with:
           name: fasttests_coverage
           path: ${{ github.workspace }}/tests/.coverage
