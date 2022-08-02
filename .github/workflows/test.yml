@@ -52,7 +52,7 @@ jobs:
           cd examples/${{ matrix.OPENEDX_RELEASE }}/minimal
           ../../../bundle/dist/ddc-project config
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v2.3.1
         with:
           name: LinuxBinary
           path: ./bundle/dist/
@@ -73,7 +73,7 @@ jobs:
           cd examples/${{ matrix.OPENEDX_RELEASE }}/minimal
           ../../../bundle/dist/ddc-project config
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v2.3.1
         with:
           name: MacOSBinary
           path: ./bundle/dist/
