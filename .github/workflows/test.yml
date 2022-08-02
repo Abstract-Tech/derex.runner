@@ -1,0 +1,77 @@
+name: Build
+on:
+  push
+
+env:
+  PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black
+  AS_PYTHON_PACKAGE: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        release: [ juniper,koa,lilac ]
+
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: $GITHUB_WORKSPACE/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -r requirements_dev.txt -e .
+
+      - name: Install derex.runner as python package
+        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
+          pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
+
+      - name: Build binary with pyinstaller
+        run: |
+          pip install pyinstaller
+          make executable
+
+      - name: Test pyinstaller created binary
+        run: |
+          set -ex
+          ./bundle/dist/derex
+          ./bundle/dist/ddc-services ps
+          cd examples/${{ parameters.OPENEDX_RELEASE }}/minimal
+          ../../../bundle/dist/ddc-project config
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: LinuxBinary
+          path: ./bundle/dist/
+
+      - name: Build binary with pyinstaller
+        run: |
+          pip install pyinstaller scrypt
+          # The Openssl version on MacOS 10.14 does not support scrypt
+          # so we pip install it and leave a trace to pyinstaller to pick it up
+          echo -e  "\nimport scrypt" >> bundle/executable.py
+          make executable
+
+      - name: Test pyinstaller created binary
+        run: |
+          set -ex
+          ./bundle/dist/derex --help
+          ./bundle/dist/ddc-services --help
+          cd examples/${{ parameters.OPENEDX_RELEASE }}/minimal
+          ../../../bundle/dist/ddc-project config
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: MacOSBinary
+          path: ./bundle/dist/
