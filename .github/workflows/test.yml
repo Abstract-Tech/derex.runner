@@ -31,6 +31,18 @@ jobs:
           key: pipcache | requirements_dev.txt
           restore-keys: pipcache
 
+      - name: Install derex.runner
+        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
+
+      - name: Install derex.runner as python package
+        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
+
       - name: Compile docs
         run: make docs
 
