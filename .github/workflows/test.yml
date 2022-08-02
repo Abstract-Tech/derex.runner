@@ -11,10 +11,36 @@ env:
   AS_PYTHON_PACKAGE: false
   PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black
 
+
 jobs:
+  CheckDocsAndPreCommit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Compile docs
+        run: make docs
+
+      - name: Check pre-commit hooks
+        run: pre-commit -a
+
   RunPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    needs: [ CheckDocsAndPreCommit ]
     strategy:
       fail-fast: false
       matrix:
@@ -104,6 +130,7 @@ jobs:
   RunSlowPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    needs: [ CheckDocsAndPreCommit ]
     strategy:
       fail-fast: false
       matrix:
@@ -208,6 +235,11 @@ jobs:
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - uses: actions/download-artifact@v3
+        with:
+          name:
+           - fasttests_coverage
+           - slowtests_coverage
+
         continue-on-error: true
 
       - name: Cache npm packages
