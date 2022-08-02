@@ -1,5 +1,6 @@
 name: Build
-on: [push]
+on:
+  public
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
@@ -160,7 +161,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: $(SENTINEL_CACHE_PATH)
-          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
+          key: SENTINEL=1 | $DOCKER_IMAGES_SLUG | $CACHE_KEY_IMAGES
 
   lilac:
     runs-on: ubuntu-latest
@@ -175,4 +176,4 @@ jobs:
         uses: actions/cache@v3
         with:
           path: $(SENTINEL_CACHE_PATH)
-          key: SENTINEL=1 | $(DOCKER_IMAGES_SLUG) | $(CACHE_KEY_IMAGES)
+          key: SENTINEL=1 | $DOCKER_IMAGES_SLUG | $CACHE_KEY_IMAGES
