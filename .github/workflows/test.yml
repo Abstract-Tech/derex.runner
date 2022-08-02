@@ -236,11 +236,11 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name:
-           - fasttests_coverage
-           - slowtests_coverage
+          name: fasttests_coverage
 
-        continue-on-error: true
+      - uses: actions/download-artifact@v3
+        with:
+          name: slowtests_coverage
 
       - name: Cache npm packages
         uses: actions/cache@v3
