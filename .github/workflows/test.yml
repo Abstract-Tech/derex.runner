@@ -37,12 +37,12 @@ jobs:
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip -U pip setuptools
           pip3 install --cache-dir $GITHUB_WORKSPACE/.cache/pip .
 
-      - name: Build binary with pyinstaller
+      - name: Build linux binary with pyinstaller
         run: |
           pip install pyinstaller
           make executable
 
-      - name: Test pyinstaller created binary
+      - name: Test pyinstaller created linux binary
         run: |
           set -ex
           ./bundle/dist/derex
@@ -55,7 +55,7 @@ jobs:
           name: LinuxBinary
           path: ./bundle/dist/
 
-      - name: Build binary with pyinstaller
+      - name: Build macOS binary with pyinstaller
         run: |
           pip install pyinstaller scrypt
           # The Openssl version on MacOS 10.14 does not support scrypt
@@ -63,7 +63,7 @@ jobs:
           echo -e  "\nimport scrypt" >> bundle/executable.py
           make executable
 
-      - name: Test pyinstaller created binary
+      - name: Test pyinstaller created macOS binary
         run: |
           set -ex
           ./bundle/dist/derex --help
