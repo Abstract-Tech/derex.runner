@@ -9,6 +9,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix:
         OPENEDX_RELEASE: [ juniper,koa,lilac ]
@@ -77,3 +78,54 @@ jobs:
         with:
           name: MacOSBinary
           path: ./bundle/dist/
+
+      - name: Run python tests
+        run: |
+          set -ex
+          set -o pipefail
+          pip3 --cache-dir $GITHUB_WORKSPACE/.cache/pip install scrypt
+          cd tests
+          pytest -m "not slowtest" | grep -v codecoveragetool=Cobertura
+          
+      - uses: actions/upload-artifact@v2.2.4
+        with:
+          name: fasttests_coverage
+          path: $GITHUB_WORKSPACE/tests/.coverage
+
+      - name: Docker images cache
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        uses: actions/cache@v3
+        with:
+          path: $IMAGE_CACHE_PATH
+          key: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }} | $CACHE_KEY_IMAGES
+          restore-keys: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }}
+
+      - name: Load images
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        run: |
+          [ -d $IMAGE_CACHE_PATH ] || exit 0
+          ls -l $IMAGE_CACHE_PATH
+          docker images
+          set -euxo pipefail
+          cat $IMAGE_CACHE_PATH/edx-${{ matrix.OPENEDX_RELEASE }}.tar.xz | unxz | docker load
+          docker images
+
+      - name: Provision and test services
+        run: |
+          ddc-services config
+          ddc-services pull
+          set -ex
+          export DEREX_ADMIN_SERVICES=False
+          ddc-services up -d
+          # Give it some seconds to boot
+          sleep 15
+          derex reset-mailslurper
+          set -o pipefail
+          cd tests
+          rm -r $GITHUB_WORKSPACE/tests/.coverage
+          pytest -m "slowtest" | grep -v codecoveragetool=Cobertura
+
+      - uses: actions/upload-artifact@v2.2.4
+        with:
+          name: slowtests_coverage
+          path: $GITHUB_WORKSPACE/tests/.coverage
