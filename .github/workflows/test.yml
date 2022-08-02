@@ -208,6 +208,7 @@ jobs:
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - uses: actions/download-artifact@v3
+        continue-on-error: true
 
       - name: Cache npm packages
         uses: actions/cache@v3
