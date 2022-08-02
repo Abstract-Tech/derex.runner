@@ -13,7 +13,7 @@ env:
 jobs:
   CheckDocsAndPreCommit:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v3
@@ -262,8 +262,8 @@ jobs:
         if: always()
         run: |
           set -ex
-          cp ${{ github.workspace }}/slowtests_coverage/.coverage tests/.coverage.slow
-          cp ${{ github.workspace }}/fasttests_coverage/.coverage tests/.coverage.fast
+          cp ${{ github.workspace }}/.coverage tests/.coverage.slow
+          cp ${{ github.workspace }}/.coverage tests/.coverage.fast
           cd tests
           coverage combine
           coverage html
