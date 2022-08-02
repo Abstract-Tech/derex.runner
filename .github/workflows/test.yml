@@ -63,9 +63,9 @@ jobs:
         with:
           name: LinuxBinary
           path: ./bundle/dist/
+        continue-on-error: true
 
       - name: Build macOS binary with pyinstaller
-        if: always()
         run: |
           pip install pyinstaller scrypt
           # The Openssl version on MacOS 10.14 does not support scrypt
@@ -74,7 +74,6 @@ jobs:
           make executable
 
       - name: Test pyinstaller created macOS binary
-        if: always()
         run: |
           set -ex
           ./bundle/dist/derex --help
@@ -83,13 +82,12 @@ jobs:
           ../../../bundle/dist/ddc-project config
 
       - uses: actions/upload-artifact@v2.2.4
-        if: always()
         with:
           name: MacOSBinary
           path: ./bundle/dist/
+        continue-on-error: true
 
       - name: Run python tests
-        if: always()
         run: |
           set -ex
           set -o pipefail
@@ -98,10 +96,10 @@ jobs:
           pytest -m "not slowtest" | grep -v codecoveragetool=Cobertura
           
       - uses: actions/upload-artifact@v2.2.4
-        if: always()
         with:
           name: fasttests_coverage
           path: ${{ github.workspace }}/tests/.coverage
+        continue-on-error: true
 
   RunSlowPytests:
     runs-on: ubuntu-latest
@@ -176,6 +174,7 @@ jobs:
         with:
           name: slowtests_coverage
           path: ${{ github.workspace }}/tests/.coverage
+        continue-on-error: true
 
   CombineCoverage:
     runs-on: ubuntu-latest
@@ -209,3 +208,32 @@ jobs:
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - uses: actions/download-artifact@v3
+
+      - name: Cache npm packages
+        uses: actions/cache@v3
+        with:
+          path: $GITHUB_WORKSPACE/.cache/npm
+          key: npmcache2
+
+      - name: Fix coverage result and publish it
+        if: always()
+        run: |
+          set -ex
+          cp ${{ github.workspace }}/slowtests_coverage/.coverage tests/.coverage.slow
+          cp ${{ github.workspace }}/fasttests_coverage/.coverage tests/.coverage.fast
+          cd tests
+          coverage combine
+          coverage html
+          coverage xml
+          cd ..
+          # We installed the package with pip, and coverage reports the full absolute path.
+          # We cut to derex/runner/etc/etc
+          DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
+          echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
+          sudo npm config set cache ${{ github.workspace }}/.cache/npm --global
+          npm install juice
+          # Azure pipelines strips style sheets but leaves styles in place.
+          # juice can embed the styles in the HTML for us and present a much better
+          # view in the coverage results tab.
+          for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+          codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;
