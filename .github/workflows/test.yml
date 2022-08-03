@@ -227,7 +227,7 @@ jobs:
   TestProject:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [RunPytests, RunSlowPytests]
+    needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
       matrix:
