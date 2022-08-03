@@ -309,7 +309,7 @@ jobs:
       - name: Prime Rabbitmq
         run: |
           set -ex
-          cd cd $PROJECT_PATH
+          cd $PROJECT_PATH
           derex reset-rabbitmq
 
       - name: Add hosts to /etc/hosts
