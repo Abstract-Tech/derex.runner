@@ -331,18 +331,130 @@ jobs:
           set -ex
           cd $PROJECT_PATH
           docker images
-
-          # This should not be needed, but for some reason Azure does not tag the image
-          docker tag $(docker images -q|head -n1) $PROJECT_NAME/openedx-themes
-          docker images
-
-          echo Installing dive
           wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
           DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
+          #dive --ci $PROJECT_NAME/openedx-themes
+          echo "Skipping image analysis"
 
-          echo Analyzing image
-          dive --ci $PROJECT_NAME/openedx-themes
-          #echo "Skipping image analysis"
+      - name: Start project services in debug runmode
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          ddc-project up -d
+          sleep 5  # Give it time to start up
+
+      - name: Show logs (debug runmode)
+        run: |
+          cd $PROJECT_PATH
+          ddc-project config
+          ddc-project logs
+
+      - name: Test project fixtures
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          # Run a command to get the current database name. First run it with all output enabled
+          # so that in case of errors in the pipeline we have info about what went wrong
+          ddc-project exec -T lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
+          # ...and then the actual run
+          DATABASE_NAME=$(ddc-project exec -T lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+          ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -p$(derex debug print-secret mysql) ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+
+      - name: Curl the LMS (debug runmode)
+        run: $CURL http://$PROJECT_NAME.localhost
+
+      - name: Curl the LMS example plugin view (debug runmode)
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: $CURL http://$PROJECT_NAME.localhost/example_view
+
+      - name: Curl the CMS (debug runmode)
+        run: $CURL http://studio.$PROJECT_NAME.localhost
+
+      - name: Start project services in production runmode
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          derex runmode production --force
+          ddc-project up -d
+          sleep 5  # Give it time to start up
+
+      - name: Show logs (production runmode)
+        run: |
+          cd $PROJECT_PATH
+          ddc-project config
+          ddc-project logs
+
+      - name: Curl the LMS (production runmode)
+        run: $CURL http://$PROJECT_NAME.localhost/ || (sleep 10; $CURL http://$PROJECT_NAME.localhost/)
+
+      - name: Curl the LMS example plugin view (production runmode)
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: $CURL http://$PROJECT_NAME.localhost/example_view
+
+      - name: Curl the CMS (production runmode)
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: $CURL http://studio.$PROJECT_NAME.localhost/ || (sleep 10; $CURL http://studio.$PROJECT_NAME.localhost/)
+
+      - name: Curl the LMS CSS and make sure our theme CSS is in
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          set -ex
+          $CURL http://$PROJECT_NAME.localhost/|grep static/demo-theme/css/lms-main-v1.css
+          $CURL http://$PROJECT_NAME.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+
+      - name: Check flower
+        run: |
+          set -x
+          cd $PROJECT_PATH
+          echo 127.0.0.1 localhost flower.$PROJECT_NAME.localhost | sudo tee -a /etc/hosts
+          while ! (ddc-project logs cms_worker|grep ready); do sleep 1; done
+          while ! (ddc-project logs lms_worker|grep ready); do sleep 1; done
+          curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.$PROJECT_NAME.localhost/dashboard?json=1|grep celery@openedx.lms
+          curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.$PROJECT_NAME.localhost/dashboard?json=1|grep celery@openedx.cms
+
+      - name: Check celerybeat
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          # This test is relying on the djcelery fixtures which should
+          # have been loaded into the database when priming mysql
+          set -ex
+          cd $PROJECT_PATH
+          CELERYBEAT_RESULT=$(ddc-project logs lms_worker | grep "Scheduler: Sending due task debug" -c)
+          WORKER_RESULT=$(ddc-project logs lms_worker | grep "pong" -c)
+          if [ $CELERYBEAT_RESULT -gt 0 ] && [ $WORKER_RESULT -gt 0 ]; then
+          exit 0
+          fi
+          exit 1
+
+      - name: Run project e2e tests
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          set -ex
+          cd $PROJECT_PATH/e2e && npm ci && cd ..
+          export HTTP_PROXY=http://127.0.0.1:80
+          derex test e2e
+
+      - name: Show services and project logs
+        run: |
+          ddc-services logs
+          cd $PROJECT_PATH; ddc-project logs
+
+      - name: Publish Cypress tests screenshots folder
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: $PROJECT_NAME-e2e-screenshots
+          path: ${{ github.workspace }}/$PROJECT_PATH/e2e/cypress/screenshots
+        continue-on-error: true
+
+      - name: Publish Cypress tests videos folder
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: $PROJECT_NAME-e2e-videos
+          path: ${{ github.workspace }}/$PROJECT_PATH/e2e/cypress/videos
+        continue-on-error: true
 
   CombineCoverage:
     runs-on: ubuntu-latest
@@ -383,7 +495,7 @@ jobs:
           path: $GITHUB_WORKSPACE/.cache/npm
           key: npmcache2
 
-      - name: Fix coverage result and publish it
+      - name: Fix coverage result
         if: always()
         run: |
           set -ex
