@@ -47,9 +47,9 @@ jobs:
       - name: Check pre-commit hooks
         run: pre-commit run -a
 
-  RunPytests:
+  BuildBinaries:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -123,6 +123,41 @@ jobs:
           path: ./bundle/dist/
         continue-on-error: true
 
+  RunPytests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [BuildBinaries]
+    strategy:
+      fail-fast: false
+      matrix:
+        OPENEDX_RELEASE: [juniper, koa, lilac]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
+
+      - name: Install derex.runner as python package
+        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
+
       - name: Run python tests
         run: |
           set -ex
@@ -139,8 +174,8 @@ jobs:
 
   RunSlowPytests:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    needs: [CheckDocsAndPreCommit]
+    timeout-minutes: 20
+    needs: [RunPytests]
     strategy:
       fail-fast: false
       matrix:
@@ -279,7 +314,6 @@ jobs:
           # juice can embed the styles in the HTML for us and present a much better
           # view in the coverage results tab.
           for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-          ls -la ${{ github.workspace }}/tests/
           cp tests/coverage.xml ${{ github.workspace }}
 
       - name: Code coverage summary report
