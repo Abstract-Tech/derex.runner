@@ -248,6 +248,19 @@ jobs:
           path: ${{ github.workspace }}/tests/.coverage
         continue-on-error: true
 
+  TestProject:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [ RunPytests, RunSlowPytests ]
+    strategy:
+      fail-fast: false
+      matrix:
+        OPENEDX_RELEASE: [ juniper, koa, lilac ]
+        TYPE: [ minimal, complete ]
+
+    steps:
+      - uses: actions/checkout@v3
+
   CombineCoverage:
     runs-on: ubuntu-latest
     timeout-minutes: 10
