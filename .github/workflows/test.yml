@@ -126,7 +126,7 @@ jobs:
   RunPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [BuildBinaries]
+    needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
       matrix:
@@ -175,7 +175,7 @@ jobs:
   RunSlowPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [RunPytests]
+    needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
       matrix:
