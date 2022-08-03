@@ -279,4 +279,8 @@ jobs:
           # juice can embed the styles in the HTML for us and present a much better
           # view in the coverage results tab.
           for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
-          codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;
+
+      - name: Code coverage summary report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
