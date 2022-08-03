@@ -7,8 +7,8 @@ env:
   CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
   IMAGE_CACHE_PATH: ${{ github.workspace }}/image_cache
   SENTINEL_CACHE_PATH: ${{ github.workspace }}/sentinel_cache
-  AS_PYTHON_PACKAGE: false
   PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black
+  CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
 
 jobs:
   CheckDocsAndPreCommit:
@@ -30,16 +30,10 @@ jobs:
           restore-keys: pipcache
 
       - name: Install derex.runner
-        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false'
         run: |
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
-
-      - name: Install derex.runner as python package
-        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
-        run: |
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - name: Compile docs
         run: make docs
@@ -71,16 +65,10 @@ jobs:
           restore-keys: pipcache
 
       - name: Install derex.runner
-        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false'
         run: |
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
-
-      - name: Install derex.runner as python package
-        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
-        run: |
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - name: Build linux binary with pyinstaller
         run: |
@@ -147,16 +135,10 @@ jobs:
           restore-keys: pipcache
 
       - name: Install derex.runner
-        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false'
         run: |
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
-
-      - name: Install derex.runner as python package
-        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
-        run: |
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - name: Run python tests
         run: |
@@ -196,16 +178,10 @@ jobs:
           restore-keys: pipcache
 
       - name: Install derex.runner
-        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false'
         run: |
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
-
-      - name: Install derex.runner as python package
-        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
-        run: |
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - name: Docker images cache
         if: steps.cache-sentinel.outputs.cache-hit != 'true'
@@ -256,10 +232,117 @@ jobs:
       fail-fast: false
       matrix:
         OPENEDX_RELEASE: [juniper, koa, lilac]
-        TYPE: [minimal, complete]
+        PROJECT_TYPE: [minimal, complete]
+    env:
+      PROJECT_TYPE: ${{ matrix.PROJECT_TYPE }}
+      PROJECT_PATH: examples/${{ matrix.OPENEDX_RELEASE }}/${{ matrix.PROJECT_TYPE }}
+      PROJECT_NAME: ${{ matrix.OPENEDX_RELEASE }}-${{ matrix.PROJECT_TYPE }}
 
     steps:
       - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner as python package
+        if: env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
+
+      - name: Docker images cache
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        uses: actions/cache@v3
+        with:
+          path: $IMAGE_CACHE_PATH
+          key: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }} | $CACHE_KEY_IMAGES
+          restore-keys: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }}
+
+      - name: Load images
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        run: |
+          [ -d $IMAGE_CACHE_PATH ] || exit 0
+          ls -l $IMAGE_CACHE_PATH
+          docker images
+          set -euxo pipefail
+          cat $IMAGE_CACHE_PATH/edx-${{ matrix.OPENEDX_RELEASE }}.tar.xz | unxz | docker load
+          docker images
+
+      - name: Provision services
+        run: |
+          ddc-services config
+          ddc-services pull
+          set -ex
+          export DEREX_ADMIN_SERVICES=False
+          ddc-services up -d
+          sleep 15
+          derex reset-mailslurper
+
+      - name: Provision project
+        run: cd $PROJECT_PATH; ddc-project config
+
+      - name: Build project final image
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: cd $PROJECT_PATH && derex build project
+
+      - name: Prime Mysql DB
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          derex mysql reset --force
+
+      - name: Prime MinIO bucket
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          derex minio-update-key
+          derex create-bucket --no-tty
+
+      - name: Prime Rabbitmq
+        run: |
+          set -ex
+          cd cd $PROJECT_PATH
+          derex reset-rabbitmq
+
+      - name: Add hosts to /etc/hosts
+        run: echo 127.0.0.1 localhost studio.$PROJECT_NAME.localhost $PROJECT_NAME.localhost | sudo tee -a /etc/hosts
+
+      - name: Show LMS/CMS logs
+        run: cd $PROJECT_PATH; ddc-project logs lms cms
+
+      - name: Set production settings
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: cd $PROJECT_PATH && derex settings production
+
+      - name: Compile theme
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: cd $PROJECT_PATH && derex compile-theme
+
+      - name: Test image with dive
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          docker images
+
+          # This should not be needed, but for some reason Azure does not tag the image
+          docker tag $(docker images -q|head -n1) $PROJECT_NAME/openedx-themes
+          docker images
+
+          echo Installing dive
+          wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
+          DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
+
+          echo Analyzing image
+          dive --ci $PROJECT_NAME/openedx-themes
+          #echo "Skipping image analysis"
 
   CombineCoverage:
     runs-on: ubuntu-latest
@@ -281,16 +364,10 @@ jobs:
           restore-keys: pipcache
 
       - name: Install derex.runner
-        if: env.AS_PYTHON_PACKAGE == 'false' && env.NEEDS_BUILD != 'false'
+        if: env.NEEDS_BUILD != 'false'
         run: |
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
           pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
-
-      - name: Install derex.runner as python package
-        if: env.AS_PYTHON_PACKAGE != 'false' && env.NEEDS_BUILD != 'false'
-        run: |
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
-          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
 
       - uses: actions/download-artifact@v3
         with:
