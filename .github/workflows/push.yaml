@@ -21,7 +21,6 @@ jobs:
   Push:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [TestProject]
     strategy:
       fail-fast: false
       matrix:
