@@ -1,5 +1,9 @@
-name: Build
-on: push
+name: Test
+on:
+  workflow_run:
+      workflows: ["Build"]
+      types:
+        - completed
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
@@ -522,3 +526,14 @@ jobs:
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: coverage.xml
+
+  on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - run: echo 'Workflow passed'
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'Workflow failed'
