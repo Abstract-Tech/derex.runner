@@ -2,8 +2,7 @@ name: Push
 on:
   workflow_run:
     workflows: [Test]
-    types:
-      - requested
+    types: [requested]
     branches:
       - master
       - build

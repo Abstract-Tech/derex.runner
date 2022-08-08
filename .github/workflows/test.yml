@@ -2,8 +2,7 @@ name: Test
 on:
   workflow_run:
     workflows: [Build]
-    types:
-      - requested
+    types: [requested]
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
