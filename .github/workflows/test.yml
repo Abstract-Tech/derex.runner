@@ -14,7 +14,6 @@ jobs:
   CheckDocsAndPreCommit:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [juniper,koa,lilac]
 
     steps:
       - uses: actions/checkout@v3
