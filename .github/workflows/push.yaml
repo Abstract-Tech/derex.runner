@@ -1,0 +1,68 @@
+name: Push
+on: push
+
+env:
+  CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
+  CACHE_KEY_FILES: ${{ github.workspace }}/docker-definition
+  CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
+  IMAGE_CACHE_PATH: ${{ github.workspace }}/image_cache
+  SENTINEL_CACHE_PATH: ${{ github.workspace }}/sentinel_cache
+
+jobs:
+  Push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [TestProject]
+    strategy:
+      fail-fast: false
+      matrix:
+        OPENEDX_RELEASE: [juniper, koa, lilac]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Docker images sentinel cache
+        id: cache-sentinel
+        uses: actions/cache@v3
+        with:
+          path: $SENTINEL_CACHE_PATH
+          key: SENTINEL=1 | ${{ matrix.OPENEDX_RELEASE }} | $CACHE_KEY_IMAGES
+
+      - name: Set needs_push pipeline variable
+        run: |
+          IMAGE="derex/openedx-${{ matrix.OPENEDX_RELEASE }}-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')"
+          echo Checking presence of ${IMAGE} on docker registry
+          docker manifest inspect ${IMAGE} || { echo "NEEDS_PUSH=true" >> $GITHUB_ENV; echo Image not found: pushing ; }
+
+      - name: Log into docker registry
+        if: env.NEEDS_PUSH != 'false'
+        run: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        env:
+          DOCKER_USERNAME: $(DOCKER_USERNAME)
+          DOCKER_PASSWORD: $(DOCKER_PASSWORD)
+
+      - name: Docker images cache
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        uses: actions/cache@v3
+        with:
+          path: $IMAGE_CACHE_PATH
+          key: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }} | $CACHE_KEY_IMAGES
+          restore-keys: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }}
+
+      - name: Load images
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        run: |
+          [ -d $IMAGE_CACHE_PATH ] || exit 0
+          ls -l $IMAGE_CACHE_PATH
+          docker images
+          set -euxo pipefail
+          cat $IMAGE_CACHE_PATH/edx-${{ matrix.OPENEDX_RELEASE }}.tar.xz | unxz | docker load
+          docker images
+
+      - name: Push dev image
+        if: env.NEEDS_PUSH != 'false'
+        run: docker push derex/openedx-${{ matrix.OPENEDX_RELEASE }}-dev:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
+
+      - name: Push nostatic image
+        if: env.NEEDS_PUSH != 'false'
+        run: docker push derex/openedx-${{ matrix.OPENEDX_RELEASE }}-nostatic:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
