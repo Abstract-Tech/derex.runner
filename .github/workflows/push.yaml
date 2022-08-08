@@ -1,14 +1,11 @@
 name: Push
 on:
-  push:
   workflow_run:
     workflows: ["Test"]
     types: [completed]
     branches:
       - master
       - build
-  schedule:
-    - cron: "30 06 * * *"
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
