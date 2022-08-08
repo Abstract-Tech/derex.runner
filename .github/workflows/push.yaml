@@ -1,7 +1,7 @@
 name: Push
 on:
   workflow_run:
-    workflows: [Test]
+    workflows: ["Test"]
     types: [requested]
     branches:
       - master
