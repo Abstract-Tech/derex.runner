@@ -17,7 +17,7 @@ jobs:
   CheckDocsAndPreCommit:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v3
 
@@ -47,6 +47,7 @@ jobs:
   BuildBinaries:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -117,6 +118,7 @@ jobs:
   RunPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -160,6 +162,7 @@ jobs:
   RunSlowPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -230,6 +233,7 @@ jobs:
   TestProject:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -462,6 +466,7 @@ jobs:
   CombineCoverage:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [RunPytests, RunSlowPytests]
 
     steps:
@@ -525,14 +530,3 @@ jobs:
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: coverage.xml
-
-  on-success:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - run: echo 'The triggering workflow passed'
-  on-failure:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    steps:
-      - run: echo 'The triggering workflow failed'

@@ -18,6 +18,7 @@ jobs:
   Push:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -71,14 +72,3 @@ jobs:
       - name: Push nostatic image
         if: env.NEEDS_PUSH != 'false'
         run: docker push derex/openedx-${{ matrix.OPENEDX_RELEASE }}-nostatic:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//')
-
-  on-success:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - run: echo 'The triggering workflow passed'
-  on-failure:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    steps:
-      - run: echo 'The triggering workflow failed'
