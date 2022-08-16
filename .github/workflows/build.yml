@@ -1,5 +1,8 @@
 name: Build
 
+on:
+  push
+
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
   CACHE_KEY_FILES: ${{ github.workspace }}/docker-definition
