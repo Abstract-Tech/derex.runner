@@ -9,10 +9,10 @@ concurrency:
 
 jobs:
   build:
-    uses: .github/workflows/build.yml
+    uses: ./.github/workflows/build.yml
 
   test:
-    uses: .github/workflows/build.yml
+    uses: ./.github/workflows/build.yml
 
   push:
-    uses: .github/workflows/push.yml
+    uses: ./.github/workflows/push.yml
