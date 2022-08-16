@@ -16,7 +16,6 @@ jobs:
   CheckDocsAndPreCommit:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v3
 
@@ -46,7 +45,6 @@ jobs:
   BuildBinaries:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -117,7 +115,6 @@ jobs:
   RunPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -161,7 +158,6 @@ jobs:
   RunSlowPytests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -232,7 +228,6 @@ jobs:
   TestProject:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [CheckDocsAndPreCommit]
     strategy:
       fail-fast: false
@@ -465,7 +460,6 @@ jobs:
   CombineCoverage:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: [RunPytests, RunSlowPytests]
 
     steps:
