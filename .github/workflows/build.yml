@@ -1,8 +1,4 @@
 name: Build
-on:
-  push:
-  schedule:
-    - cron: "30 06 * * *"
 
 env:
   CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
