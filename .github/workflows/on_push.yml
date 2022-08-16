@@ -9,10 +9,10 @@ concurrency:
 
 jobs:
   build:
-    uses: .github/workflows/build.yml
+    uses: .github/workflows/build.yml@migrate_to_github_actions
 
   test:
-    uses: .github/workflows/build.yml
+    uses: .github/workflows/build.yml@migrate_to_github_actions
 
   push:
-    uses: .github/workflows/push.yml
+    uses: .github/workflows/push.yml@migrate_to_github_actions
