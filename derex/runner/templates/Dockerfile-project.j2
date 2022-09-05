@@ -6,7 +6,7 @@ ENV DJANGO_SETTINGS_MODULE={{ project.settings.value }}
 ENV SERVICE_VARIANT=lms
 ENV DEREX_PROJECT={{ project.name }}
 ENV DEREX_OPENEDX_VERSION={{ project.openedx_version.name }}
-ENV DEREX_VERSION=0.3.4.dev2
+ENV DEREX_VERSION=0.3.4.dev3
 ENV MYSQL_DB_NAME={{ project.mysql_db_name }}
 ENV MYSQL_USER={{ project.mysql_user }}
 ENV MYSQL_PASSWORD={{ project.secret("mysql") }}
@@ -19,23 +19,10 @@ ENV {{ key }}={{ value | tojson }}
 {%- endfor %}
 {% endblock %}
 
-{% block themes %}
-FROM {{ project.base_image }} as themes
-{% if project.themes_dir -%}
-    COPY themes/ /openedx/themes/
-    {% for theme in project.get_themes() -%}
-        {% if theme.is_lms_theme() and theme.has_lms_static() -%}
-            RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
-        {% endif -%}
-        {% if theme.is_cms_theme() and theme.has_cms_static() -%}
-            RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
-        {% endif -%}
-    {% endfor -%}
-    {% if project.config.get("update_assets", None) -%}
-        RUN sh -c 'set -e; rm -rf /openedx/staticfiles; derex_update_assets;'
-    {% elif project.config.get("collect_assets", None) -%}
-        RUN sh -c 'set -e; derex_collect_assets;'
-    {% endif -%}
+{% block scripts %}
+FROM base as scripts
+{% if project.scripts_dir -%}
+    COPY {{ project.scripts_dir.name }} /derex/scripts
 {% endif -%}
 {% endblock %}
 
@@ -58,10 +45,23 @@ FROM requirements as openedx_customizations
 {% endif %}
 {% endblock %}
 
-{% block scripts %}
-FROM base as scripts
-{% if project.scripts_dir -%}
-    COPY {{ project.scripts_dir.name }} /derex/scripts
+{% block themes %}
+FROM openedx_customizations as themes
+{% if project.themes_dir -%}
+    COPY themes/ /openedx/themes/
+    {% for theme in project.get_themes() -%}
+        {% if theme.is_lms_theme() and theme.has_lms_static() -%}
+            RUN sh -c "mkdir -p /openedx/staticfiles/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/lms/static/* /openedx/staticfiles/{{ theme.root.name }}/"
+        {% endif -%}
+        {% if theme.is_cms_theme() and theme.has_cms_static() -%}
+            RUN sh -c "mkdir -p /openedx/staticfiles/studio/{{ theme.root.name }}/; cp -r /openedx/themes/{{ theme.root.name }}/cms/static/* /openedx/staticfiles/studio/{{ theme.root.name }}/"
+        {% endif -%}
+    {% endfor -%}
+    {% if project.config.get("update_assets", None) -%}
+        RUN sh -c 'set -e; rm -rf /openedx/staticfiles; derex_update_assets;'
+    {% elif project.config.get("collect_assets", None) -%}
+        RUN sh -c 'set -e; derex_collect_assets;'
+    {% endif -%}
 {% endif -%}
 {% endblock %}
 
@@ -81,9 +81,9 @@ FROM settings as translations
     RUN SERVICE_VARIANT=cms python manage.py cms compilemessages
     RUN SERVICE_VARIANT=lms python manage.py lms compilejsi18n
     RUN SERVICE_VARIANT=cms python manage.py cms compilejsi18n
-    RUN sh -c 'mkdir -p /openedx/staticfiles/js/i18n/; cp -rf /openedx/edx-platform/lms/static/js/i18n/ /openedx/staticfiles/js/i18n/'
-    RUN sh -c 'apk add gzip; gzip -rkf /openedx/staticfiles/js/i18n/*/*.js; apk del gzip'
-    RUN sh -c 'apk add brotli; brotli -f /openedx/staticfiles/js/i18n/*/*.js; apk del brotli'
+    RUN sh -c 'mkdir -p /openedx/staticfiles/js/i18n/ /openedx/staticfiles/studio/js/i18n/; cp -rf /openedx/edx-platform/lms/static/js/i18n/* /openedx/staticfiles/js/i18n/; cp -rf /openedx/edx-platform/cms/static/js/i18n/* /openedx/staticfiles/studio/js/i18n/'
+    RUN sh -c 'apk add gzip; gzip -rkf /openedx/staticfiles/js/i18n/*/*.js; gzip -rkf /openedx/staticfiles/studio/js/i18n/*/*.js; apk del gzip'
+    RUN sh -c 'apk add brotli; brotli -f /openedx/staticfiles/js/i18n/*/*.js; brotli -f /openedx/staticfiles/studio/js/i18n/*/*.js; apk del brotli'
 {% endif -%}
 {% endblock %}
 
