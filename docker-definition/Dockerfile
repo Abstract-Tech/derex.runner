@@ -162,6 +162,7 @@ RUN cp /tmp/derex* /usr/local/bin/ && chmod +x /usr/local/bin/*
 
 FROM notranslations as translations
 
+ARG TRANSLATIONS_CACHEBURST=1
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=secret,id=transifex,dst=/root/.transifexrc-orig \
     pip install transifex-client -c /openedx/requirements/openedx_constraints.txt && \
