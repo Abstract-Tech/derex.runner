@@ -75,17 +75,17 @@ steps:
     parameters:
       CONDITION: "ne(variables.needs_build, 'false')"
 
-  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker --build-arg TRANSLATIONS_CACHEBURST=${date +%d%m%y}" --target=nostatic $(DOCKER_IMAGES_SLUG)
+  - script: derex build openedx --docker-opts "${CACHE_FROM_OPTS} --cache-to=type=inline -o type=docker --build-arg TRANSLATIONS_CACHEBURST=$(date +%d%m%y)" --target=nostatic $(DOCKER_IMAGES_SLUG)
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build nostatic image
 
-  - script: derex build openedx --docker-opts "--cache-to=type=inline -o type=docker --build-arg TRANSLATIONS_CACHEBURST=${date +%d%m%y}" --target=dev $(DOCKER_IMAGES_SLUG)
+  - script: derex build openedx --docker-opts "--cache-to=type=inline -o type=docker --build-arg TRANSLATIONS_CACHEBURST=$(date +%d%m%y)" --target=dev $(DOCKER_IMAGES_SLUG)
     condition: and(succeeded(), ne(variables.needs_build, 'false'))
     displayName: Build dev image
 
   - script: |
       docker images
-      derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target} --build-arg TRANSLATIONS_CACHEBURST=${date +%d%m%y}" --target=translations $(DOCKER_IMAGES_SLUG)
+      derex build openedx --docker-opts "${CACHE_FROM_OPTS} --output type=docker,name={docker_image_prefix}-{target} --build-arg TRANSLATIONS_CACHEBURST=$(date +%d%m%y)" --target=translations $(DOCKER_IMAGES_SLUG)
       docker images
       docker run --rm derex/openedx-${DOCKER_IMAGES_SLUG}-translations:$(grep __version__ derex/runner/__init__.py |sed 's/[^"]*"//;s/"//') sh -c "i18n_tool validate || (find conf|grep prob; find conf|grep prob|xargs cat; false)" ||
         echo "##vso[task.logissue type=error]Problems with translations found"
