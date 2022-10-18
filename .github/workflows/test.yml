@@ -1,0 +1,525 @@
+name: Test
+
+on:
+  workflow_call:
+
+env:
+  CACHE_KEY_BASE: 22 # Increment this value to reset the images cache
+  CACHE_KEY_FILES: ${{ github.workspace }}/docker-definition
+  CACHE_KEY_IMAGES: BASE_SEED=$CACHE_KEY_BASE | $CACHE_KEY_FILES
+  IMAGE_CACHE_PATH: ${{ github.workspace }}/image_cache
+  SENTINEL_CACHE_PATH: ${{ github.workspace }}/sentinel_cache
+  PYTEST_ADDOPTS: --cov=derex --cov-report xml --cov-report html --cov-report term --cov-report term-missing --cov-branch --black
+  CURL: curl --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 -f
+
+jobs:
+  CheckDocsAndPreCommit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
+
+      - name: Compile docs
+        run: make docs
+
+      - name: Check pre-commit hooks
+        run: pre-commit run -a
+
+  BuildBinaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [CheckDocsAndPreCommit]
+    strategy:
+      fail-fast: false
+      matrix:
+        OPENEDX_RELEASE: [juniper, koa, lilac]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
+
+      - name: Build linux binary with pyinstaller
+        run: |
+          pip install pyinstaller
+          make executable
+
+      - name: Test pyinstaller created linux binary
+        run: |
+          set -ex
+          ./bundle/dist/derex
+          ./bundle/dist/ddc-services ps
+          cd examples/${{ matrix.OPENEDX_RELEASE }}/minimal
+          ../../../bundle/dist/ddc-project config
+
+      - uses: actions/upload-artifact@v2.2.4
+        with:
+          name: LinuxBinary
+          path: ./bundle/dist/
+        continue-on-error: true
+
+      - name: Build macOS binary with pyinstaller
+        run: |
+          pip install pyinstaller scrypt
+          # The Openssl version on MacOS 10.14 does not support scrypt
+          # so we pip install it and leave a trace to pyinstaller to pick it up
+          echo -e  "\nimport scrypt" >> bundle/executable.py
+          make executable
+
+      - name: Test pyinstaller created macOS binary
+        run: |
+          set -ex
+          ./bundle/dist/derex --help
+          ./bundle/dist/ddc-services --help
+          cd examples/${{ matrix.OPENEDX_RELEASE }}/minimal
+          ../../../bundle/dist/ddc-project config
+
+      - uses: actions/upload-artifact@v2.2.4
+        with:
+          name: MacOSBinary
+          path: ./bundle/dist/
+        continue-on-error: true
+
+  RunPytests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [CheckDocsAndPreCommit]
+    strategy:
+      fail-fast: false
+      matrix:
+        OPENEDX_RELEASE: [juniper, koa, lilac]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
+
+      - name: Run python tests
+        run: |
+          set -ex
+          set -o pipefail
+          pip3 --cache-dir ${{ github.workspace }}/.cache/pip install scrypt
+          cd tests
+          pytest -m "not slowtest" | grep -v codecoveragetool=Cobertura
+
+      - uses: actions/upload-artifact@v2.2.4
+        with:
+          name: fasttests_coverage
+          path: ${{ github.workspace }}/tests/.coverage
+        continue-on-error: true
+
+  RunSlowPytests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [CheckDocsAndPreCommit]
+    strategy:
+      fail-fast: false
+      matrix:
+        OPENEDX_RELEASE: [juniper, koa, lilac]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
+
+      - name: Docker images cache
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        uses: actions/cache@v3
+        with:
+          path: $IMAGE_CACHE_PATH
+          key: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }} | $CACHE_KEY_IMAGES
+          restore-keys: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }}
+
+      - name: Load images
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        run: |
+          [ -d $IMAGE_CACHE_PATH ] || exit 0
+          ls -l $IMAGE_CACHE_PATH
+          docker images
+          set -euxo pipefail
+          cat $IMAGE_CACHE_PATH/edx-${{ matrix.OPENEDX_RELEASE }}.tar.xz | unxz | docker load
+          docker images
+
+      - name: Provision services
+        run: |
+          ddc-services config
+          ddc-services pull
+          set -ex
+          export DEREX_ADMIN_SERVICES=False
+          ddc-services up -d
+          sleep 15
+          derex reset-mailslurper
+
+      - name: Run python tests
+        run: |
+          set -ex
+          set -o pipefail
+          cd tests
+          pytest -m "slowtest" | grep -v codecoveragetool=Cobertura
+
+      - uses: actions/upload-artifact@v2.2.4
+        with:
+          name: slowtests_coverage
+          path: ${{ github.workspace }}/tests/.coverage
+        continue-on-error: true
+
+  TestProject:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [CheckDocsAndPreCommit]
+    strategy:
+      fail-fast: false
+      matrix:
+        OPENEDX_RELEASE: [juniper, koa, lilac]
+        PROJECT_TYPE: [minimal, complete]
+    env:
+      PROJECT_TYPE: ${{ matrix.PROJECT_TYPE }}
+      PROJECT_PATH: examples/${{ matrix.OPENEDX_RELEASE }}/${{ matrix.PROJECT_TYPE }}
+      PROJECT_NAME: ${{ matrix.OPENEDX_RELEASE }}-${{ matrix.PROJECT_TYPE }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner as python package
+        if: env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip .
+
+      - name: Docker images cache
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        uses: actions/cache@v3
+        with:
+          path: $IMAGE_CACHE_PATH
+          key: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }} | $CACHE_KEY_IMAGES
+          restore-keys: BASE_SEED=$CACHE_KEY_BASE | ${{ matrix.OPENEDX_RELEASE }}
+
+      - name: Load images
+        if: steps.cache-sentinel.outputs.cache-hit != 'true'
+        run: |
+          [ -d $IMAGE_CACHE_PATH ] || exit 0
+          ls -l $IMAGE_CACHE_PATH
+          docker images
+          set -euxo pipefail
+          cat $IMAGE_CACHE_PATH/edx-${{ matrix.OPENEDX_RELEASE }}.tar.xz | unxz | docker load
+          docker images
+
+      - name: Provision services
+        run: |
+          ddc-services config
+          ddc-services pull
+          set -ex
+          export DEREX_ADMIN_SERVICES=False
+          ddc-services up -d
+          sleep 15
+          derex reset-mailslurper
+
+      - name: Provision project
+        run: cd $PROJECT_PATH; ddc-project config
+
+      - name: Build project final image
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: cd $PROJECT_PATH && derex build project
+
+      - name: Prime Mysql DB
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          derex mysql reset --force
+
+      - name: Prime MinIO bucket
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          derex minio-update-key
+          derex create-bucket --no-tty
+
+      - name: Prime Rabbitmq
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          derex reset-rabbitmq
+
+      - name: Add hosts to /etc/hosts
+        run: echo 127.0.0.1 localhost studio.$PROJECT_NAME.localhost $PROJECT_NAME.localhost | sudo tee -a /etc/hosts
+
+      - name: Show LMS/CMS logs
+        run: cd $PROJECT_PATH; ddc-project logs lms cms
+
+      - name: Set production settings
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: cd $PROJECT_PATH && derex settings production
+
+      - name: Compile theme
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: cd $PROJECT_PATH && derex compile-theme
+
+      - name: Test image with dive
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          docker images
+          wget -q https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
+          DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y ./dive_0.9.2_linux_amd64.deb
+          #dive --ci $PROJECT_NAME/openedx-themes
+          echo "Skipping image analysis"
+
+      - name: Start project services in debug runmode
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          ddc-project up -d
+          sleep 5  # Give it time to start up
+
+      - name: Show logs (debug runmode)
+        run: |
+          cd $PROJECT_PATH
+          ddc-project config
+          ddc-project logs
+
+      - name: Test project fixtures
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          # Run a command to get the current database name. First run it with all output enabled
+          # so that in case of errors in the pipeline we have info about what went wrong
+          ddc-project exec -T lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell'
+          # ...and then the actual run
+          DATABASE_NAME=$(ddc-project exec -T lms sh -c 'echo '"'"'from django.conf import settings; print(settings.DATABASES["default"]["NAME"])'"'"' |./manage.py lms shell 2> /dev/null' 2> /dev/null)
+          ddc-services exec -T mysql mysql -h localhost --protocol tcp -u root -p$(derex debug print-secret mysql) ${DATABASE_NAME} -e "SELECT * from auth_user WHERE username='derex.runner'"|grep derex.runner
+
+      - name: Curl the LMS (debug runmode)
+        run: $CURL http://$PROJECT_NAME.localhost
+
+      - name: Curl the LMS example plugin view (debug runmode)
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: $CURL http://$PROJECT_NAME.localhost/example_view
+
+      - name: Curl the CMS (debug runmode)
+        run: $CURL http://studio.$PROJECT_NAME.localhost
+
+      - name: Start project services in production runmode
+        run: |
+          set -ex
+          cd $PROJECT_PATH
+          derex runmode production --force
+          ddc-project up -d
+          sleep 5  # Give it time to start up
+
+      - name: Show logs (production runmode)
+        run: |
+          cd $PROJECT_PATH
+          ddc-project config
+          ddc-project logs
+
+      - name: Curl the LMS (production runmode)
+        run: $CURL http://$PROJECT_NAME.localhost/ || (sleep 10; $CURL http://$PROJECT_NAME.localhost/)
+
+      - name: Curl the LMS example plugin view (production runmode)
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: $CURL http://$PROJECT_NAME.localhost/example_view
+
+      - name: Curl the CMS (production runmode)
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: $CURL http://studio.$PROJECT_NAME.localhost/ || (sleep 10; $CURL http://studio.$PROJECT_NAME.localhost/)
+
+      - name: Curl the LMS CSS and make sure our theme CSS is in
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          set -ex
+          $CURL http://$PROJECT_NAME.localhost/|grep static/demo-theme/css/lms-main-v1.css
+          $CURL http://$PROJECT_NAME.localhost/static/demo-theme/css/lms-main-v1.css | grep this_is_a_customized_theme -q
+
+      - name: Check flower
+        run: |
+          set -x
+          cd $PROJECT_PATH
+          echo 127.0.0.1 localhost flower.$PROJECT_NAME.localhost | sudo tee -a /etc/hosts
+          while ! (ddc-project logs cms_worker|grep ready); do sleep 1; done
+          while ! (ddc-project logs lms_worker|grep ready); do sleep 1; done
+          curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.$PROJECT_NAME.localhost/dashboard?json=1|grep celery@openedx.lms
+          curl -m10 --retry-connrefused --connect-timeout 30 --retry 5 --retry-delay 5 http://flower.$PROJECT_NAME.localhost/dashboard?json=1|grep celery@openedx.cms
+
+      - name: Check celerybeat
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          # This test is relying on the djcelery fixtures which should
+          # have been loaded into the database when priming mysql
+          set -ex
+          cd $PROJECT_PATH
+          CELERYBEAT_RESULT=$(ddc-project logs lms_worker | grep "Scheduler: Sending due task debug" -c)
+          WORKER_RESULT=$(ddc-project logs lms_worker | grep "pong" -c)
+          if [ $CELERYBEAT_RESULT -gt 0 ] && [ $WORKER_RESULT -gt 0 ]; then
+          exit 0
+          fi
+          exit 1
+
+      - name: Run project e2e tests
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        run: |
+          set -ex
+          cd $PROJECT_PATH/e2e && npm ci && cd ..
+          export HTTP_PROXY=http://127.0.0.1:80
+          derex test e2e
+
+      - name: Show services and project logs
+        run: |
+          ddc-services logs
+          cd $PROJECT_PATH; ddc-project logs
+
+      - name: Publish Cypress tests screenshots folder
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: $PROJECT_NAME-e2e-screenshots
+          path: ${{ github.workspace }}/$PROJECT_PATH/e2e/cypress/screenshots
+        continue-on-error: true
+
+      - name: Publish Cypress tests videos folder
+        if: ${{ matrix.PROJECT_TYPE == 'complete' }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: $PROJECT_NAME-e2e-videos
+          path: ${{ github.workspace }}/$PROJECT_PATH/e2e/cypress/videos
+        continue-on-error: true
+
+  CombineCoverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [RunPytests, RunSlowPytests]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/pip
+          key: pipcache | requirements_dev.txt
+          restore-keys: pipcache
+
+      - name: Install derex.runner
+        if: env.NEEDS_BUILD != 'false'
+        run: |
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -U pip setuptools
+          pip3 install --cache-dir ${{ github.workspace }}/.cache/pip -r requirements_dev.txt -e .
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: fasttests_coverage
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: slowtests_coverage
+
+      - name: Cache npm packages
+        uses: actions/cache@v3
+        with:
+          path: $GITHUB_WORKSPACE/.cache/npm
+          key: npmcache2
+
+      - name: Fix coverage result
+        if: always()
+        run: |
+          set -ex
+          cp ${{ github.workspace }}/.coverage tests/.coverage.slow
+          cp ${{ github.workspace }}/.coverage tests/.coverage.fast
+          cd tests
+          coverage combine
+          coverage html
+          coverage xml
+          cd ..
+          # We installed the package with pip, and coverage reports the full absolute path.
+          # We cut to derex/runner/etc/etc
+          DEREX_RUNNER_PATH=`cd tests;python -c "from pathlib import Path; import derex.runner;print(Path(derex.runner.__file__).parent.parent.parent)"`
+          echo Replacing ${DEREX_RUNNER_PATH} in tests/htmlcov/*.html
+          sudo npm config set cache ${{ github.workspace }}/.cache/npm --global
+          npm install juice
+          # Azure pipelines strips style sheets but leaves styles in place.
+          # juice can embed the styles in the HTML for us and present a much better
+          # view in the coverage results tab.
+          for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+          cp tests/coverage.xml ${{ github.workspace }}
+
+      - name: Code coverage summary report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
