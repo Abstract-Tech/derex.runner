@@ -12,19 +12,15 @@ with open("HISTORY.rst") as history_file:
 
 requirements = [
     "appdirs",
-    "Click==8.1.0",
+    "Click",
     "click_plugins",
-    "docker-compose>=1.25.4",
-    "importlib_metadata<5.0",
+    "docker-compose",
+    "importlib_metadata",
     "jinja2",
     "pluggy",
     "pymongo<4",
     "pymysql",
     "rich",
-    # Package constrained due to dependabot alerts
-    "PyYAML>=5.4",
-    "py>=1.10.0",
-    "urllib3>=1.26.5",
     "python-on-whales",
 ]
 
@@ -44,9 +40,9 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     entry_points={
         "console_scripts": [
@@ -69,6 +65,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extras_requirements,
     url="https://github.com/Abstract-Tech/derex.runner",
-    version="0.3.4.dev4",
+    version="0.3.4.dev5",
     zip_safe=False,
 )

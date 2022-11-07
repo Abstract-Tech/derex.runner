@@ -30,7 +30,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-@with_plugins(importlib_metadata.entry_points().get("derex.runner.cli_plugins", []))  # type: ignore
+@with_plugins(importlib_metadata.entry_points().select(group="derex.runner.cli_plugins"))  # type: ignore
 @click.group(invoke_without_command=True)
 @click.version_option()
 @click.pass_context
