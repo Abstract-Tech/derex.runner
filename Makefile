@@ -90,13 +90,13 @@ requirements-clean:
 	rm requirements.txt requirements_doc.txt requirements_dev.txt
 
 requirements.txt: setup.py
-	pip-compile > requirements.txt
+	pip-compile -U > requirements.txt
 
 requirements_doc.txt: requirements_doc.in
-	pip-compile requirements_doc.in > requirements_doc.txt
+	pip-compile -U requirements_doc.in > requirements_doc.txt
 
 requirements_dev.txt: requirements_dev.in requirements_doc.in
-	pip-compile requirements_dev.in > requirements_dev.txt
+	pip-compile -U requirements_dev.in > requirements_dev.txt
 
 executable: ## Build a single executable file using pyinstaller
 	$(MAKE) -C bundle executable
