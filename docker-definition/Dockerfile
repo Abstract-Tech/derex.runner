@@ -100,6 +100,7 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     swig \
     xmlsec \
     xmlsec-dev \
+    lynx \
     # The following are needed just to compile gevent
     make \
     gcc \
