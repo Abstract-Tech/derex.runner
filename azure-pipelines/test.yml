@@ -119,7 +119,7 @@ stages:
               # Azure pipelines strips style sheets but leaves styles in place.
               # juice can embed the styles in the HTML for us and present a much better
               # view in the coverage results tab.
-              for filename in tests/htmlcov/*.html; do $(npm bin)/juice $filename $filename; done
+              for filename in tests/htmlcov/*.html; do $(npm prefix)/node_modules/.bin/juice $filename $filename; done
               echo "##vso[codecoverage.publish codecoveragetool=Cobertura;summaryfile=${PWD}/tests/coverage.xml;reportdirectory=${PWD}/tests/htmlcov;]"
             displayName: Fix coverage result and publish it
             condition: succeededOrFailed()
