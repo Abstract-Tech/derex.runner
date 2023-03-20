@@ -29,6 +29,7 @@ RUN --mount=type=cache,target=/var/cache/apk apk add \
     mariadb-connector-c \
     sqlite \
     xmlsec \
+    lynx \
     wget \
     bash \
     geos-dev
