@@ -92,6 +92,7 @@ services:
         --worker-class gevent
         --worker-tmp-dir /dev/shm
         --log-file=-
+        --timeout 300
         wsgi:application'
     healthcheck:
       test: ["CMD", "wget", "localhost:80/heartbeat", "-q", "-O", "/dev/null"]
