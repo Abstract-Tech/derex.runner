@@ -22,6 +22,7 @@ requirements = [
     "pymysql",
     "rich",
     "python-on-whales",
+    "pyyaml==5.3.0",
 ]
 
 setup_requirements = ["setuptools"]
