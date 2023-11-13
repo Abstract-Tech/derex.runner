@@ -210,7 +210,7 @@ services:
           - minio.localhost
 
   httpserver:
-    image: caddy:2.0.0
+    image: caddy:2.7.5-alpine
     restart: unless-stopped
     container_name: httpserver
     ports:
