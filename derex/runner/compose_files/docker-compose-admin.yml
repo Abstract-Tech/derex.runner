@@ -1,5 +1,4 @@
 # Services to monitor/inspect Open edX
-version: "3.5"
 services:
   adminer:
     image: adminer:4.7.6

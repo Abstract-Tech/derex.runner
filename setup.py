@@ -14,7 +14,6 @@ requirements = [
     "appdirs",
     "Click",
     "click_plugins",
-    "docker-compose",
     "importlib_metadata",
     "jinja2",
     "pluggy",

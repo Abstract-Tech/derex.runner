@@ -1,6 +1,4 @@
 # Open edX services
-version: "3.5"
-
 x-common:
   &common-conf
   {% if project.runmode.name == "production" -%}
@@ -70,8 +68,6 @@ services:
       <<: *common-env
       SERVICE_VARIANT: lms
     container_name: {{ project.name }}_flower
-    networks:
-      - derex
     networks:
         derex:
           aliases:
