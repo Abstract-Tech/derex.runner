@@ -8,6 +8,8 @@ if "runserver" in sys.argv:
 else:
     DEBUG = False
 
+ADMINS = [('Serhii', 's.kostenko@abstract-technology.de'), ('Marco', 'marco.chiruzzi@abstract-technology.de')]
+
 ALLOWED_HOSTS = ["*"]
 # This container should never be exposed directly
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

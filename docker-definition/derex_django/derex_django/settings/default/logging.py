@@ -48,6 +48,13 @@ LOGGING["handlers"]["tracking"] = {
     "formatter": "raw",
 }
 
+LOGGING["handlers"]["mail_admins"] = {
+    "level": "ERROR",
+    "class": "django.utils.log.AdminEmailHandler",
+    "email_backend": "django.core.mail.backends.smtp.EmailBackend",
+    "include_html": True,
+}
+
 LOGGING["loggers"][""]["handlers"] = ["console", "local", "error"]
 
 
