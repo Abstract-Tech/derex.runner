@@ -1,5 +1,4 @@
 # Services needed for Open edX to work
-version: "3.5"
 services:
   mongodb:
     image: mongo:3.2.21
